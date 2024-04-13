@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel='stylesheet' href='styles/main.css'>
+  <script src='https://d3js.org/d3.v5.min.js'></script>
+  <script src="https://d3js.org/d3-array.v2.min.js"></script>
+  <script src="https://d3js.org/d3-geo.v1.min.js"></script>
+  <script src="https://unpkg.com/topojson-client@3"></script>
+  <title>Tachyon Visual Interface</title>
+</head>
+
+<body>
+  <div class='wrapper_main'>
+    <div class='wrapper_top'>
+      <div id='ts_view'>
+        <div class='view_title'>Farm Nodes</div>
+        <div id='farm_selection'>
+          Date
+          <select id='farm_file_select'>
+          </select>
+          Group
+          <select id='data_group'>
+            <option value='cpu'>cpu</option>
+            <option value='network'>network</option>
+          </select>
+        </div>
+        <svg id='farm_svg'></svg>
+        <svg id="farm-colorbar" class="colorbar"></svg>
+      </div>
+      <div id='ts_view'>
+        <div class='view_title'>Manager Nodes</div>
+        <div id='manager_selection'>
+          Data
+          <select id='manager_file_select'>
+          </select>
+          Group
+          <select id='data_group'>
+            <option value='cpu'>cpu</option>
+            <option value='network'>network</option>
+          </select>
+        </div>
+        <svg id='manager_svg'></svg>
+    </div>
+    </div>
+
+  <script src='scripts/main.js' type='module'></script>
+</body>
+
+</html>

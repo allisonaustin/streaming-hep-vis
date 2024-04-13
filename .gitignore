@@ -1,0 +1,8 @@
+ui/data/farm/
+ui/data/manager/
+server/data
+
+package-lock.json
+.DS_STORE
+
+node_modules/
