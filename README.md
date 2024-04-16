@@ -7,7 +7,7 @@
 - Navigate to /server
 
 - Run
-``` python server.py``` 
+```python server.py``` 
 
 #### Client
 - Open a second terminal 

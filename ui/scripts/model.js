@@ -9,6 +9,7 @@ export const svgData = () => {
       data: [],
       selectedX: undefined,
       selectedY: undefined,
-      target: undefined
+      target: undefined,
+      date: undefined
     }
   };

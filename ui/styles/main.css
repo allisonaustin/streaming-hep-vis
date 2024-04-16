@@ -60,8 +60,9 @@ select {
 }
 
 .tooltip{
+    position: absolute;
     line-height: 1;
-    font-weight: bold;
+    font-family: 'Helvetica Neue', sans-serif;
     padding: 10px;
     background: rgba(0, 0, 0, 0.8);
     color: #fff;

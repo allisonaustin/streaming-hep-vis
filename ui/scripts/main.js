@@ -14,8 +14,7 @@ import {
   prepareSvgArea 
 } from './d3_utils.js';
 
-const init = (dateValue, group) => {
-  const flaskUrl = m.flaskUrl;
+const getDateComponents = (dateValue) => {
   const components = dateValue.split(' ');
   const date = components[0].split('-');
   const time = components[1].split(':');
@@ -23,9 +22,18 @@ const init = (dateValue, group) => {
   const month = date[0];
   const day = date[1];
   const hour = time[0];
+  return [year, month, day, hour];
+}
+
+const init = (dateValue, group, target) => {
+  const flaskUrl = m.flaskUrl;
+  let components = getDateComponents(dateValue);
+  let year = components[0];
+  let month = components[1];
+  let day = components[2];
+  let hour = components[3];
 
   const dataPath = '../data/' + group + '/' + `data_${year}-${month}-${day}_${hour}.json`;
-  const target = document.getElementById('data_group').value;
   // fetch(flaskUrl)
   fetch(dataPath)
     .then(res => {
@@ -41,6 +49,7 @@ const init = (dateValue, group) => {
       svgData.svg = d3.select(`#${group}_svg`);
       svgData.data = data;
       svgData.target = target;
+      svgData.date = dateValue;
       const margin = { 
         top: 20,
         right: 10,
@@ -63,6 +72,10 @@ const init = (dateValue, group) => {
     });
 }
 
+window.updateChart = () => {
+  init(document.getElementById('date_selection').value, 'farm', document.getElementById('data_group').value)
+}
+
 fetch('../data/farm/farm-data-dates.json')
   .then(response => response.json())
   .then(data => {
@@ -70,8 +83,8 @@ fetch('../data/farm/farm-data-dates.json')
       const option = document.createElement("option");
       option.text = date;
       option.value = date;
-      document.querySelector('#farm_file_select').appendChild(option);
+      document.querySelector('#date_selection').appendChild(option);
     }
-    document.querySelector('#farm_file_select').value = data.dates[0];
-    init(document.querySelector('#farm_file_select').value, 'farm');
+    document.querySelector('#date_selection').value = data.dates[0];
+    init(document.querySelector('#date_selection').value, 'farm', document.getElementById('data_group').value);
 });
