@@ -83,7 +83,7 @@ select {
     float: left;
     position: relative;
     display:flex;
-    width: 50%;
+    width: 60%;
     height: 100%;
     padding-top: 0px;
     border-style: solid;
@@ -140,28 +140,40 @@ select {
     z-index: 10;
 }
 
-.view_selection input[type="checkbox"] {
+#node_options {
+    position: relative;
+    width: 220px;
+    height: 150px;
+    margin-right: 20px;
+    padding: 5px;
+    top: 25%;
+    border: 1px solid;
+    border-radius: 2px;
+    overflow: scroll;
+}
+
+.node_selection input[type="checkbox"] {
     display: none;
 }
 
-.view_selection input[type="checkbox"]+label {
+.node_selection input[type="checkbox"]+label {
     display: none;
     cursor: pointer;
     display: inline-block;
     position: relative;
-    padding-bottom: 3px;
+    padding-bottom: 4px;
     padding-left: 20px;
     padding-right: 5px;
 }
 
-.view_selection input[type="checkbox"]+label::before {
+.node_selection input[type="checkbox"]+label::before {
     content: "";
     position: absolute;
     display: block;
     box-sizing: border-box;
     width: 11px;
     height: 11px;
-    margin-top: -8px;
+    margin-top: -7px;
     left: 5px;
     top: 50%;
     border: 1px solid;
@@ -170,7 +182,7 @@ select {
     background-color: #ffffff; */
 }
 
-.view_selection input[type="checkbox"]:checked+label::after {
+.node_selection input[type="checkbox"]:checked+label::after {
     content: "";
     position: absolute;
     display: block;

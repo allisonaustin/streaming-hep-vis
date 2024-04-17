@@ -3,35 +3,41 @@ import {
     pallette
 } from './colors.js';
 
-function getGroup(data, group) {
-    const values = [];
+function getGroups(data, group) {
+    const groups = {};
     data.forEach(obj => {
-      Object.keys(obj).forEach(key => {
-        if (key.includes(group)) {
-            values.push({
-                timestamp: obj.timestamp,
-                key: key,
-                nodeId: obj.nodeId,
-                value: obj[key]
-            });
+        const node = obj.nodeId;
+        if (!(node in groups)) {
+            groups[node] = {};
         }
+        Object.keys(obj).forEach(key => {
+            if (key.includes(group)) {
+                if (!(key in groups[node])) {
+                    groups[node][key] = [];
+                }
+                groups[node][key].push({
+                    timestamp: obj.timestamp,
+                    value: obj[key]
+                });
+            }
       });
     });
-    return values;
+    return groups;
   }
 
 export const chart = (svgData) => {
     svgData.svg.selectAll("*").remove();
     const svgArea = svgData.svgArea;
     const data = svgData.data;
-    const targetData = getGroup(data, svgData.target);
+    const groupedData = getGroups(data, svgData.target);
     const chartContainer = svgData.svg;
-    chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width, svgArea.height]);
+    chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width + svgData.margin.left, svgArea.height + svgData.margin.top]);
     
-    const timeParse = d3.timeParse('%H:%M')
     const timeFormat = d3.timeFormat('%H:%M');
+    const timestamps = data.map(d => new Date(d.timestamp));
+    // const timeExtent = d3.extent(data, function(d) { return new Date(d.timestamp) })
+    const timeExtent = [new Date(d3.min(timestamps)), new Date(new Date(d3.min(timestamps)).getTime() + 3600000)]; 
     const timeBand = data[2].timestamp - data[1].timestamp;
-    const timeExtent = d3.extent(data, function(d) { return new Date(d.timestamp) })
 
     // tooltip
     let tooltip = d3.select('#heatmap-tooltip')
@@ -42,12 +48,13 @@ export const chart = (svgData) => {
 
     const chartXAxis = d3.axisBottom(x).tickFormat(timeFormat).ticks(10);
 
+    let yPadding = 20;
     // x label
     chartContainer.append('text')
         .attr('x', svgArea.width / 2)
-        .attr('y', svgArea.height)
+        .attr('y', svgArea.height + yPadding)
         .attr('text-anchor', 'middle')
-        .style('font-size', '10')
+        .style('font-size', '12')
         .text('Time')
 
     const round = number => Math.round(number * 10) / 10;
@@ -61,7 +68,6 @@ export const chart = (svgData) => {
                 .domain([0, 1])
                 .range([svgArea.height - svgData.margin.bottom, 0])
 
-    let yPadding = 40;
     chartContainer.append('g')
         .attr('transform', `translate(0, ${svgArea.height - yPadding})`)
         .call(chartXAxis)
@@ -72,7 +78,7 @@ export const chart = (svgData) => {
 
     chartContainer.append('g')
         .attr('class', 'y-axis')
-        .attr('transform', `translate(${svgData.margin.left}, ${svgData.margin.bottom - yPadding + 10})`)
+        .attr('transform', `translate(${svgData.margin.left}, ${svgData.margin.bottom - yPadding})`)
         .call(d3.axisLeft(y))
 
     // y label
@@ -80,13 +86,11 @@ export const chart = (svgData) => {
         .attr('x', svgData.margin.left)
         .attr('y', 10)
         .attr('text-anchor', 'middle')
-        .style('font-size', '10')
+        .style('font-size', '12')
         .text('Value')
 
-    let padding = 1;
-
     let grid = chartContainer.append('g')   
-        .attr('transform', `translate(${padding}, ${svgData.margin.top + 10})`)
+        .attr('transform', `translate(1, ${svgData.margin.bottom - 9})`)
 
     // granularity of heatmap, edit later to be configurable in UI
     let steps = 10
@@ -97,33 +101,51 @@ export const chart = (svgData) => {
     for (let i = 0; i < steps; i++) {
         counts.push(new Array(xDomain.length - 1).fill(0));
     }
-    targetData.forEach(data => {
-        let yIndex = yDomain.findIndex(value => value >= data.value);
-        if (yIndex >= 0 && yIndex < steps) {
-            let xIndex = xDomain.findIndex(x => data.timestamp >= x && data.timestamp < xDomain[xDomain.indexOf(x) + 1]);
-            if (xIndex !== -1) {
-                counts[yIndex][xIndex]++; 
-            }
+    
+    for (let nodeId in groupedData) {
+        for (let key in groupedData[nodeId]) {
+            groupedData[nodeId][key].forEach(data => {
+                let yIndex = yDomain.findIndex(value => value >= data.value);
+                if (yIndex >= 0 && yIndex < steps) {
+                    let xIndex = xDomain.findIndex(x => data.timestamp >= x && data.timestamp < xDomain[xDomain.indexOf(x) + 1]);
+                    if (xIndex !== -1) {
+                        counts[yIndex][xIndex]++; 
+                    }
+                }
+            })
         }
-    });
-
-    const groupedData = d3.group(targetData, d => d.key);
+    }
 
     const line = d3.line()
         .x(d => x(d.timestamp))
         .y(d => y_(d.value));
 
     // adding lines to chart
-    const linesGroup = chartContainer.append('g').attr('id', 'lines-group');  
-    groupedData.forEach((group, key) => {
-        linesGroup.append("path")
-            .datum(group)
-            .attr('fill', 'none')
-            .attr('stroke', 'steelblue')
-            .attr('stroke-width', 1)
-            .attr('stroke-opacity', 0)
-            .attr('d', line);
-    })
+    const linesGroup = chartContainer.append('g')
+        .attr('id', `lines-group_${svgData.date}`)
+        .attr('transform', `translate(0, ${yPadding - 1})`); 
+
+    const clipPathId = "clip-path";
+        chartContainer.append("defs")
+            .append("clipPath")
+            .attr("id", clipPathId)
+            .append("rect")
+            .attr("width", svgArea.width - 10)
+            .attr("height", svgArea.height - svgData.margin.top);
+    
+    for (let nodeId in groupedData) {
+        for (let key in groupedData[nodeId]) {
+            let group = groupedData[nodeId][key];
+                linesGroup.append("path")
+                    .datum(group)
+                    .attr('fill', 'none')
+                    .attr('clip-path', `url(#${clipPathId})`)
+                    .attr('stroke', 'steelblue')
+                    .attr('stroke-width', 1)
+                    .attr('stroke-opacity', 0)
+                    .attr('d', line);
+        }
+    }
 
     let colorScale = d3.scaleSequential()
                         .domain([0, d3.max(counts.flat())])
@@ -186,33 +208,26 @@ export const chart = (svgData) => {
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
                     .on('mouseover', function (event, d) {
-                        let classes = d3.select(this).attr("class").split(" ");
-                        const xCoord = classes[0].split("_")[1];
-                        const yCoord = parseFloat(classes[0].split("_")[2]);
+                        let classes = d3.select(this).attr("class");
+                        const xCoord = classes.split("_")[1];
+                        const yCoord = parseFloat(classes.split("_")[2]);
                         const date = svgData.date.split(' ')[0];
-                        const [month, day, year] = date.split('-');
+                        const [year, month, day] = date.split('-');
                         const datetime = new Date(`${year}-${month}-${day}T${xCoord}:00`);
                     
                         const xRange = [datetime, new Date(datetime.getTime() + (xDomain[2] - xDomain[1]))];
                         const yRange = [parseFloat((yCoord - (yDomain[1] - yDomain[0])).toFixed(1)), yCoord];
-
-                        // tooltip.transition()
-                        //     .duration(200)
-                        //     .style('opacity', 0.9);
-                        // tooltip.html(`X: ${xRange[0].getHours()}:${xRange[0].getMinutes()}-${xRange[1].getHours()}:${xRange[1].getMinutes()}, Y: ${yRange[0]}-${yRange[1]}`)
-                        //     .style('left', (d3.event.pageX) + 'px')
-                        //     .style('top', (d3.event.pageY - 28) + 'px')
-
-                        let dataPoints = targetData.filter(d => {
-                            const isLineInXRange = d.timestamp >= xRange[0].getTime() && d.timestamp < xRange[1].getTime();
-                            const isLineInYRange = parseFloat(d.value) >= yRange[0] && parseFloat(d.value) < yRange[1];
-                            return isLineInXRange && isLineInYRange;
-                        });
+                        tooltip.transition()
+                            .duration(200)
+                            .style('opacity', 0.9);
+                        tooltip.html(`X: ${xRange[0].getHours()}:${xRange[0].getMinutes()}-${xRange[1].getHours()}:${xRange[1].getMinutes()}, Y: ${yRange[0]}-${yRange[1]}`)
+                            .style('left', (d3.event.pageX) + 'px')
+                            .style('top', (d3.event.pageY - 28) + 'px')
 
                         linesGroup.selectAll('path')
                             .each(function() {
                                 const path = d3.select(this); 
-                                const lineData = path.datum(); 
+                                const lineData = path.datum();
                                 const isLineInXRange = lineData.some(point => {
                                     return point.timestamp >= xRange[0].getTime() && point.timestamp < xRange[1].getTime();
                                 });
@@ -223,11 +238,13 @@ export const chart = (svgData) => {
                                     path.attr('stroke-opacity', 1);
                                 }
                             });
+                        // linesGroup.selectAll('path')
+                        //     .attr('stroke-opacity', 1)
                     })
                     .on("mouseout", function(d) {
-                        // tooltip.transition()
-                        //     .duration(500)
-                        //     .style("opacity", 0);
+                        tooltip.transition()
+                            .duration(500)
+                            .style("opacity", 0);
                         
                         linesGroup.selectAll('path')
                             .attr('stroke-opacity', 0)

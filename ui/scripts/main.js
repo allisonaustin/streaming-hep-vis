@@ -17,12 +17,10 @@ import {
 const getDateComponents = (dateValue) => {
   const components = dateValue.split(' ');
   const date = components[0].split('-');
-  const time = components[1].split(':');
-  const year = date[2];
-  const month = date[0];
-  const day = date[1];
-  const hour = time[0];
-  return [year, month, day, hour];
+  const day = date[2];
+  const year = date[0];
+  const month = date[1];
+  return [year, month, day];
 }
 
 const init = (dateValue, group, target) => {
@@ -33,7 +31,7 @@ const init = (dateValue, group, target) => {
   let day = components[2];
   let hour = components[3];
 
-  const dataPath = '../data/' + group + '/' + `data_${year}-${month}-${day}_${hour}.json`;
+  const dataPath = '../data/' + group + '/' + `far_data_${year}-${month}-${day}.json`;
   // fetch(flaskUrl)
   fetch(dataPath)
     .then(res => {
@@ -65,6 +63,26 @@ const init = (dateValue, group, target) => {
               left: 0
           });
       svgData.margin = margin;
+
+      const uniqueNodes = new Set();
+      data.forEach(obj => {
+        uniqueNodes.add(obj.nodeId);
+      });
+      const nodeOptions = document.getElementById("node_options");
+      d3.selectAll("#node_options > *").remove();
+      uniqueNodes.forEach(nodeId => {
+        const btn = document.createElement('input');
+        btn.type = 'checkbox';
+        btn.id = nodeId;
+        btn.name = "nodeId";
+        btn.value = nodeId;
+        const label = document.createElement("label");
+        label.htmlFor = nodeId;
+        label.textContent = nodeId;
+        nodeOptions.appendChild(btn);
+        nodeOptions.appendChild(label);
+        nodeOptions.appendChild(document.createElement("br"));
+      })
       heatMapView.chart(svgData);
     })
     .catch(error => {
