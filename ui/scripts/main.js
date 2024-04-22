@@ -49,9 +49,9 @@ const init = (dateValue, group, target) => {
       svgData.target = target;
       svgData.date = dateValue;
       const margin = { 
-        top: 30,
+        top: 40,
         right: 10,
-        bottom: 50,
+        bottom: 40,
         left: 40
       };
       svgData.svgArea = prepareSvgArea(

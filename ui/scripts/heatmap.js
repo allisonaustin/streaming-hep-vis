@@ -105,10 +105,7 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
         });
     }
     timestamps = [...timestamps]
-    // const timestamps = data.map(d => new Date(d.timestamp));
-    // const timeExtent = d3.extent(data, function(d) { return new Date(d.timestamp) })
     const timeExtent = [new Date(d3.min(timestamps)), new Date(new Date(d3.min(timestamps)).getTime() + 3600000)]; 
-    // const timeBand = data[2].timestamp - data[1].timestamp;
     const timeBand = timestamps[1] - timestamps[0];
 
     const customColorScale = d3.scaleOrdinal()
@@ -134,7 +131,7 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
         // .text('Time')
 
     let y = d3.scaleLinear()
-                .domain([0, 1])
+                .domain(d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value))))
                 .range([svgArea.height - svgArea.margin.bottom, 0])
 
     container.append('g')
@@ -158,12 +155,13 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
         .style('font-size', '12')
         // .text('Value')
 
-    let grid = container.append('g').attr('transform', `translate(0, ${-svgArea.margin.bottom - yPadding})`) 
+    let grid = container.append('g').attr('transform', `translate(0, ${-yPadding - 5})`) 
 
     // granularity of heatmap, edit later to be configurable in UI
     let steps = 10
+    let interval = (y.domain()[1] - y.domain()[0]) / steps;
     let xDomain = [x.domain()[0], ...x.ticks(), x.domain()[1]];
-    let yDomain = d3.range(0, 1.1, 0.1);
+    let yDomain = d3.range(y.domain()[0], y.domain()[1] + interval, interval).map(value => +value.toFixed(2));
 
     let counts = [];
     for (let i = 0; i < steps; i++) {
@@ -219,7 +217,9 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
 
     let colorbarSize = {width: 100, height: 10}
 
-    let colorbar = container.append('svg').attr('id', 'farm-colorbar')
+    let colorbar = container.append('svg')
+        .attr('id', 'farm-colorbar')
+
     let defs = colorbar.append('defs')
     const linearGradient = defs.append('linearGradient')
         .attr('id', 'color-gradient')
@@ -239,7 +239,7 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
     colorbar.append('rect')
         .attr('x', svgArea.width + colorbarSize.height)
         .attr('y', 0)
-        .attr("transform", "rotate(90 " + (svgArea.width + svgArea.margin.right) + " " + (colorbarSize.height / 2) + ")")
+        .attr("transform", "rotate(90 " + (svgArea.width + svgArea.margin.right + 5) + " " + (colorbarSize.height / 2) + ")")
         .attr('width', colorbarSize.width)
         .attr('height', colorbarSize.height)
         .style("fill", 'url(#color-gradient)');
@@ -252,7 +252,7 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
         .ticks(5) 
         .tickSize(-colorbarSize.height)
     const colorAxis = colorbar.append("g")
-        .attr('transform', `translate(${svgArea.width + svgArea.margin.right - 5}, ${svgArea.margin.top})`)
+        .attr('transform', `translate(${svgArea.width + colorbarSize.height}, 0)`) 
         .call(colorAxisTicks);
 
     // constructing grid
@@ -265,7 +265,7 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
                     .attr('x', x(xValue)) 
                     .attr('y', y(yDomain[i])) 
                     .attr('width', width)
-                    .attr('height', y(0) - y(0.1))
+                    .attr('height', y(0) - y(interval))
                     .attr('fill', colorBand(counts[i][j]))
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
