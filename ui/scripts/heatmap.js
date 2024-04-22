@@ -23,52 +23,121 @@ function getGroups(data, group) {
       });
     });
     return groups;
-  }
+}
 
-export const chart = (svgData) => {
+function groupByDataType(data, target) {
+    const groups = {};
+    data.forEach(obj => {
+        let nodeId = obj.nodeId
+        Object.keys(obj).forEach(key => {
+            if (key.includes(target)) {
+                if (!(key in groups)) {
+                    groups[key] = {}
+                }
+                if (!(nodeId in groups[key])) {
+                    groups[key][nodeId] = [];
+                }
+                groups[key][nodeId].push({
+                    timestamp: obj.timestamp,
+                    value: obj[key]
+                });
+            }
+      });
+    });
+    return groups;
+}
+
+
+export const createHeatmaps = (svgData) => {
     svgData.svg.selectAll("*").remove();
     const svgArea = svgData.svgArea;
-    const data = svgData.data;
-    const groupedData = getGroups(data, svgData.target);
+    const daydate = svgData.date
     const chartContainer = svgData.svg;
     chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width + svgData.margin.left, svgArea.height + svgData.margin.top]);
-    
+
+    const targetData = groupByDataType(svgData.data, svgData.target);
+
+    const numCharts = Object.keys(targetData).length;
+    const numRows = Math.ceil(Math.sqrt(numCharts));
+    const numCols = Math.ceil(numCharts / numRows);
+    const chartWidth = (svgArea.width - (numCols - 1) * svgData.margin.left) / numCols;
+    const chartHeight = (svgArea.height - (numRows - 1) * svgData.margin.top) / numRows;
+    const chartSvgArea = {
+        height: chartHeight,
+        width: chartWidth,
+        margin: {
+            top: svgData.margin.top / numCharts,
+            bottom: svgData.margin.bottom / numCharts,
+            left: svgData.margin.left,
+            right: svgData.margin.right
+        }
+    }
+    let row = 0;
+    let col = 0;
+
+    for (let group in targetData) {
+        const xOffset = col * (chartWidth + svgData.margin.left);
+        const yOffset = row * (chartHeight + svgData.margin.top);
+
+        const container = chartContainer.append("g")
+            .attr('id', `${group}-heatmap`)
+            .attr("transform", `translate(${xOffset}, ${yOffset})`);
+
+        chart(container, targetData[group], group, chartSvgArea, svgData, daydate)
+
+        col++;
+        if (col >= numCols) {
+            row++;
+            col = 0;
+        }
+    }
+
+}
+
+export const chart = (container, groupData, group, svgArea, daydate) => {
+    const data = groupData;    
+    const date = daydate.date;
     const timeFormat = d3.timeFormat('%H:%M');
-    const timestamps = data.map(d => new Date(d.timestamp));
+    let timestamps = new Set();
+    for (const node in data) {
+        data[node].forEach(e => {
+            timestamps.add(new Date(e.timestamp));
+        });
+    }
+    timestamps = [...timestamps]
+    // const timestamps = data.map(d => new Date(d.timestamp));
     // const timeExtent = d3.extent(data, function(d) { return new Date(d.timestamp) })
     const timeExtent = [new Date(d3.min(timestamps)), new Date(new Date(d3.min(timestamps)).getTime() + 3600000)]; 
-    const timeBand = data[2].timestamp - data[1].timestamp;
+    // const timeBand = data[2].timestamp - data[1].timestamp;
+    const timeBand = timestamps[1] - timestamps[0];
+
+    const customColorScale = d3.scaleOrdinal()
+        .domain(Object.keys(pallette))
+        .range(Object.values(pallette).map(percentColToD3Rgb));
 
     // tooltip
     let tooltip = d3.select('#heatmap-tooltip')
     
     let x = d3.scaleTime()
                 .domain([timeExtent[0].getTime(), timeExtent[1].getTime() + timeBand])
-                .range([svgData.margin.left, svgArea.width - svgData.margin.right])
+                .range([svgArea.margin.left, svgArea.width - svgArea.margin.right])
 
     const chartXAxis = d3.axisBottom(x).tickFormat(timeFormat).ticks(10);
 
     let yPadding = 20;
     // x label
-    chartContainer.append('text')
+    container.append('text')
         .attr('x', svgArea.width / 2)
         .attr('y', svgArea.height + yPadding)
         .attr('text-anchor', 'middle')
         .style('font-size', '12')
-        .text('Time')
+        // .text('Time')
 
-    const round = number => Math.round(number * 10) / 10;
-    let yDom = d3.range(0, 1.1, 0.1)
-    
-    let y = d3.scaleBand()
-        .domain(yDom.map(round))
-        .range([svgArea.height - svgData.margin.bottom, 0])
-
-    let y_ = d3.scaleLinear()
+    let y = d3.scaleLinear()
                 .domain([0, 1])
-                .range([svgArea.height - svgData.margin.bottom, 0])
+                .range([svgArea.height - svgArea.margin.bottom, 0])
 
-    chartContainer.append('g')
+    container.append('g')
         .attr('transform', `translate(0, ${svgArea.height - yPadding})`)
         .call(chartXAxis)
         .selectAll('text')
@@ -76,89 +145,81 @@ export const chart = (svgData) => {
         .style('font-size', '10')
         .style('text-anchor', 'end');
 
-    chartContainer.append('g')
+    container.append('g')
         .attr('class', 'y-axis')
-        .attr('transform', `translate(${svgData.margin.left}, ${svgData.margin.bottom - yPadding})`)
+        .attr('transform', `translate(${svgArea.margin.left}, ${svgArea.margin.bottom - yPadding})`)
         .call(d3.axisLeft(y))
 
     // y label
-    chartContainer.append('text')
-        .attr('x', svgData.margin.left)
+    container.append('text')
+        .attr('x', svgArea.margin.left)
         .attr('y', 10)
         .attr('text-anchor', 'middle')
         .style('font-size', '12')
-        .text('Value')
+        // .text('Value')
 
-    let grid = chartContainer.append('g')   
-        .attr('transform', `translate(1, ${svgData.margin.bottom - 9})`)
+    let grid = container.append('g').attr('transform', `translate(0, ${-svgArea.margin.bottom - yPadding})`) 
 
     // granularity of heatmap, edit later to be configurable in UI
     let steps = 10
     let xDomain = [x.domain()[0], ...x.ticks(), x.domain()[1]];
-    let yDomain = y.domain().slice(1);
+    let yDomain = d3.range(0, 1.1, 0.1);
 
     let counts = [];
     for (let i = 0; i < steps; i++) {
         counts.push(new Array(xDomain.length - 1).fill(0));
     }
     
-    for (let nodeId in groupedData) {
-        for (let key in groupedData[nodeId]) {
-            groupedData[nodeId][key].forEach(data => {
-                let yIndex = yDomain.findIndex(value => value >= data.value);
-                if (yIndex >= 0 && yIndex < steps) {
-                    let xIndex = xDomain.findIndex(x => data.timestamp >= x && data.timestamp < xDomain[xDomain.indexOf(x) + 1]);
-                    if (xIndex !== -1) {
-                        counts[yIndex][xIndex]++; 
-                    }
+    for (let nodeId in data) {
+        data[nodeId].forEach(data => {
+            let yIndex = yDomain.findIndex(value => value >= data.value);
+            if (yIndex >= 0 && yIndex < steps) {
+                let xIndex = xDomain.findIndex(x => data.timestamp >= x && data.timestamp < xDomain[xDomain.indexOf(x) + 1]);
+                if (xIndex !== -1) {
+                    counts[yIndex][xIndex]++; 
                 }
-            })
-        }
+            }
+        })
     }
 
     const line = d3.line()
         .x(d => x(d.timestamp))
-        .y(d => y_(d.value));
+        .y(d => y(d.value));
 
     // adding lines to chart
-    const linesGroup = chartContainer.append('g')
-        .attr('id', `lines-group_${svgData.date}`)
-        .attr('transform', `translate(0, ${yPadding - 1})`); 
+    const linesGroup = container.append('g')
+        .attr('id', `lines-group_${date}`)
+        .attr('transform', `translate(0, ${svgArea.margin.bottom - yPadding})`); 
 
     const clipPathId = "clip-path";
-        chartContainer.append("defs")
+        container.append("defs")
             .append("clipPath")
             .attr("id", clipPathId)
             .append("rect")
-            .attr("width", svgArea.width - 10)
-            .attr("height", svgArea.height - svgData.margin.top);
+            .attr("width", svgArea.width)
+            .attr("height", svgArea.height - svgArea.margin.top);
     
-    for (let nodeId in groupedData) {
-        for (let key in groupedData[nodeId]) {
-            let group = groupedData[nodeId][key];
-                linesGroup.append("path")
-                    .datum(group)
-                    .attr('fill', 'none')
-                    .attr('clip-path', `url(#${clipPathId})`)
-                    .attr('stroke', 'steelblue')
-                    .attr('stroke-width', 1)
-                    .attr('stroke-opacity', 0)
-                    .attr('d', line);
-        }
+    for (let nodeId in data) {
+        let group = data[nodeId];
+            linesGroup.append("path")
+                .datum(group)
+                .attr('class', nodeId)
+                .attr('fill', 'none')
+                .attr('clip-path', `url(#${clipPathId})`)
+                .attr('stroke', 'steelblue')
+                .attr('stroke-width', 1)
+                .attr('stroke-opacity', 0)
+                .attr('d', line);
     }
-
-    let colorScale = d3.scaleSequential()
-                        .domain([0, d3.max(counts.flat())])
-                        .interpolator(d3.interpolateRgb('white', 'red'));
 
     // legend
     const colorBand = d3.scaleLinear()
                         .domain([0, d3.max(counts.flat()) / 2, d3.max(counts.flat())])
                         .range(["white", "orange", "red"]);
 
-    let colorbarSize = {width: 250, height: 10}
+    let colorbarSize = {width: 100, height: 10}
 
-    let colorbar = chartContainer.append('svg').attr('id', 'farm-colorbar')
+    let colorbar = container.append('svg').attr('id', 'farm-colorbar')
     let defs = colorbar.append('defs')
     const linearGradient = defs.append('linearGradient')
         .attr('id', 'color-gradient')
@@ -176,8 +237,9 @@ export const chart = (svgData) => {
         .attr("stop-color", d => d.color);
     
     colorbar.append('rect')
-        .attr('x', svgArea.width - colorbarSize.width - svgData.margin.right - 40)
+        .attr('x', svgArea.width + colorbarSize.height)
         .attr('y', 0)
+        .attr("transform", "rotate(90 " + (svgArea.width + svgArea.margin.right) + " " + (colorbarSize.height / 2) + ")")
         .attr('width', colorbarSize.width)
         .attr('height', colorbarSize.height)
         .style("fill", 'url(#color-gradient)');
@@ -186,11 +248,11 @@ export const chart = (svgData) => {
         .domain([colorBand.domain()[0], colorBand.domain()[2]])
         .range([0, colorbarSize.width])
     
-    const colorAxisTicks = d3.axisBottom(colorAxisScale)
+    const colorAxisTicks = d3.axisLeft(colorAxisScale)
         .ticks(5) 
         .tickSize(-colorbarSize.height)
     const colorAxis = colorbar.append("g")
-        .attr('transform', `translate(${svgArea.width - colorbarSize.width - svgData.margin.right - 40}, ${colorbarSize.height})`)
+        .attr('transform', `translate(${svgArea.width + svgArea.margin.right - 5}, ${svgArea.margin.top})`)
         .call(colorAxisTicks);
 
     // constructing grid
@@ -203,7 +265,7 @@ export const chart = (svgData) => {
                     .attr('x', x(xValue)) 
                     .attr('y', y(yDomain[i])) 
                     .attr('width', width)
-                    .attr('height', y.bandwidth())
+                    .attr('height', y(0) - y(0.1))
                     .attr('fill', colorBand(counts[i][j]))
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
@@ -211,45 +273,62 @@ export const chart = (svgData) => {
                         let classes = d3.select(this).attr("class");
                         const xCoord = classes.split("_")[1];
                         const yCoord = parseFloat(classes.split("_")[2]);
-                        const date = svgData.date.split(' ')[0];
                         const [year, month, day] = date.split('-');
                         const datetime = new Date(`${year}-${month}-${day}T${xCoord}:00`);
                     
                         const xRange = [datetime, new Date(datetime.getTime() + (xDomain[2] - xDomain[1]))];
-                        const yRange = [parseFloat((yCoord - (yDomain[1] - yDomain[0])).toFixed(1)), yCoord];
-                        tooltip.transition()
-                            .duration(200)
-                            .style('opacity', 0.9);
-                        tooltip.html(`X: ${xRange[0].getHours()}:${xRange[0].getMinutes()}-${xRange[1].getHours()}:${xRange[1].getMinutes()}, Y: ${yRange[0]}-${yRange[1]}`)
-                            .style('left', (d3.event.pageX) + 'px')
-                            .style('top', (d3.event.pageY - 28) + 'px')
+                        const yRange = [yCoord, parseFloat((yCoord + (yDomain[1] - yDomain[0])).toFixed(1))];
+
+                        // tooltip.transition()
+                        //     .duration(200)
+                        //     .style('opacity', 0.9);
+                        // tooltip.html(`X: ${xRange[0].getHours()}:${xRange[0].getMinutes()}-${xRange[1].getHours()}:${xRange[1].getMinutes()}, Y: ${yRange[0]}-${yRange[1]}`)
+                        //     .style('left', (d3.event.pageX) + 'px')
+                        //     .style('top', (d3.event.pageY - 28) + 'px')
 
                         linesGroup.selectAll('path')
                             .each(function() {
                                 const path = d3.select(this); 
-                                const lineData = path.datum();
-                                const isLineInXRange = lineData.some(point => {
-                                    return point.timestamp >= xRange[0].getTime() && point.timestamp < xRange[1].getTime();
+                                const lineData = path.datum(); 
+                                const isLineInRange = lineData.some(point => {
+                                    return (point.timestamp >= xRange[0].getTime() && point.timestamp <= xRange[1].getTime()) 
+                                        && (parseFloat(point.value) >= yRange[0] && parseFloat(point.value) <= yRange[1]);
                                 });
-                                const isLineInYRange = lineData.some(point => {
-                                    return parseFloat(point.value) >= yRange[0] && parseFloat(point.value) < yRange[1];
-                                });
-                                if (isLineInXRange && isLineInYRange) {
+                                if (isLineInRange) {
                                     path.attr('stroke-opacity', 1);
+                                    const lastPoint = lineData[lineData.findIndex(d => d.value !== null && !isNaN(d.value))];
+                                    linesGroup.append("text")
+                                        .attr("class", "nodeId-label")
+                                        .attr("x", x(xDomain[xDomain.length - 1]))
+                                        .attr("y", y(lastPoint.value))
+                                        .attr("dx", 5)
+                                        .attr("dy", 5)
+                                        // .text(`node ${path.attr('class').substring(path.attr('class').length - 2)}`);
                                 }
                             });
                         // linesGroup.selectAll('path')
                         //     .attr('stroke-opacity', 1)
                     })
                     .on("mouseout", function(d) {
-                        tooltip.transition()
-                            .duration(500)
-                            .style("opacity", 0);
-                        
+                        // tooltip.transition()
+                        //     .duration(500)
+                        //     .style("opacity", 0);
+                        // linesGroup.selectAll(".nodeId-label").remove();
                         linesGroup.selectAll('path')
                             .attr('stroke-opacity', 0)
                     });
             }
         });
     }
+
+    const title = container.append("text")
+    .attr("class", "grid-title")
+    .attr("x", -svgArea.height / 3) 
+    .attr("y", 0) 
+    .attr("dy", "1em")
+    .style("text-anchor", "middle")
+    .style("fill", "black")
+    .text(group);
+
+    title.attr("transform", "rotate(-90)");
 }

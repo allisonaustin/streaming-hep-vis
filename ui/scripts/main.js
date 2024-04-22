@@ -49,7 +49,7 @@ const init = (dateValue, group, target) => {
       svgData.target = target;
       svgData.date = dateValue;
       const margin = { 
-        top: 20,
+        top: 30,
         right: 10,
         bottom: 50,
         left: 40
@@ -83,7 +83,7 @@ const init = (dateValue, group, target) => {
         nodeOptions.appendChild(label);
         nodeOptions.appendChild(document.createElement("br"));
       })
-      heatMapView.chart(svgData);
+      heatMapView.createHeatmaps(svgData);
     })
     .catch(error => {
       console.error('Error:', error);
