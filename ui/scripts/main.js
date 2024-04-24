@@ -1,5 +1,6 @@
 /* MODEL */
 import * as m from './model.js';
+import * as g from './groups.js';
 
 /* UPDATE */
 import * as u from './update.js';
@@ -16,14 +17,15 @@ import {
 
 const getDateComponents = (dateValue) => {
   const components = dateValue.split(' ');
+  const hour = components[1].split(':')[0];
   const date = components[0].split('-');
   const day = date[2];
   const year = date[0];
   const month = date[1];
-  return [year, month, day];
+  return [year, month, day, hour];
 }
 
-const init = (dateValue, group, target) => {
+const init = (dateValue, type, group) => {
   const flaskUrl = m.flaskUrl;
   let components = getDateComponents(dateValue);
   let year = components[0];
@@ -31,7 +33,7 @@ const init = (dateValue, group, target) => {
   let day = components[2];
   let hour = components[3];
 
-  const dataPath = '../data/' + group + '/' + `far_data_${year}-${month}-${day}.json`;
+  const dataPath = '../data/' + type + '/' + `far_data_${year}-${month}-${day}_${hour}.json`;
   // fetch(flaskUrl)
   fetch(dataPath)
     .then(res => {
@@ -44,9 +46,9 @@ const init = (dateValue, group, target) => {
     .then(data => {
       const svgData = m.svgData();
       svgData.domId = 'ts_view';
-      svgData.svg = d3.select(`#${group}_svg`);
+      svgData.svg = d3.select(`#${type}_svg`);
       svgData.data = data;
-      svgData.target = target;
+      svgData.group = group;
       svgData.date = dateValue;
       const margin = { 
         top: 40,
@@ -103,6 +105,12 @@ fetch('../data/farm/farm-data-dates.json')
       option.value = date;
       document.querySelector('#date_selection').appendChild(option);
     }
+    Object.keys(g.groups).forEach(key => {
+      const option = document.createElement("option");
+      option.text = key;
+      option.value = key;
+      document.querySelector("#data_group").appendChild(option);
+    });
     document.querySelector('#date_selection').value = data.dates[0];
     init(document.querySelector('#date_selection').value, 'farm', document.getElementById('data_group').value);
 });

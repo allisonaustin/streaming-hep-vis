@@ -3,6 +3,8 @@ import {
     pallette
 } from './colors.js';
 
+import * as g from './groups.js';
+
 function getGroups(data, group) {
     const groups = {};
     data.forEach(obj => {
@@ -30,7 +32,7 @@ function groupByDataType(data, target) {
     data.forEach(obj => {
         let nodeId = obj.nodeId
         Object.keys(obj).forEach(key => {
-            if (key.includes(target)) {
+            if (g.groups[target].includes(key)) {
                 if (!(key in groups)) {
                     groups[key] = {}
                 }
@@ -55,7 +57,7 @@ export const createHeatmaps = (svgData) => {
     const chartContainer = svgData.svg;
     chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width + svgData.margin.left, svgArea.height + svgData.margin.top]);
 
-    const targetData = groupByDataType(svgData.data, svgData.target);
+    const targetData = groupByDataType(svgData.data, svgData.group);
 
     const numCharts = Object.keys(targetData).length;
     const numRows = Math.ceil(Math.sqrt(numCharts));
@@ -273,7 +275,7 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
                         let classes = d3.select(this).attr("class");
                         const xCoord = classes.split("_")[1];
                         const yCoord = parseFloat(classes.split("_")[2]);
-                        const [year, month, day] = date.split('-');
+                        const [year, month, day] = date.split(' ')[0].split('-');
                         const datetime = new Date(`${year}-${month}-${day}T${xCoord}:00`);
                     
                         const xRange = [datetime, new Date(datetime.getTime() + (xDomain[2] - xDomain[1]))];
@@ -313,7 +315,7 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
                         // tooltip.transition()
                         //     .duration(500)
                         //     .style("opacity", 0);
-                        // linesGroup.selectAll(".nodeId-label").remove();
+                        linesGroup.selectAll(".nodeId-label").remove();
                         linesGroup.selectAll('path')
                             .attr('stroke-opacity', 0)
                     });
@@ -323,12 +325,12 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
 
     const title = container.append("text")
     .attr("class", "grid-title")
-    .attr("x", -svgArea.height / 3) 
-    .attr("y", 0) 
+    .attr("x", svgArea.width / 1.8) 
+    .attr("y", -svgArea.margin.left) 
     .attr("dy", "1em")
     .style("text-anchor", "middle")
     .style("fill", "black")
     .text(group);
 
-    title.attr("transform", "rotate(-90)");
+    // title.attr("transform", "rotate(-90)");
 }

@@ -28,9 +28,9 @@ def get_hour_data(file, root):
             timestamp_str = str(data.get('timestamp'))
             timestamp = datetime.fromtimestamp(data.get('timestamp') / 1000.0) 
 
-            if current_hour is None or timestamp.hour != current_hour:
+            if current_hour is None or timestamp.hour != current_hour :
                 if hour_data:
-                    outfile = fpathProcessed + root + '/' + f"data_{timestamp.strftime('%Y-%m-%d_%H')}.json"
+                    outfile = fpathProcessed + root + '/' + f"far_data_{timestamp.strftime('%Y-%m-%d_%H')}.json"
                     write_to_json(hour_data, outfile)
                 hour_data = []
                 current_hour = timestamp.hour
@@ -38,7 +38,7 @@ def get_hour_data(file, root):
             hour_data.append(data)
 
     if hour_data:
-        outfile = fpathProcessed + root + '/' + f"data_{timestamp.strftime('%Y-%m-%d_%H')}.json"
+        outfile = fpathProcessed + root + '/' + f"far_data_{timestamp.strftime('%Y-%m-%d_%H')}.json"
         write_to_json(hour_data, outfile)
 
 if __name__ == '__main__':
