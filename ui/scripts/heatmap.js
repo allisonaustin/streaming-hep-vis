@@ -54,19 +54,19 @@ function groupByDataType(data) {
 }
 
 
-export const createHeatmaps = (svgData) => {
+export async function createHeatmaps(svgData) {
     svgData.svg.selectAll("*").remove();
     const svgArea = svgData.svgArea;
     const daydate = svgData.date
     const chartContainer = svgData.svg;
     chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width + svgData.margin.left, svgArea.height + svgData.margin.top]);
 
-    let targetData = groupByDataType(svgData.data, svgData.group);
+    let targetData = groupByDataType(svgData.data);
     let numCharts = Object.keys(targetData).length;
 
     for (let group in targetData) {
         let yDom = d3.extent(Object.values(targetData[group]).flatMap(array => array.map(obj => obj.value)))
-        if (yDom[0] == yDom[1] && yDom[0] == 0 && yDom[1] == 0) {
+        if (yDom[0] == yDom[1]) {
             delete targetData[group];
             numCharts--;
         }
@@ -76,14 +76,13 @@ export const createHeatmaps = (svgData) => {
     const numCols = Math.ceil(numCharts / numRows);
     const chartWidth = (svgArea.width - (numCols) * svgData.margin.left) / numCols;
     const chartHeight = (svgArea.height - (numRows) * svgData.margin.top) / numRows;
-    console.log(chartWidth, chartHeight)
     const chartSvgArea = {
         height: chartHeight,
         width: chartWidth,
         margin: {
             top: 2,
             bottom: 2,
-            left: 5,
+            left: 15,
             right: 5,
         }
     }
