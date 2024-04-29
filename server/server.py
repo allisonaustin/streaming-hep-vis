@@ -1,46 +1,37 @@
 import pandas as pd
 import numpy as np
-from flask import Flask, jsonify, send_file
+from flask import Flask, jsonify, Response
 from flask_cors import CORS
 from datetime import datetime
 import os
 import json
+import time
 
 app = Flask(__name__)
 cors = CORS(app)
 
-path = 'data/'
-fpathProcessed = '../ui/data/'
+df = pd.DataFrame()
+filepath = 'data/farm/combined-farm-data.csv'
+init_timepts = 1000
 
-def write_to_json(data, outfile):
-    with open(outfile, 'w') as f:
-        json.dump(data, f)
+@app.route("/getData")
+def get_data(rows=10, skip_rows=0, date='2024-02-22', inc=False):
+    global filepath
+    global df 
 
-app.route("/")
-def get_hour_data(file, root):
-    with open(file, 'r') as f:
-        current_hour = None
-        hour_data = []
+    if not inc:
+        skip_rows = 0 
+        rows = init_timepts
+    else:
+        skip_rows = rows
+        rows += rows
 
-        json_data = json.load(f)
+    df = pd.read_csv(filepath, skiprows=skip_rows, nrows=rows, na_values=['', 'NaN', 'NA', 'N/A', 'null'])
+    df['timestamp'] = df['timestamp'].apply(lambda x: int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
+    df = df.replace({np.nan: None})
+    print(df)
 
-        for data in json_data:
-            timestamp_str = str(data.get('timestamp'))
-            timestamp = datetime.fromtimestamp(data.get('timestamp') / 1000.0) 
-
-            if current_hour is None or timestamp.hour != current_hour :
-                if hour_data:
-                    outfile = fpathProcessed + root + '/' + f"far_data_{timestamp.strftime('%Y-%m-%d_%H')}.json"
-                    write_to_json(hour_data, outfile)
-                hour_data = []
-                current_hour = timestamp.hour
-
-            hour_data.append(data)
-
-    if hour_data:
-        outfile = fpathProcessed + root + '/' + f"far_data_{timestamp.strftime('%Y-%m-%d_%H')}.json"
-        write_to_json(hour_data, outfile)
+    return Response(df.to_json(orient='records'), mimetype='application/json')
 
 if __name__ == '__main__':
-    get_hour_data(path + 'farm/' + 'combined-farm-data.json', 'farm')
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

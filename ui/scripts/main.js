@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 /* MODEL */
 import * as m from './model.js';
 import * as g from './groups.js';
@@ -15,27 +17,11 @@ import {
   prepareSvgArea 
 } from './d3_utils.js';
 
-const getDateComponents = (dateValue) => {
-  const components = dateValue.split(' ');
-  const hour = components[1].split(':')[0];
-  const date = components[0].split('-');
-  const day = date[2];
-  const year = date[0];
-  const month = date[1];
-  return [year, month, day, hour];
-}
 
-const init = (dateValue, type, group) => {
-  const flaskUrl = m.flaskUrl;
-  let components = getDateComponents(dateValue);
-  let year = components[0];
-  let month = components[1];
-  let day = components[2];
-  let hour = components[3];
-
-  const dataPath = '../data/' + type + '/' + `far_data_${year}-${month}-${day}_${hour}.json`;
-  // fetch(flaskUrl)
-  fetch(dataPath)
+const init = (dateValue, type) => {
+  const flaskUrl = m.flaskUrl + "/getData";
+  const dataPath = '../data/' + type + '/' + `far_data_2019-07-10.json`;
+  fetch(flaskUrl)
     .then(res => {
       if (res.ok) {
         return res.json();
@@ -48,13 +34,12 @@ const init = (dateValue, type, group) => {
       svgData.domId = 'ts_view';
       svgData.svg = d3.select(`#${type}_svg`);
       svgData.data = data;
-      svgData.group = group;
       svgData.date = dateValue;
       const margin = { 
-        top: 40,
+        top: 30,
         right: 10,
-        bottom: 40,
-        left: 40
+        bottom: 20,
+        left: 10
       };
       svgData.svgArea = prepareSvgArea(
           calcContainerWidth(`#${svgData.domId}`),
@@ -66,34 +51,30 @@ const init = (dateValue, type, group) => {
           });
       svgData.margin = margin;
 
-      const uniqueNodes = new Set();
-      data.forEach(obj => {
-        uniqueNodes.add(obj.nodeId);
-      });
-      const nodeOptions = document.getElementById("node_options");
-      d3.selectAll("#node_options > *").remove();
-      uniqueNodes.forEach(nodeId => {
-        const btn = document.createElement('input');
-        btn.type = 'checkbox';
-        btn.id = nodeId;
-        btn.name = "nodeId";
-        btn.value = nodeId;
-        const label = document.createElement("label");
-        label.htmlFor = nodeId;
-        label.textContent = nodeId;
-        nodeOptions.appendChild(btn);
-        nodeOptions.appendChild(label);
-        nodeOptions.appendChild(document.createElement("br"));
-      })
+      // const uniqueNodes = new Set();
+      // data.forEach(obj => {
+      //   uniqueNodes.add(obj.nodeId);
+      // });
+      // const nodeOptions = document.getElementById("node_options");
+      // d3.selectAll("#node_options > *").remove();
+      // uniqueNodes.forEach(nodeId => {
+      //   const btn = document.createElement('input');
+      //   btn.type = 'checkbox';
+      //   btn.id = nodeId;
+      //   btn.name = "nodeId";
+      //   btn.value = nodeId;
+      //   const label = document.createElement("label");
+      //   label.htmlFor = nodeId;
+      //   label.textContent = nodeId;
+      //   nodeOptions.appendChild(btn);
+      //   nodeOptions.appendChild(label);
+      //   nodeOptions.appendChild(document.createElement("br"));
+      // })
       heatMapView.createHeatmaps(svgData);
     })
     .catch(error => {
       console.error('Error:', error);
     });
-}
-
-window.updateChart = () => {
-  init(document.getElementById('date_selection').value, 'farm', document.getElementById('data_group').value)
 }
 
 fetch('../data/farm/farm-data-dates.json')
@@ -105,12 +86,7 @@ fetch('../data/farm/farm-data-dates.json')
       option.value = date;
       document.querySelector('#date_selection').appendChild(option);
     }
-    Object.keys(g.groups).forEach(key => {
-      const option = document.createElement("option");
-      option.text = key;
-      option.value = key;
-      document.querySelector("#data_group").appendChild(option);
-    });
+
     document.querySelector('#date_selection').value = data.dates[0];
-    init(document.querySelector('#date_selection').value, 'farm', document.getElementById('data_group').value);
+    init(document.querySelector('#date_selection').value, 'farm');
 });
