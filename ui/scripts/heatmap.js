@@ -289,7 +289,7 @@ export const chart = (container, groupData, group, svgArea) => {
             if (j < xDomain.length - 1) {
                 let width = x(xDomain[j+1]) - x(xDomain[j])
                 grid.append('rect')
-                    .attr("class", `t_${timeFormat(xValue)}_${yDomain[i]}`)
+                    .attr("id", `t_${j}_${i}`)
                     .attr('x', x(xValue)) 
                     .attr('y', y(yDomain[i])) 
                     .attr('width', width)
@@ -337,16 +337,15 @@ export const updateHeatmaps = (svgData, newData) => {
                 .concat(Array.from({ length: numIntervals + 1 }, (_, index) => new Date(newTimestamps[0].getTime() + index * 5000)))
 
     for (let group in targetData) {
-        functs = updateChart(chartContainer, targetData[group], newData, group, svgData.svgArea, functs.x, functs.y)
+        functs = updateChart(chartContainer, targetData[group], group, svgData.svgArea, functs.x, functs.y)
     }
 }
 
-export const updateChart = (container, data, newData, group, svgArea, x, y) => {
+export const updateChart = (container, data, group, svgArea, x, y) => {
     const timeFormat = d3.timeFormat('%H:%M');
     // granularity of heatmap, edit later to be configurable in UI ?
     let ticksCount = 15
     let timeExtent = d3.extent(tsArray);
-    console.log(timeExtent)
 
     const customColorScale = d3.scaleOrdinal()
         .domain(Object.keys(pallette))
@@ -369,12 +368,10 @@ export const updateChart = (container, data, newData, group, svgArea, x, y) => {
         .attr('transform', 'rotate(-45)') 
         .style('font-size', '10')
         .style('text-anchor', 'end');
-    
-    // updating y axis
+
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
     let interval = (yDom[1] - yDom[0]) / ticksCount;
     let yDomain = d3.range(yDom[0], yDom[1] + interval + interval, interval).map(value => +value.toFixed(2));
-    y.domain([yDomain[0], yDomain[yDomain.length - 1]])
 
     // updating lines
     // const line = d3.line()
@@ -385,23 +382,39 @@ export const updateChart = (container, data, newData, group, svgArea, x, y) => {
     // linesGroup.selectAll('path')
     //     .datum((_, i) => Object.values(data)[i])
     //     .attr('d', line);
-    
-    // updating grid
-    let grid = d3.select(`#grid_${group}`);
-    
-    // updating counts
-    newData.forEach(newDataPoint => {
-        let yIndex = yDomain.findIndex(value => value >= newDataPoint.value);
-        if (yIndex >= 0 && yIndex <= ticksCount) {
-            let xIndex = xDomain.findIndex(x => newDataPoint.timestamp >= x && newDataPoint.timestamp < xDomain[xDomain.indexOf(x) + 1]);
-            if (xIndex !== -1) {
-                let rect = grid.select(`.t_${timeFormat(newDataPoint.timestamp)}_${yDomain[yIndex]}`);
-                let currentFillColor = rect.attr('fill');
-                let newFillColor = incrementFillColor(currentFillColor);
-                rect.attr('fill', newFillColor);
+     
+    // updating counts fixme!!!
+    let counts = []
+    for (let i = 0; i <= ticksCount; i++) {
+        counts.push(new Array(xDomain.length - 1).fill(0));
+    }
+
+    for (let nodeId in data) {
+        data[nodeId].forEach(data => {
+            let yIndex = yDomain.findIndex(value => value >= data.value);
+            if (yIndex >= 0 && yIndex <= ticksCount) {
+                let xIndex = xDomain.findIndex(x => data.timestamp >= x && data.timestamp < xDomain[xDomain.indexOf(x) + 1]);
+                if (xIndex !== -1) {
+                    counts[yIndex][xIndex]++; 
+                }
             }
-        }
-    });
+        })
+    }
+
+    const colorBand = d3.scaleLinear()
+                        .domain([0, d3.max(counts.flat()) / 2, d3.max(counts.flat())])
+                        .range(["white", "orange", "red"]);
+
+    // updating grid
+    let grid = d3.select(`#grid_${group}`)
+    for (let i=0; i<=ticksCount; i++) {
+        xDomain.forEach((xValue, j) => {
+            if (j < xDomain.length - 1) {
+                grid.select(`#t_${j}_${i}`)
+                    .attr('fill', colorBand(counts[i][j]))
+            }
+        });
+    }
 
     return {x, y};
 
