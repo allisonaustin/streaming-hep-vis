@@ -12,8 +12,8 @@ cors = CORS(app)
 
 df = pd.DataFrame()
 filepath = '../ui/data/farm/'
-init_timepts = 50000
-inc_rows = 15000
+init_timepts = 40000
+inc_rows = 1500
 skip_rows = 0
 cols = []
 
@@ -22,7 +22,6 @@ def get_data(filename, inc):
     global df 
     global filepath
     global init_timepts
-    global rows 
     global skip_rows 
     global inc_rows
     global cols 
@@ -32,12 +31,13 @@ def get_data(filename, inc):
     if int(inc) == 0:
         skip_rows = 0
         rows = init_timepts
-        df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=rows)
+        df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=init_timepts)
+        print(df)
         cols = df.columns
+        skip_rows += init_timepts
     else:
-        skip_rows += rows
-        rows = inc_rows
-        df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=rows, names=cols)
+        skip_rows += inc_rows
+        df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=inc_rows, names=cols)
         print(df)
 
     

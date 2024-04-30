@@ -35,7 +35,7 @@ async function init(dateValue, type) {
       svgData.data = data;
       svgData.date = dateValue;
       const margin = { 
-        top: 30,
+        top: 40,
         right: 10,
         bottom: 20,
         left: 20

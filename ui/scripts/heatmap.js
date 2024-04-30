@@ -7,9 +7,14 @@ import * as g from './groups.js';
 
 let timestamps = new Set(); // all timestamps
 let tsArray = []; // timestamps of current window
-let timeBand = 0;
 let date = '';
 let functs = {};
+
+function incrementFillColor(fillColor) {
+    let currentColor = d3.rgb(fillColor);
+    let updatedColor = d3.rgb(currentColor.r + 1, currentColor.g + 1, currentColor.b + 1);
+    return updatedColor.toString();
+}
 
 function getGroups(data, group) {
     const groups = {};
@@ -83,8 +88,6 @@ export async function createHeatmaps(svgData) {
         timestamps.add(new Date(e.timestamp))
     })
     tsArray = [...timestamps]
-    const timeExtent = d3.extent(tsArray)
-    timeBand = tsArray[1] - tsArray[0];
 
     const numRows = Math.ceil(Math.sqrt(numCharts));
     const numCols = Math.ceil(numCharts / numRows);
@@ -112,7 +115,7 @@ export async function createHeatmaps(svgData) {
             .attr('id', `${group}-heatmap`)
             .attr("transform", `translate(${xOffset}, ${yOffset})`);
         
-            functs = chart(container, targetData[group], group, chartSvgArea, timeExtent)
+            functs = chart(container, targetData[group], group, chartSvgArea)
 
         col++;
         if (col >= numCols) {
@@ -123,7 +126,7 @@ export async function createHeatmaps(svgData) {
 
 }
 
-export const chart = (container, groupData, group, svgArea, timeExtent) => {
+export const chart = (container, groupData, group, svgArea) => {
     const data = groupData;   
     const timeFormat = d3.timeFormat('%H:%M');
     // granularity of heatmap, edit later to be configurable in UI ?
@@ -135,17 +138,18 @@ export const chart = (container, groupData, group, svgArea, timeExtent) => {
 
     // tooltip
     let tooltip = d3.select('#heatmap-tooltip')
-    
+    let timeExtent = d3.extent(tsArray);
+
     let x = d3.scaleTime()
-                .domain([timeExtent[0].getTime(), timeExtent[1].getTime() + timeBand])
+                .domain([timeExtent[0].getTime(), timeExtent[1].getTime()])
                 .range([svgArea.margin.left, svgArea.width - svgArea.margin.right])
 
-    const chartXAxis = d3.axisBottom(x).tickFormat(timeFormat).ticks(ticksCount);
-    let xDomain = chartXAxis.scale().ticks(ticksCount).map(function(time) {
-        return new Date(time.getTime());
-    })
-    const xIncrement = (xDomain[xDomain.length - 1] - xDomain[0]) / xDomain.length;
-    xDomain = [new Date(xDomain[0].getTime() - xIncrement), ...xDomain, new Date(xDomain[xDomain.length - 1].getTime() + xIncrement)];
+    let xDomain = d3.timeMinute.every(5).range(...timeExtent);
+    let labels = xDomain.filter((_, i) => i % 5 === 0);
+    
+    const chartXAxis = d3.axisBottom(x)
+        .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
+        .tickValues(xDomain);
 
     // x label
     // container.append('text')
@@ -163,13 +167,14 @@ export const chart = (container, groupData, group, svgArea, timeExtent) => {
                 .domain([yDomain[0], yDomain[yDomain.length - 1]])
                 .range([svgArea.height - svgArea.margin.bottom, 0])
 
-    // container.append('g')
-    //     .attr('transform', `translate(0, ${svgArea.height - svgArea.margin.bottom})`)
-    //     .call(chartXAxis)
-    //     .selectAll('text')
-    //     .attr('transform', 'rotate(-45)') 
-    //     .style('font-size', '10')
-    //     .style('text-anchor', 'end');
+    container.append('g')
+        .attr('class', `x-axis-${group}`)
+        .attr('transform', `translate(0, ${svgArea.height + svgArea.margin.bottom})`)
+        .call(chartXAxis)
+        .selectAll('text')
+        .attr('transform', 'rotate(-45)') 
+        .style('font-size', '10')
+        .style('text-anchor', 'end');
 
     // container.append('g')
     //     .attr('class', 'y-axis')
@@ -186,7 +191,7 @@ export const chart = (container, groupData, group, svgArea, timeExtent) => {
 
     let grid = container.append('g').attr('class', 'grid').attr('id', `grid_${group}`).attr('transform', `translate(0, -${svgArea.margin.bottom})`)
     
-    let counts = [];
+    let counts = []
     for (let i = 0; i <= ticksCount; i++) {
         counts.push(new Array(xDomain.length - 1).fill(0));
     }
@@ -203,34 +208,34 @@ export const chart = (container, groupData, group, svgArea, timeExtent) => {
         })
     }
 
-    const line = d3.line()
-        .x(d => x(d.timestamp))
-        .y(d => y(+d.value));
+    // const line = d3.line()
+    //     .x(d => x(d.timestamp))
+    //     .y(d => y(+d.value));
 
-    // adding lines to chart
-    const linesGroup = container.append('g')
-        .attr('id', `lines-group_${group}`)
+    // // adding lines to chart
+    // const linesGroup = container.append('g')
+    //     .attr('id', `lines-group_${group}`)
 
-    const clipPathId = "clip-path";
-        container.append("defs")
-            .append("clipPath")
-            .attr("id", clipPathId)
-            .append("rect")
-            .attr("width", svgArea.width)
-            .attr("height", svgArea.height - svgArea.margin.top);
+    // const clipPathId = "clip-path";
+    //     container.append("defs")
+    //         .append("clipPath")
+    //         .attr("id", clipPathId)
+    //         .append("rect")
+    //         .attr("width", svgArea.width)
+    //         .attr("height", svgArea.height - svgArea.margin.top);
     
-    for (let nodeId in data) {
-        let group = data[nodeId];
-            linesGroup.append("path")
-                .datum(group)
-                .attr('class', nodeId)
-                .attr('fill', 'none')
-                .attr('clip-path', `url(#${clipPathId})`)
-                .attr('stroke', 'steelblue')
-                .attr('stroke-width', 1)
-                .attr('stroke-opacity', 0)
-                .attr('d', line);
-    }
+    // for (let nodeId in data) {
+    //     let group = data[nodeId];
+    //         linesGroup.append("path")
+    //             .datum(group)
+    //             .attr('class', nodeId)
+    //             .attr('fill', 'none')
+    //             .attr('clip-path', `url(#${clipPathId})`)
+    //             .attr('stroke', 'steelblue')
+    //             .attr('stroke-width', 1)
+    //             .attr('stroke-opacity', 0)
+    //             .attr('d', line);
+    // }
 
     // legend
     const colorBand = d3.scaleLinear()
@@ -292,26 +297,26 @@ export const chart = (container, groupData, group, svgArea, timeExtent) => {
                     .attr('fill', colorBand(counts[i][j]))
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
-                    .on('mouseover', function (event, d) {
-                        linesGroup.selectAll('path')
-                            .attr('stroke-opacity', 1)
-                    })
-                    .on("mouseout", function(d) {
-                        linesGroup.selectAll('path')
-                            .attr('stroke-opacity', 0)
-                    });
+                    // .on('mouseover', function (event, d) {
+                    //     linesGroup.selectAll('path')
+                    //         .attr('stroke-opacity', 1)
+                    // })
+                    // .on("mouseout", function(d) {
+                    //     linesGroup.selectAll('path')
+                    //         .attr('stroke-opacity', 0)
+                    // });
             }
         });
     }
 
     const title = container.append("text")
-    .attr("class", "grid-title")
-    .attr("x", svgArea.width / 1.7) 
-    .attr("y", -2 * svgArea.margin.right - svgArea.margin.top) 
-    .attr("dy", "1em")
-    .style("text-anchor", "middle")
-    .style("fill", "black")
-    .text(group);
+        .attr("class", "grid-title")
+        .attr("x", svgArea.width / 1.7) 
+        .attr("y", -2 * svgArea.margin.right - svgArea.margin.top) 
+        .attr("dy", "1em")
+        .style("text-anchor", "middle")
+        .style("fill", "black")
+        .text(group);
 
     // title.attr("transform", "rotate(-90)");
 
@@ -325,69 +330,79 @@ export const updateHeatmaps = (svgData, newData) => {
     let targetData = groupByDataType(svgData.data);
 
     let newTimestamps = d3.extent(newData.map(obj => new Date(obj.timestamp)));
-    const timeExtent = [tsArray[0], newTimestamps[1]];
+    let numIntervals = (newTimestamps[1].getTime() - newTimestamps[0].getTime()) / (tsArray[1] - tsArray[0]);
+    // updating time window
+    tsArray = tsArray
+                .slice(numIntervals)
+                .concat(Array.from({ length: numIntervals + 1 }, (_, index) => new Date(newTimestamps[0].getTime() + index * 5000)))
 
     for (let group in targetData) {
-        updateChart(chartContainer, targetData[group], group, svgData.svgArea, functs.x, functs.y, timeExtent)
+        functs = updateChart(chartContainer, targetData[group], newData, group, svgData.svgArea, functs.x, functs.y)
     }
 }
 
-export const updateChart = (container, data, group, svgArea, x, y, timeExtent) => {
+export const updateChart = (container, data, newData, group, svgArea, x, y) => {
     const timeFormat = d3.timeFormat('%H:%M');
     // granularity of heatmap, edit later to be configurable in UI ?
     let ticksCount = 15
+    let timeExtent = d3.extent(tsArray);
+    console.log(timeExtent)
 
     const customColorScale = d3.scaleOrdinal()
         .domain(Object.keys(pallette))
         .range(Object.values(pallette).map(percentColToD3Rgb));
     
-    x.domain([timeExtent[0].getTime(), timeExtent[1].getTime() + timeBand]) 
+    // updating x axis
+    x.domain([timeExtent[0].getTime(), timeExtent[1].getTime()]) 
+    let xDomain = d3.timeMinute.every(5).range(...timeExtent);
+    let labels = xDomain.filter((_, i) => i % 5 === 0);
+    let chartXAxis = d3.axisBottom(x)
+        .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
+        .tickValues(xDomain);
+
+    d3.select(`.x-axis-${group}`)
+        .selectAll('.tick')
+        .remove();
+    d3.select(`.x-axis-${group}`)
+        .call(chartXAxis)
+        .selectAll('text')
+        .attr('transform', 'rotate(-45)') 
+        .style('font-size', '10')
+        .style('text-anchor', 'end');
     
+    // updating y axis
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
     let interval = (yDom[1] - yDom[0]) / ticksCount;
     let yDomain = d3.range(yDom[0], yDom[1] + interval + interval, interval).map(value => +value.toFixed(2));
     y.domain([yDomain[0], yDomain[yDomain.length - 1]])
 
     // updating lines
-    const line = d3.line()
-        .x(d => x(d.timestamp))
-        .y(d => y(+d.value));
+    // const line = d3.line()
+    //     .x(d => x(d.timestamp))
+    //     .y(d => y(+d.value));
     
     // let linesGroup = d3.select(`#lines-group_${group}`);
     // linesGroup.selectAll('path')
-    //     .attr('d', d => line(d.data));
+    //     .datum((_, i) => Object.values(data)[i])
+    //     .attr('d', line);
     
-    // // updating grid
-    // let grid = d3.select(`#grid_${group}`);
+    // updating grid
+    let grid = d3.select(`#grid_${group}`);
     
-    // // fixme !!! don't need to recalculate counts
-    // // let counts = [];
-    // // for (let i = 0; i <= ticksCount; i++) {
-    // //     counts.push(new Array(xDomain.length - 1).fill(0));
-    // // }
+    // updating counts
+    newData.forEach(newDataPoint => {
+        let yIndex = yDomain.findIndex(value => value >= newDataPoint.value);
+        if (yIndex >= 0 && yIndex <= ticksCount) {
+            let xIndex = xDomain.findIndex(x => newDataPoint.timestamp >= x && newDataPoint.timestamp < xDomain[xDomain.indexOf(x) + 1]);
+            if (xIndex !== -1) {
+                let rect = grid.select(`.t_${timeFormat(newDataPoint.timestamp)}_${yDomain[yIndex]}`);
+                let currentFillColor = rect.attr('fill');
+                let newFillColor = incrementFillColor(currentFillColor);
+                rect.attr('fill', newFillColor);
+            }
+        }
+    });
 
-    // // updating counts
-    // for (let nodeId in data) {
-    //     data[nodeId].forEach(data => {
-    //         let yIndex = yDomain.findIndex(value => value >= data.value);
-    //         if (yIndex >= 0 && yIndex <= ticksCount) {
-    //             let xIndex = xDomain.findIndex(x => data.timestamp >= x && data.timestamp < xDomain[xDomain.indexOf(x) + 1]);
-    //             if (xIndex !== -1) {
-    //                 counts[yIndex][xIndex]++; 
-    //             }
-    //         }
-    //     })
-    // }
-
-    // for (let i = 0; i <= ticksCount; i++) {
-    //     xDomain.forEach((xValue, j) => {
-    //         if (j < xDomain.length - 1) {
-    //             let rect = grid.select(`.t_${timeFormat(xValue)}_${yDomain[i]}`);
-    //             if (!rect.empty()) {
-    //                 rect.attr('fill', colorBand(counts[i][j]));
-    //             }
-    //         }
-    //     });
-    // }
+    return {x, y};
 
 }

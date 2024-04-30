@@ -202,9 +202,9 @@ select {
     position: relative;
     display: inline-block;
     margin-top: 10px;
-    bottom: 5px;
-    width: 36px;
-    height: 20px;
+    left: 3px;
+    width: 24px;
+    height: 12px;
   }
   
   .switch input { 
@@ -228,8 +228,8 @@ select {
   .slider:before {
     position: absolute;
     content: "";
-    height: 16px;
-    width: 16px;
+    height: 8px;
+    width: 8px;
     left: 2px;
     bottom: 2px;
     background-color: white;
@@ -246,9 +246,9 @@ select {
   }
   
   input:checked + .slider:before {
-    -webkit-transform: translateX(16px);
-    -ms-transform: translateX(16px);
-    transform: translateX(16px);
+    -webkit-transform: translateX(12px);
+    -ms-transform: translateX(12px);
+    transform: translateX(12px);
   }
   
   /* Rounded sliders */
