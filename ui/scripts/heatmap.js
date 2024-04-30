@@ -5,6 +5,12 @@ import {
 
 import * as g from './groups.js';
 
+let timestamps = new Set(); // all timestamps
+let tsArray = []; // timestamps of current window
+let timeBand = 0;
+let date = '';
+let functs = {};
+
 function getGroups(data, group) {
     const groups = {};
     data.forEach(obj => {
@@ -57,7 +63,7 @@ function groupByDataType(data) {
 export async function createHeatmaps(svgData) {
     svgData.svg.selectAll("*").remove();
     const svgArea = svgData.svgArea;
-    const daydate = svgData.date
+    date = svgData.date.date;
     const chartContainer = svgData.svg;
     chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width + svgData.margin.left, svgArea.height + svgData.margin.top]);
 
@@ -71,6 +77,14 @@ export async function createHeatmaps(svgData) {
             numCharts--;
         }
     }
+
+    timestamps = new Set();
+    Object.values(targetData[Object.keys(targetData)[0]])[0].forEach(e => {
+        timestamps.add(new Date(e.timestamp))
+    })
+    tsArray = [...timestamps]
+    const timeExtent = d3.extent(tsArray)
+    timeBand = tsArray[1] - tsArray[0];
 
     const numRows = Math.ceil(Math.sqrt(numCharts));
     const numCols = Math.ceil(numCharts / numRows);
@@ -97,8 +111,8 @@ export async function createHeatmaps(svgData) {
         const container = chartContainer.append("g")
             .attr('id', `${group}-heatmap`)
             .attr("transform", `translate(${xOffset}, ${yOffset})`);
-
-        chart(container, targetData[group], group, chartSvgArea, svgData, daydate)
+        
+            functs = chart(container, targetData[group], group, chartSvgArea, timeExtent)
 
         col++;
         if (col >= numCols) {
@@ -109,21 +123,10 @@ export async function createHeatmaps(svgData) {
 
 }
 
-export const chart = (container, groupData, group, svgArea, daydate) => {
+export const chart = (container, groupData, group, svgArea, timeExtent) => {
     const data = groupData;   
-    const date = daydate.date;
     const timeFormat = d3.timeFormat('%H:%M');
-    let timestamps = new Set();
-    for (const node in data) {
-        data[node].forEach(e => {
-            timestamps.add(new Date(e.timestamp));
-        });
-    }
-    timestamps = [...timestamps]
-    // const timeExtent = [new Date(d3.min(timestamps)), new Date(new Date(d3.min(timestamps)).getTime() + 3600000)]; 
-    const timeExtent = d3.extent(timestamps)
-    const timeBand = timestamps[1] - timestamps[0];
-    // granularity of heatmap, edit later to be configurable in UI
+    // granularity of heatmap, edit later to be configurable in UI ?
     let ticksCount = 15
 
     const customColorScale = d3.scaleOrdinal()
@@ -181,7 +184,7 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
     //     .style('font-size', '12')
         // .text('Value')
 
-    let grid = container.append('g').attr('class', 'grid').attr('transform', `translate(0, -${svgArea.margin.bottom})`)
+    let grid = container.append('g').attr('class', 'grid').attr('id', `grid_${group}`).attr('transform', `translate(0, -${svgArea.margin.bottom})`)
     
     let counts = [];
     for (let i = 0; i <= ticksCount; i++) {
@@ -206,7 +209,7 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
 
     // adding lines to chart
     const linesGroup = container.append('g')
-        .attr('id', `lines-group_${date}`)
+        .attr('id', `lines-group_${group}`)
 
     const clipPathId = "clip-path";
         container.append("defs")
@@ -290,50 +293,10 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
                     .on('mouseover', function (event, d) {
-                        let classes = d3.select(this).attr("class");
-                        const xCoord = classes.split("_")[1];
-                        const yCoord = parseFloat(classes.split("_")[2]);
-                        const [year, month, day] = date.split(' ')[0].split('-');
-                        const datetime = new Date(`${year}-${month}-${day}T${xCoord}:00`);
-                    
-                        const xRange = [datetime, new Date(datetime.getTime() + (xDomain[2] - xDomain[1]))];
-                        const yRange = [yCoord, parseFloat((yCoord + (yDomain[1] - yDomain[0])).toFixed(1))];
-
-                        // tooltip.transition()
-                        //     .duration(200)
-                        //     .style('opacity', 0.9);
-                        // tooltip.html(`X: ${xRange[0].getHours()}:${xRange[0].getMinutes()}-${xRange[1].getHours()}:${xRange[1].getMinutes()}, Y: ${yRange[0]}-${yRange[1]}`)
-                        //     .style('left', (d3.event.pageX) + 'px')
-                        //     .style('top', (d3.event.pageY - 28) + 'px')
-
-                        linesGroup.selectAll('path')
-                            .each(function() {
-                                const path = d3.select(this); 
-                                const lineData = path.datum(); 
-                                const isLineInRange = lineData.some(point => {
-                                    return (point.timestamp >= xRange[0].getTime() && point.timestamp <= xRange[1].getTime()) 
-                                        && (parseFloat(point.value) >= yRange[0] && parseFloat(point.value) <= yRange[1]);
-                                });
-                                if (isLineInRange) {
-                                    path.attr('stroke-opacity', 1);
-                                    const lastPoint = lineData[lineData.findIndex(d => d.value !== null && !isNaN(d.value))];
-                                    linesGroup.append("text")
-                                        .attr("class", "nodeId-label")
-                                        .attr("x", x(xDomain[xDomain.length - 1]))
-                                        .attr("y", y(lastPoint.value))
-                                        .attr("dx", 5)
-                                        .attr("dy", 5)
-                                        // .text(`node ${path.attr('class').substring(path.attr('class').length - 2)}`);
-                                }
-                            });
                         linesGroup.selectAll('path')
                             .attr('stroke-opacity', 1)
                     })
                     .on("mouseout", function(d) {
-                        // tooltip.transition()
-                        //     .duration(500)
-                        //     .style("opacity", 0);
-                        linesGroup.selectAll(".nodeId-label").remove();
                         linesGroup.selectAll('path')
                             .attr('stroke-opacity', 0)
                     });
@@ -351,4 +314,80 @@ export const chart = (container, groupData, group, svgArea, daydate) => {
     .text(group);
 
     // title.attr("transform", "rotate(-90)");
+
+    return {x, y};
+}
+
+
+export const updateHeatmaps = (svgData, newData) => {
+    const chartContainer = svgData.svg;
+    date = svgData.date.date;
+    let targetData = groupByDataType(svgData.data);
+
+    let newTimestamps = d3.extent(newData.map(obj => new Date(obj.timestamp)));
+    const timeExtent = [tsArray[0], newTimestamps[1]];
+
+    for (let group in targetData) {
+        updateChart(chartContainer, targetData[group], group, svgData.svgArea, functs.x, functs.y, timeExtent)
+    }
+}
+
+export const updateChart = (container, data, group, svgArea, x, y, timeExtent) => {
+    const timeFormat = d3.timeFormat('%H:%M');
+    // granularity of heatmap, edit later to be configurable in UI ?
+    let ticksCount = 15
+
+    const customColorScale = d3.scaleOrdinal()
+        .domain(Object.keys(pallette))
+        .range(Object.values(pallette).map(percentColToD3Rgb));
+    
+    x.domain([timeExtent[0].getTime(), timeExtent[1].getTime() + timeBand]) 
+    
+    let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
+    let interval = (yDom[1] - yDom[0]) / ticksCount;
+    let yDomain = d3.range(yDom[0], yDom[1] + interval + interval, interval).map(value => +value.toFixed(2));
+    y.domain([yDomain[0], yDomain[yDomain.length - 1]])
+
+    // updating lines
+    const line = d3.line()
+        .x(d => x(d.timestamp))
+        .y(d => y(+d.value));
+    
+    // let linesGroup = d3.select(`#lines-group_${group}`);
+    // linesGroup.selectAll('path')
+    //     .attr('d', d => line(d.data));
+    
+    // // updating grid
+    // let grid = d3.select(`#grid_${group}`);
+    
+    // // fixme !!! don't need to recalculate counts
+    // // let counts = [];
+    // // for (let i = 0; i <= ticksCount; i++) {
+    // //     counts.push(new Array(xDomain.length - 1).fill(0));
+    // // }
+
+    // // updating counts
+    // for (let nodeId in data) {
+    //     data[nodeId].forEach(data => {
+    //         let yIndex = yDomain.findIndex(value => value >= data.value);
+    //         if (yIndex >= 0 && yIndex <= ticksCount) {
+    //             let xIndex = xDomain.findIndex(x => data.timestamp >= x && data.timestamp < xDomain[xDomain.indexOf(x) + 1]);
+    //             if (xIndex !== -1) {
+    //                 counts[yIndex][xIndex]++; 
+    //             }
+    //         }
+    //     })
+    // }
+
+    // for (let i = 0; i <= ticksCount; i++) {
+    //     xDomain.forEach((xValue, j) => {
+    //         if (j < xDomain.length - 1) {
+    //             let rect = grid.select(`.t_${timeFormat(xValue)}_${yDomain[i]}`);
+    //             if (!rect.empty()) {
+    //                 rect.attr('fill', colorBand(counts[i][j]));
+    //             }
+    //         }
+    //     });
+    // }
+
 }

@@ -12,8 +12,8 @@ cors = CORS(app)
 
 df = pd.DataFrame()
 filepath = '../ui/data/farm/'
-init_timepts = 10000
-inc_rows = 150
+init_timepts = 50000
+inc_rows = 15000
 skip_rows = 0
 cols = []
 
@@ -34,11 +34,12 @@ def get_data(filename, inc):
         rows = init_timepts
         df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=rows)
         cols = df.columns
-        print(cols)
     else:
-        skip_rows = rows
+        skip_rows += rows
         rows = inc_rows
         df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=rows, names=cols)
+        print(df)
+
     
     df['timestamp'] = df['timestamp'].apply(lambda x: int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
     df = df.replace({np.nan: None})

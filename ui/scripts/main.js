@@ -17,44 +17,44 @@ import {
   prepareSvgArea 
 } from './d3_utils.js';
 
-
 async function init(dateValue, type) {
   try {
     const filename = `far_data_${dateValue}.csv`;
     const flaskUrl = m.flaskUrl + `/getData/${filename}/0`;
-
-    const res = await fetch(flaskUrl);
-    if (!res.ok) {
-      throw new Error('Error getting data:', farmGroup);
-    }
-
-    const data = await res.json();
-
-    const svgData = m.svgData();
-    svgData.domId = 'ts_view';
-    svgData.svg = d3.select(`#${type}_svg`);
-    svgData.data = data;
-    svgData.date = dateValue;
-    const margin = { 
-      top: 30,
-      right: 10,
-      bottom: 20,
-      left: 20
-    };
-    svgData.svgArea = prepareSvgArea(
-      calcContainerWidth(`#${svgData.domId}`),
-      calcContainerHeight(`#${svgData.domId}`),
-      margin || {
-        top: 0,
-        right: 0,
-        bottom: 0,
-        left: 0
+    if (document.getElementById('data-stream-option').checked) {
+      const res = await fetch(flaskUrl);
+      if (!res.ok) {
+        throw new Error('Error getting data:', farmGroup);
       }
-    );
-    svgData.margin = margin;
 
-    await heatMapView.createHeatmaps(svgData);
-    setInterval(() => u.updateCharts(svgData), 2000);
+      const data = await res.json();
+
+      const svgData = m.svgData();
+      svgData.domId = 'ts_view';
+      svgData.svg = d3.select(`#${type}_svg`);
+      svgData.data = data;
+      svgData.date = dateValue;
+      const margin = { 
+        top: 30,
+        right: 10,
+        bottom: 20,
+        left: 20
+      };
+      svgData.svgArea = prepareSvgArea(
+        calcContainerWidth(`#${svgData.domId}`),
+        calcContainerHeight(`#${svgData.domId}`),
+        margin || {
+          top: 0,
+          right: 0,
+          bottom: 0,
+          left: 0
+        }
+      );
+      svgData.margin = margin;
+
+      await heatMapView.createHeatmaps(svgData);
+      setInterval(() => u.updateCharts(svgData), 2000);
+    }
   } catch (error) {
     console.error('Error:', error);
   }
