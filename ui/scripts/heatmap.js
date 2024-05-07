@@ -7,6 +7,7 @@ import * as g from './groups.js';
 
 let timestamps = new Set(); // all timestamps
 let tsArray = []; // timestamps of current window
+let timeInterval;
 let date = '';
 let functs = {};
 
@@ -88,6 +89,7 @@ export async function createHeatmaps(svgData) {
         timestamps.add(new Date(e.timestamp))
     })
     tsArray = [...timestamps]
+    timeInterval = tsArray[1] - tsArray[0];
 
     const numRows = Math.ceil(Math.sqrt(numCharts));
     const numCols = Math.ceil(numCharts / numRows);
@@ -160,8 +162,8 @@ export const chart = (container, groupData, group, svgArea) => {
         // .text('Time')
 
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
-    let interval = (yDom[1] - yDom[0]) / ticksCount;
-    let yDomain = d3.range(yDom[0], yDom[1] + interval + interval, interval).map(value => +value.toFixed(2));
+    let yInterval = (yDom[1] - yDom[0]) / ticksCount;
+    let yDomain = d3.range(yDom[0], yDom[1] + yInterval + yInterval, yInterval).map(value => +value.toFixed(2));
 
     let y = d3.scaleLinear()
                 .domain([yDomain[0], yDomain[yDomain.length - 1]])
@@ -289,11 +291,12 @@ export const chart = (container, groupData, group, svgArea) => {
             if (j < xDomain.length - 1) {
                 let width = x(xDomain[j+1]) - x(xDomain[j])
                 grid.append('rect')
+                    .attr('class', 'grid-rect')
                     .attr("id", `t_${j}_${i}`)
                     .attr('x', x(xValue)) 
                     .attr('y', y(yDomain[i])) 
                     .attr('width', width)
-                    .attr('height', y(0) - y(interval))
+                    .attr('height', y(0) - y(yInterval))
                     .attr('fill', colorBand(counts[i][j]))
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
@@ -330,11 +333,11 @@ export const updateHeatmaps = (svgData, newData) => {
     let targetData = groupByDataType(svgData.data);
 
     let newTimestamps = d3.extent(newData.map(obj => new Date(obj.timestamp)));
-    let numIntervals = (newTimestamps[1].getTime() - newTimestamps[0].getTime()) / (tsArray[1] - tsArray[0]);
+    let numIntervals = (newTimestamps[1].getTime() - newTimestamps[0].getTime()) / timeInterval;
     // updating time window
     tsArray = tsArray
                 .slice(numIntervals)
-                .concat(Array.from({ length: numIntervals + 1 }, (_, index) => new Date(newTimestamps[0].getTime() + index * 5000)))
+                .concat(Array.from({ length: numIntervals }, (_, index) => new Date(newTimestamps[0].getTime() + index * timeInterval)))
 
     for (let group in targetData) {
         functs = updateChart(chartContainer, targetData[group], group, svgData.svgArea, functs.x, functs.y)
@@ -370,8 +373,8 @@ export const updateChart = (container, data, group, svgArea, x, y) => {
         .style('text-anchor', 'end');
 
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
-    let interval = (yDom[1] - yDom[0]) / ticksCount;
-    let yDomain = d3.range(yDom[0], yDom[1] + interval + interval, interval).map(value => +value.toFixed(2));
+    let yInterval = (yDom[1] - yDom[0]) / ticksCount;
+    let yDomain = d3.range(yDom[0], yDom[1] + yInterval + yInterval, yInterval).map(value => +value.toFixed(2));
 
     // updating lines
     // const line = d3.line()

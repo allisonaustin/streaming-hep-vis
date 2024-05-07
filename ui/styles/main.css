@@ -152,6 +152,10 @@ select {
     overflow: scroll;
 }
 
+.grid-rect:hover {
+    cursor: pointer;
+}
+
 /* .node_selection input[type="checkbox"] {
     display: none;
 }

@@ -17,6 +17,8 @@ import {
   prepareSvgArea 
 } from './d3_utils.js';
 
+const svgData = m.svgData();
+
 async function init(dateValue, type) {
   try {
     const filename = `far_data_${dateValue}.csv`;
@@ -29,7 +31,6 @@ async function init(dateValue, type) {
 
       const data = await res.json();
 
-      const svgData = m.svgData();
       svgData.domId = 'ts_view';
       svgData.svg = d3.select(`#${type}_svg`);
       svgData.data = data;
@@ -61,7 +62,11 @@ async function init(dateValue, type) {
 }
 
 window.updateChart = () => {
-  init(document.getElementById('date_selection').value, 'farm')
+  if (svgData.date == undefined) {
+    init(document.getElementById('date_selection').value, 'farm')
+  } else {
+    setInterval(() => u.updateCharts(svgData), 2000);
+  }
 }
 
 fetch('../data/farm/farm-data-dates.json')

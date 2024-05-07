@@ -40,8 +40,8 @@ def get_data(filename, inc):
         df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=inc_rows, names=cols)
         print(df)
 
-    
-    df['timestamp'] = df['timestamp'].apply(lambda x: int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
+
+    df['timestamp'] = df['timestamp'].apply(lambda x: int(x) * 1000 if isinstance(x, int) else int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
     df = df.replace({np.nan: None})
     return Response(df.to_json(orient='records'), mimetype='application/json')
 
