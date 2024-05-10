@@ -1,4 +1,3 @@
-import * as tsView from './ts-view.js';
 import * as heatMapView from './heatmap.js'
 import * as m from './model.js';
 

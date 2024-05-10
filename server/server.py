@@ -12,7 +12,7 @@ cors = CORS(app)
 
 df = pd.DataFrame()
 filepath = '../ui/data/farm/'
-init_timepts = 40000
+init_timepts = 60000
 inc_rows = 1500
 skip_rows = 0
 cols = []

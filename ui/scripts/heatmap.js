@@ -17,28 +17,6 @@ function incrementFillColor(fillColor) {
     return updatedColor.toString();
 }
 
-function getGroups(data, group) {
-    const groups = {};
-    data.forEach(obj => {
-        const node = obj.nodeId;
-        if (!(node in groups)) {
-            groups[node] = {};
-        }
-        Object.keys(obj).forEach(key => {
-            if (key.includes(group)) {
-                if (!(key in groups[node])) {
-                    groups[node][key] = [];
-                }
-                groups[node][key].push({
-                    timestamp: obj.timestamp,
-                    value: +obj[key]
-                });
-            }
-      });
-    });
-    return groups;
-}
-
 function groupByDataType(data) {
     const groups = {};
     Object.keys(g.groups).forEach(target => {
@@ -125,7 +103,6 @@ export async function createHeatmaps(svgData) {
             col = 0;
         }
     }
-
 }
 
 export const chart = (container, groupData, group, svgArea) => {
@@ -133,10 +110,6 @@ export const chart = (container, groupData, group, svgArea) => {
     const timeFormat = d3.timeFormat('%H:%M');
     // granularity of heatmap, edit later to be configurable in UI ?
     let ticksCount = 15
-
-    const customColorScale = d3.scaleOrdinal()
-        .domain(Object.keys(pallette))
-        .range(Object.values(pallette).map(percentColToD3Rgb));
 
     // tooltip
     let tooltip = d3.select('#heatmap-tooltip')
@@ -147,7 +120,7 @@ export const chart = (container, groupData, group, svgArea) => {
                 .range([svgArea.margin.left, svgArea.width - svgArea.margin.right])
 
     let xDomain = d3.timeMinute.every(5).range(...timeExtent);
-    let labels = xDomain.filter((_, i) => i % 5 === 0);
+    let labels = xDomain.filter((_, i) => i % 3 === 0);
     
     const chartXAxis = d3.axisBottom(x)
         .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
@@ -210,34 +183,34 @@ export const chart = (container, groupData, group, svgArea) => {
         })
     }
 
-    // const line = d3.line()
-    //     .x(d => x(d.timestamp))
-    //     .y(d => y(+d.value));
+    const line = d3.line()
+        .x(d => x(d.timestamp))
+        .y(d => y(+d.value));
 
-    // // adding lines to chart
-    // const linesGroup = container.append('g')
-    //     .attr('id', `lines-group_${group}`)
+    // adding lines to chart
+    const linesGroup = container.append('g')
+        .attr('id', `lines-group_${group}`)
 
-    // const clipPathId = "clip-path";
-    //     container.append("defs")
-    //         .append("clipPath")
-    //         .attr("id", clipPathId)
-    //         .append("rect")
-    //         .attr("width", svgArea.width)
-    //         .attr("height", svgArea.height - svgArea.margin.top);
+    const clipPathId = "clip-path";
+        container.append("defs")
+            .append("clipPath")
+            .attr("id", clipPathId)
+            .append("rect")
+            .attr("width", svgArea.width)
+            .attr("height", svgArea.height - svgArea.margin.top);
     
-    // for (let nodeId in data) {
-    //     let group = data[nodeId];
-    //         linesGroup.append("path")
-    //             .datum(group)
-    //             .attr('class', nodeId)
-    //             .attr('fill', 'none')
-    //             .attr('clip-path', `url(#${clipPathId})`)
-    //             .attr('stroke', 'steelblue')
-    //             .attr('stroke-width', 1)
-    //             .attr('stroke-opacity', 0)
-    //             .attr('d', line);
-    // }
+    for (let nodeId in data) {
+        let group = data[nodeId];
+            linesGroup.append("path")
+                .datum(group)
+                .attr('class', nodeId)
+                .attr('fill', 'none')
+                .attr('clip-path', `url(#${clipPathId})`)
+                .attr('stroke', 'steelblue')
+                .attr('stroke-width', 1)
+                .attr('stroke-opacity', 0)
+                .attr('d', line);
+    }
 
     // legend
     const colorBand = d3.scaleLinear()
@@ -300,14 +273,14 @@ export const chart = (container, groupData, group, svgArea) => {
                     .attr('fill', colorBand(counts[i][j]))
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
-                    // .on('mouseover', function (event, d) {
-                    //     linesGroup.selectAll('path')
-                    //         .attr('stroke-opacity', 1)
-                    // })
-                    // .on("mouseout", function(d) {
-                    //     linesGroup.selectAll('path')
-                    //         .attr('stroke-opacity', 0)
-                    // });
+                    .on('mouseover', function (event, d) {
+                        linesGroup.selectAll('path')
+                            .attr('stroke-opacity', 1)
+                    })
+                    .on("mouseout", function(d) {
+                        linesGroup.selectAll('path')
+                            .attr('stroke-opacity', 0)
+                    });
             }
         });
     }
@@ -349,15 +322,11 @@ export const updateChart = (container, data, group, svgArea, x, y) => {
     // granularity of heatmap, edit later to be configurable in UI ?
     let ticksCount = 15
     let timeExtent = d3.extent(tsArray);
-
-    const customColorScale = d3.scaleOrdinal()
-        .domain(Object.keys(pallette))
-        .range(Object.values(pallette).map(percentColToD3Rgb));
     
     // updating x axis
     x.domain([timeExtent[0].getTime(), timeExtent[1].getTime()]) 
     let xDomain = d3.timeMinute.every(5).range(...timeExtent);
-    let labels = xDomain.filter((_, i) => i % 5 === 0);
+    let labels = xDomain.filter((_, i) => i % 3 === 0);
     let chartXAxis = d3.axisBottom(x)
         .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
         .tickValues(xDomain);

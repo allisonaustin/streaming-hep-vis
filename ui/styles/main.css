@@ -24,6 +24,32 @@ select {
     height: 100%;
 }
 
+#fc_view {
+    display: flex;
+    position: relative;
+    width: auto;
+    height: 50%;
+    border-style: solid;
+    border-width: thin;
+    border-color: #DDDDDD;
+    /* border-bottom-color: #FFFFFF; */
+  }
+  
+  #fc_view_left {
+    display: flex;
+    position: relative;
+    width: 65%;
+    height: 100%;
+  }
+  
+  #fc_view_right {
+    display: flex;
+    position: relative;
+    width: 35%;
+    height: 100%;
+  }
+  
+
 .view_title {
     position: absolute;
     right: 0px;
