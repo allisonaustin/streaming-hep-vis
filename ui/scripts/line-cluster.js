@@ -43,6 +43,8 @@ export async function drawSvg(svgData) {
 export const chart = (container, groupData, svgData) => {
     const data = groupData;   
     const svgArea = svgData.svgArea;
+    const selectedX = svgData.selectedX;
+    const selectedY = svgData.selectedY;
 
     const customColorScale = d3.scaleOrdinal()
         .domain(Object.keys(pallette))
@@ -51,9 +53,10 @@ export const chart = (container, groupData, svgData) => {
     let xDom = []
     let yDom = []
     Object.values(data).forEach(node => {
-      xDom.push(...node.swap_free.map(d => d.value));
-      yDom.push(...node.part_max_used.map(d => d.value));
+      xDom.push(...node[selectedX].map(d => d.value));
+      yDom.push(...node[selectedY].map(d => d.value));
     });
+
     const xScale = d3.scaleLinear()
       .domain(d3.extent(xDom))
       .range([0, svgArea.width]);
@@ -67,18 +70,22 @@ export const chart = (container, groupData, svgData) => {
       .call(d3.axisBottom(xScale))
       .selectAll('text')
       .attr('transform', 'rotate(-45)')
-      .style('text-anchor', 'end');
+      .style('text-anchor', 'end')
+      .style('display', 'none'); // hiding tick values
     
     container.append('g')
       .attr('transform', `translate(${svgData.margin.left},0)`)
-      .call(d3.axisLeft(yScale));
+      .call(d3.axisLeft(yScale))
+      .selectAll('text')
+      .style('display', 'none');
 
     container.append('text')
       .attr('class', 'axis-label')
       .attr('x', svgArea.width / 1.5) 
       .attr('y', svgArea.height + svgData.margin.top + svgData.margin.bottom) 
       .style('text-anchor', 'middle') 
-      .text('Variable 1');
+      .style('font-size', '16')
+      .text(selectedX);
     
     container.append('text')
       .attr('class', 'axis-label')
@@ -86,11 +93,12 @@ export const chart = (container, groupData, svgData) => {
       .attr('x', -svgArea.height / 2) 
       .attr('y', svgData.margin.right + 15)
       .style('text-anchor', 'middle')
-      .text('Variable 2');
+      .style('font-size', '16')
+      .text(selectedY);
         
     const line = d3.line()
-      .x((d, i) => xScale(d.swap_free))
-      .y((d, i) => yScale(d.part_max_used));
+      .x((d, i) => xScale(d.x))
+      .y((d, i) => yScale(d.y));
 
     const linesGroup = container.append('g')
                         .attr('transform', `translate(${svgData.margin.left}, 0)`)
@@ -104,12 +112,13 @@ export const chart = (container, groupData, svgData) => {
     const defs = container.append('defs');
 
     Object.keys(data).forEach((node, i) => {
-      const cpuIdleValues = data[node].swap_free.map(entry => entry.value);
-      const memTotalValues = data[node].part_max_used.map(entry => entry.value);
-      const nodeData = cpuIdleValues.map((swap_free, index) => ({
-        swap_free: swap_free,
-        part_max_used: memTotalValues[index],
+      const xValues = data[node][selectedX].map(entry => entry.value);
+      const yValues = data[node][selectedY].map(entry => entry.value);
+      const nodeData = xValues.map((selectedX, index) => ({
+        x: selectedX,
+        y: yValues[index],
       }));
+
       linesGroup.append('path')
         .datum(nodeData)
         .attr('class', 'line')

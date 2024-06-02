@@ -50,9 +50,15 @@ export async function createHeatmaps(svgData) {
     date = svgData.date.date;
     const chartContainer = svgData.svg;
     chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width + svgData.margin.left, svgArea.height + svgData.margin.top]);
+    
+    let dock = chartContainer.append("g")
+        .attr("class", "dock")
+        .attr("transform", `translate(${svgData.margin.left}, ${svgArea.height + svgData.margin.top})`);
 
     let targetData = groupByDataType(svgData.data);
     let numCharts = Object.keys(targetData).length;
+
+    let hiddenHeatmaps = [];
 
     for (let group in targetData) {
         let yDom = d3.extent(Object.values(targetData[group]).flatMap(array => array.map(obj => obj.value)))
@@ -96,7 +102,7 @@ export async function createHeatmaps(svgData) {
             .attr("transform", `translate(${xOffset}, ${yOffset})`);
         
             functs = chart(container, targetData[group], group, chartSvgArea)
-
+        
         col++;
         if (col >= numCols) {
             row++;
@@ -142,14 +148,14 @@ export const chart = (container, groupData, group, svgArea) => {
                 .domain([yDomain[0], yDomain[yDomain.length - 1]])
                 .range([svgArea.height - svgArea.margin.bottom, 0])
 
-    container.append('g')
-        .attr('class', `x-axis-${group}`)
-        .attr('transform', `translate(0, ${svgArea.height + svgArea.margin.bottom})`)
-        .call(chartXAxis)
-        .selectAll('text')
-        .attr('transform', 'rotate(-45)') 
-        .style('font-size', '10')
-        .style('text-anchor', 'end');
+    // container.append('g')
+    //     .attr('class', `x-axis-${group}`)
+    //     .attr('transform', `translate(0, ${svgArea.height + svgArea.margin.bottom})`)
+    //     .call(chartXAxis)
+    //     .selectAll('text')
+    //     .attr('transform', 'rotate(-45)') 
+    //     .style('font-size', '10')
+    //     .style('text-anchor', 'end');
 
     // container.append('g')
     //     .attr('class', 'y-axis')
@@ -324,22 +330,22 @@ export const updateChart = (container, data, group, svgArea, x, y) => {
     let timeExtent = d3.extent(tsArray);
     
     // updating x axis
-    x.domain([timeExtent[0].getTime(), timeExtent[1].getTime()]) 
-    let xDomain = d3.timeMinute.every(5).range(...timeExtent);
-    let labels = xDomain.filter((_, i) => i % 3 === 0);
-    let chartXAxis = d3.axisBottom(x)
-        .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
-        .tickValues(xDomain);
+    // x.domain([timeExtent[0].getTime(), timeExtent[1].getTime()]) 
+    // let xDomain = d3.timeMinute.every(5).range(...timeExtent);
+    // let labels = xDomain.filter((_, i) => i % 3 === 0);
+    // let chartXAxis = d3.axisBottom(x)
+    //     .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
+    //     .tickValues(xDomain);
 
-    d3.select(`.x-axis-${group}`)
-        .selectAll('.tick')
-        .remove();
-    d3.select(`.x-axis-${group}`)
-        .call(chartXAxis)
-        .selectAll('text')
-        .attr('transform', 'rotate(-45)') 
-        .style('font-size', '10')
-        .style('text-anchor', 'end');
+    // d3.select(`.x-axis-${group}`)
+    //     .selectAll('.tick')
+    //     .remove();
+    // d3.select(`.x-axis-${group}`)
+    //     .call(chartXAxis)
+    //     .selectAll('text')
+    //     .attr('transform', 'rotate(-45)') 
+    //     .style('font-size', '10')
+    //     .style('text-anchor', 'end');
 
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
     let yInterval = (yDom[1] - yDom[0]) / ticksCount;

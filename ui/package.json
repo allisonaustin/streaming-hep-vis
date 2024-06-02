@@ -29,5 +29,8 @@
         "server": "^1.0.39",
         "vite": "^5.2.8",
         "wheel": "^1.0.0"
+    },
+    "dependencies": {
+        "d3-lasso": "^0.0.5"
     }
 }

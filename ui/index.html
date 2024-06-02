@@ -6,6 +6,7 @@
   <script src='https://d3js.org/d3.v5.min.js'></script>
   <script src="https://d3js.org/d3-array.v2.min.js"></script>
   <script src="https://d3js.org/d3-geo.v1.min.js"></script>
+  <script src="scripts/libs/d3-lasso.min.js"></script>
   <script src="https://unpkg.com/topojson-client@3"></script>
   <title>Tachyon Visual Interface</title>
 </head>
@@ -24,9 +25,6 @@
             <input id="data-stream-option" type="checkbox">
             <span class="slider round"></span>
           </label>
-          <!-- Group
-          <select id='data_group' onchange="updateChart()">
-          </select> -->
         </div>
         <svg id='farm_svg'></svg>
         <div class="tooltip" id="heatmap-tooltip"></div>
@@ -34,7 +32,11 @@
         </div>
       </div>
       <div id="fc_view">
-        <div class="view_title">Manager Nodes</div>
+        <div class="view_title">MS Plot</div>
+        <svg id="msplot-svg"></svg>
+      </div>
+      <div id="fc_view">
+        <div class="view_title">Correlation View</div>
         <div id='fc_view_left'>
           <svg id='line_svg'></svg>
         </div>
