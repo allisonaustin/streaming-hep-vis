@@ -178,10 +178,6 @@ select {
     overflow: scroll;
 }
 
-.grid-rect:hover {
-    cursor: pointer;
-}
-
 /* .node_selection input[type="checkbox"] {
     display: none;
 }
@@ -289,3 +285,39 @@ select {
   .slider.round:before {
     border-radius: 50%;
   }
+
+
+/*lasso css below*/
+.lasso path {
+    stroke: rgb(80,80,80);
+    stroke-width:2px;
+}
+
+.lasso .drawn {
+    fill-opacity:.05 ;
+}
+
+.lasso .loop_close {
+    fill:none;
+    stroke-dasharray: 4,4;
+}
+
+.lasso .origin {
+    fill:#3399FF;
+    fill-opacity:.5;
+}
+
+
+
+  div.tooltip-module {
+    position: absolute;
+    text-align: center;
+    width: 128px;
+    height: 30px;
+    padding: 2px;
+    font-family: Georgia, Serif;
+    font-size: 12px;
+    background: lightsteelblue;
+    border: 0px;
+    border-radius: 8px;
+}

@@ -1,7 +1,7 @@
-//Module Pattern
 import * as lassoitem from './custom-lasso.js'
+import * as tooltipM from './tooltip-module.js'
 
-//private variables
+// Module variables
 let data;
 let msPlotSvg;
 let msContainer;
@@ -11,9 +11,18 @@ let width;
 let xms;
 let yms;
 let ms_circle_r = 3.5
+let visUpdateFlag;
+let selectednodesMain = [];
 
 const colorRange = d3.schemeCategory10;
 let colorcode;
+function formatTick(d) {
+    if (Math.abs(d) < 1000) {
+        return d3.format(".2f")(d);
+    } else {
+        return d3.format(".2e")(d).replace(/e\+0$/, '');
+    }
+}
 
 let xrange, xdomR1, xdomR2, yrange, ydomR1, ydomR2, xAxis, yAxis;
 
@@ -35,9 +44,6 @@ function init(msdata, nodes) {
     colorcode = d3.scaleOrdinal()
         .domain(nodes)
         .range(colorRange);
-
-    // xms = d3.scaleLinear().range([marginMS.left, width]);
-    // yms = d3.scaleLinear().range([height, marginMS.top]);
 };
 
 //process the input data
@@ -50,27 +56,12 @@ function processInput(data) {
     let xd = d3.extent(data.map(d => d[0])),
     yd = d3.extent(data.map(d => d[1]));
 
-    // xms.domain(xd).nice(); //[ xd[0]-0.1, xd[1]+0.1 ]
-    // yms.domain(yd).nice(); // [ yd[0]-0.1, yd[1]+0.1 ]
-
     xms = d3.scaleLinear()
             .range([marginMS.left, width])
             .domain([ xd[0]-0.001, xd[1]+0.001 ]).nice();
     yms = d3.scaleLinear()
             .range([height, marginMS.top])
             .domain([ yd[0]-0.001, yd[1]+0.001 ]).nice();
-
-
-    // xms.domain([ xd[0]-0.05, xd[1]+0.05 ]).nice();
-    // yms.domain([ yd[0]-0.05, yd[1]+0.05 ]).nice();
-
-    // xrange = xms.domain()[1] - xms.domain()[0];
-    // xdomR1 = xms.domain()[0] + (xrange*0.23);
-    // xdomR2 = xms.domain()[1] - (xrange*0.27);
-
-    // yrange = yms.domain()[1] - yms.domain()[0];
-    // ydomR1 = yms.domain()[0] + (yrange*0.25);
-    // ydomR2 = yms.domain()[1] - (yrange*0.40);
 };
 
 //append axis
@@ -79,13 +70,13 @@ function appendAxis() {
     xAxis = msContainer.append("g")
         .attr("id", "xmsaxis-container")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(xms));
+        .call(d3.axisBottom(xms).tickFormat(formatTick));
 
     // Add the Y Axis
     yAxis = msContainer.append("g")
         .attr("id", "ymsaxis-container")
         .attr("transform", `translate(${marginMS.left},0)`)
-        .call(d3.axisLeft(yms));
+        .call(d3.axisLeft(yms).tickFormat(formatTick));
 
 };
 
@@ -93,18 +84,15 @@ function appendAxis() {
 function appendLassoInteraction(targetItems){
     // console.log("lasso interaction", msContainer, d3.select("#msplot-svg", targetItems))
     let lassoRect = d3.select('#msplot-svg')
-    let lasso = lassoitem.getInstance(lassoRect, targetItems);
+    let lasso = lassoitem.getInstance(lassoRect, targetItems, ms_circle_r);
     msContainer.call(lasso)
 };
 
 function showMapCircles(){
     d3.selectAll(".ms-circle").each(function(_){
         let item = d3.select(this).attr("id")
-
-        let itemID = item.replace('_temp','');
-
-        d3.select("#co-"+itemID).style("visibility", "visible");
-        d3.select("#ci-"+itemID).style("visibility", "visible");
+        d3.select("#co-"+item).style("visibility", "visible");
+        d3.select("#ci-"+item).style("visibility", "visible");
     })
 };
 
@@ -117,7 +105,7 @@ function appendCircles(cols, nodes){
         .enter()
         .append("circle")
         .attr("class", (d, i) => "ms-circle "+nodes[i])
-        .attr("id", (d, i) => cols[i])
+        .attr("id", (d, i) => nodes[i])
         .attr("cx", d => xms(d[0]))
         .attr("cy", d => yms(d[1]))
         .attr("r", ms_circle_r)
@@ -125,8 +113,8 @@ function appendCircles(cols, nodes){
         .attr("stroke-width", "1px")
         .attr('fill', (d, i) => colorcode(nodes[i]))
         .on("mouseover", function(){
-            let ttms = tooltipM.getTooltip("msTooltip");
-            ttms.addToolTip(d3.select(this).property("id"), d3.event.pageX, d3.event.pageY-20)
+            tooltipM.getTooltip("msTooltip");
+            tooltipM.addToolTip(d3.select(this).attr("id"), d3.event.pageX, d3.event.pageY - 20);
         })
         .on("mouseout", function(){
             d3.select("#msTooltip").remove();
@@ -141,13 +129,12 @@ function appendCircles(cols, nodes){
     appendLassoInteraction(circs);
 };
 
-function appendAxisLabels(){
+function appendAxisLabels(cols){
     //x axis label
     msContainer.append("text")
         .attr("transform", "rotate(0)")
-        .attr("x", width/2)
-        .attr("y", height + marginMS.padding)
-        .attr("dy", "1em")
+        .attr("x", width/1.8)
+        .attr('y', height + marginMS.top)
         .attr("font-size","10px")
         .attr("font-weight","bold")
         .attr("text-anchor", "middle")
@@ -163,6 +150,16 @@ function appendAxisLabels(){
         .attr("font-weight","bold")
         .attr("text-anchor", "middle")
         .text("VO");
+
+    // title
+    msContainer.append("text")
+        .attr("x", width / 1.8) 
+        .attr("y", marginMS.top) 
+        .attr("dy", "1em")
+        .attr("font-weight","bold")
+        .attr("text-anchor", "middle")
+        .style("fill", "black")
+        .text(cols);
 };
 
 
@@ -172,7 +169,7 @@ function appendDataModules(msdata, cols, nodes){
     processInput(msdata.data);
     appendAxis();
     appendCircles(cols, nodes);
-    appendAxisLabels();
+    appendAxisLabels(cols);
 };
 
 function updateData(msdata){
@@ -236,8 +233,8 @@ function updateCirclesProgressive(newCircleID, newRackID){
         .attr("stroke-width", "1px")
         .attr('fill', colorcode(newRackID))
         .on("mouseover", function(){
-            let ttms = tooltipM.getTooltip("msTooltip");
-            ttms.addToolTip(d3.select(this).property("id"), d3.event.pageX, d3.event.pageY-20)
+            tooltipM.getTooltip("msTooltip");
+            tooltipM.addToolTip(d3.select(this).property("id"), d3.event.pageX, d3.event.pageY-20)
         })
         .on("mouseout", function(){
             d3.select("#msTooltip").remove();

@@ -4,12 +4,14 @@ import {
 } from './colors.js';
 
 import * as g from './groups.js';
+import * as m from './main.js';
 
 let timestamps = new Set(); // all timestamps
 let tsArray = []; // timestamps of current window
 let timeInterval;
 let date = '';
 let functs = {};
+let selectedGroup;
 
 function incrementFillColor(fillColor) {
     let currentColor = d3.rgb(fillColor);
@@ -48,6 +50,7 @@ export async function createHeatmaps(svgData) {
     svgData.svg.selectAll("*").remove();
     const svgArea = svgData.svgArea;
     date = svgData.date.date;
+    selectedGroup = svgData.group;
     const chartContainer = svgData.svg;
     chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width + svgData.margin.left, svgArea.height + svgData.margin.top]);
     
@@ -280,12 +283,18 @@ export const chart = (container, groupData, group, svgArea) => {
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
                     .on('mouseover', function (event, d) {
-                        linesGroup.selectAll('path')
-                            .attr('stroke-opacity', 1)
+                        // linesGroup.selectAll('path')
+                        //     .attr('stroke-opacity', 1)
+                        d3.select(this).style("cursor", "pointer");
                     })
                     .on("mouseout", function(d) {
-                        linesGroup.selectAll('path')
-                            .attr('stroke-opacity', 0)
+                        // linesGroup.selectAll('path')
+                        //     .attr('stroke-opacity', 0)
+                        d3.select(this).style("cursor", "default");
+                    })
+                    .on('click', function(event, d) {
+                        selectedGroup = group;
+                        m.updateMS(group)
                     });
             }
         });

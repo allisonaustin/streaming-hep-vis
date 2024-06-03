@@ -1,5 +1,37 @@
 let lasso; 
 let selectedItems = [];
+let selectedNodes = [];
+let ms_circle_r;
+
+function mapReset() {
+    d3.selectAll(".circleOut").each(function(_){
+        d3.select(this).attr("r", "3")
+            .style("stroke-width", "0px")
+            .style("fill", "gray")
+    });
+    d3.selectAll(".circleIn").each(function(_){
+        d3.select(this).attr("r", "2")
+            .style("fill", "darkgray")
+    });
+};
+
+function mapResetFpc(sels=[]) {
+    if(sels.length != 0){
+        sels.forEach(function(item){
+            let itemID = item.replace('_temp','');
+            d3.select("#co-"+itemID).style("stroke-width", "0px")
+        });
+    }else{
+        selectedFpcLines.forEach(function(item){
+            d3.select("#co-"+item).attr("r", "4")
+                .style("stroke-width", "0px")
+                .style("fill", tableauColors['tab:brown'])
+            d3.select("#ci-"+item).attr("r", "3")
+                .style("fill", tableauColors['tab:brown'])
+        });
+
+    }
+}
 
 function initLasso(container, targetItems) {
     // Ensure these are defined before use
@@ -43,25 +75,19 @@ function initLasso(container, targetItems) {
             .attr("r", ms_circle_r); //.style("opacity", 0.2); //3.5
 
         selectedItems = [];
-        selectedRacks = [];
+        selectedNodes = [];
         selectedcircles.each(function() {
             selectedItems.push(d3.select(this).property("id"));
-            var rackID = d3.select(this).attr("class").substring("ms-circle ".length).replace(" selected", "");
-            selectedRacks.push(rackID);
+            var node = d3.select(this).attr("class").substring("ms-circle ".length).replace(" selected", "");
+            selectedNodes.push(node);
         });
 
         selectedFpcLines = selectedItems;
 
-        // console.log("selected items", selectedItems, selectedRacks);
+        // console.log("selected items", selectedItems, selectedNodes);
 
         // call fpca
         if (selectedItems.length !== 0) {
-            // let rack_update = selectedRacksMain.length === 0 ? "": selectedRacksMain;
-            let rack_update = selectedRacks;
-            Sijax.request("update_main_view", [main_filename, selectedItems, rack_update], {
-                url: flaskServer + '/fda'
-            });
-
             selectedItems.forEach(function(item) {
                 let itemID = item.replace('_temp', '');
                 d3.select("#co-" + itemID).attr("r", "4")
@@ -86,7 +112,8 @@ function initLasso(container, targetItems) {
         .on("end", lassoEnd);
 }
 
-export function getInstance(container, targetItems) {
+export function getInstance(container, targetItems, r) {
+    ms_circle_r = r;
     initLasso(container, targetItems);
     return lasso;
 }

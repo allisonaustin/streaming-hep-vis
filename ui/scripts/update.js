@@ -1,5 +1,6 @@
 import * as heatMapView from './heatmap.js'
 import * as m from './model.js';
+import * as main from './main.js';
 
 export const updateCharts = (svg) => {
   const filename = `far_data_${svg.date}.csv`

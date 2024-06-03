@@ -65,12 +65,14 @@ def get_ms_inc(group):
     global cols 
 
     ms_data = df.set_index('timestamp') \
-                .pivot(columns='nodeId', values=group) 
+                .pivot(columns='nodeId', values=group) \
+                .transpose()
     
     inc_fdo = IncFDO()
     inc_fdo.initial_fit(ms_data)
     lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
-    return Response(json.dumps(lis), mimetype='application/json')
+    response = {'data': lis, 'nodeIds': inc_fdo.VO.index.tolist()}
+    return Response(json.dumps(response), mimetype='application/json')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

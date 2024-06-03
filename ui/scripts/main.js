@@ -117,10 +117,10 @@ function initClusterView(data, dateValue) {
   lineClusterView.drawSvg(lineSvgData);
 }
 
-function initMsPlotView(data, group, uniqueNodes) {
+function initMsPlotView(response, group) {
   msPlotData.domId = 'fc_view';
   msPlotData.svg = d3.select(`#msplot-svg`);
-  msPlotData.data = data;
+  msPlotData.data = response.data;
   const margin = {
     top: 30,
     right: 10,
@@ -138,7 +138,13 @@ function initMsPlotView(data, group, uniqueNodes) {
     }
   );
   msPlotData.margin = margin;
-  msplot.appendScatterPlot(msPlotData, [group], uniqueNodes);
+  msplot.appendScatterPlot(msPlotData, [group], response.nodeIds, );
+}
+
+export async function updateMS(group) {
+  console.log(group)
+  const msData = await getMsData(group);
+  initMsPlotView(msData, group)
 }
 
 async function init(dateValue, type) {
@@ -146,13 +152,13 @@ async function init(dateValue, type) {
   const group = 'cpu_idle'
   const data = await getData(filename, 0);
   const msData = await getMsData(group);
-  const uniqueNodes = new Set();
-  data.forEach(obj => {
-    uniqueNodes.add(obj.nodeId);
-  });
-  initHeatmap(data, dateValue, type)
+  // const uniqueNodes = new Set();
+  // data.forEach(obj => {
+  //   uniqueNodes.add(obj.nodeId);
+  // });
+  initHeatmap(data, dateValue, type, group)
   initClusterView(data, dateValue)
-  initMsPlotView(msData, group, uniqueNodes)
+  initMsPlotView(msData, group)
 }
 
 window.updateChart = () => {
