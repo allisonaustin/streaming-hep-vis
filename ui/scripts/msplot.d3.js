@@ -153,6 +153,7 @@ function appendAxisLabels(cols){
 
     // title
     msContainer.append("text")
+        .attr("id", "chart-title")
         .attr("x", width / 1.8) 
         .attr("y", marginMS.top) 
         .attr("dy", "1em")
@@ -184,10 +185,15 @@ function updateData(msdata){
 }
 
 function updateAxis(){
-    processInput();
-    xAxis.call(d3.axisBottom(xms));
-    yAxis.call(d3.axisLeft(yms));
+    processInput(data);
+    xAxis.call(d3.axisBottom(xms).tickFormat(formatTick));
+    yAxis.call(d3.axisLeft(yms).tickFormat(formatTick));
 };
+
+function updateTitle(title){
+    d3.select('#chart-title')
+        .text(title);
+}
 
 function updateCircles(){
 
@@ -301,9 +307,10 @@ export function appendScatterPlot(msdata, cols, nodes){
 
 }
 
-export function updateScatterPlot(msdata, nodes){
+export function updateScatterPlot(msdata, group, nodes){
     updateData(msdata);
     updateAxis();
+    updateTitle(group);
     updateCircles();
     showMapCircles();
     visUpdateFlag = false;

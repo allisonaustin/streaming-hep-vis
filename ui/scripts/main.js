@@ -65,11 +65,12 @@ function getCorrelationData() {
   }
 }
 
-function initHeatmap(data, dateValue, type) {
+function initHeatmap(data, dateValue, type, group) {
   heatmapSvgData.domId = 'ts_view';
   heatmapSvgData.svg = d3.select(`#${type}_svg`);
   heatmapSvgData.data = data;
   heatmapSvgData.date = dateValue;
+  heatmapSvgData.group = group;
   const margin = { 
     top: 40,
     right: 10,
@@ -138,13 +139,7 @@ function initMsPlotView(response, group) {
     }
   );
   msPlotData.margin = margin;
-  msplot.appendScatterPlot(msPlotData, [group], response.nodeIds, );
-}
-
-export async function updateMS(group) {
-  console.log(group)
-  const msData = await getMsData(group);
-  initMsPlotView(msData, group)
+  msplot.appendScatterPlot(msPlotData, [group], response.nodeIds);
 }
 
 async function init(dateValue, type) {
@@ -157,7 +152,7 @@ async function init(dateValue, type) {
   //   uniqueNodes.add(obj.nodeId);
   // });
   initHeatmap(data, dateValue, type, group)
-  initClusterView(data, dateValue)
+  initClusterView(data, dateValue, group)
   initMsPlotView(msData, group)
 }
 

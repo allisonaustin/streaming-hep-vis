@@ -15,4 +15,6 @@ export const pallette = {
     purple: [0.345, 0.24, 0.315],
     brown: [0.61, 0.46, 0.38],
   };
+
+export const features = ['8292af', '8fbcb4']
   

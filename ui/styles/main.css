@@ -26,6 +26,7 @@ select {
 
 #fc_view {
     display: flex;
+    flex-direction: column;
     position: relative;
     width: auto;
     height: 50%;
@@ -321,3 +322,38 @@ select {
     border: 0px;
     border-radius: 8px;
 }
+
+.button-container {
+    display: flex; 
+    justify-content: center;
+    margin-bottom: 10px;
+  }
+
+button {
+    border: none; 
+    color: white;
+    padding: 10px 20px; 
+    text-align: center;
+    text-decoration: none; 
+    margin: 4px 2px; 
+    cursor: pointer; 
+    border-radius: 4px; 
+    transition: background-color 0.3s; 
+  }
+
+  .left-button {
+    background-color: #8292af; 
+  }
+  
+  .left-button:hover {
+    background-color: #687996; 
+  }
+  
+  .right-button {
+    background-color: #8fbcb4;
+  }
+  
+  .right-button:hover {
+    background-color: #78a39b;
+  }
+  

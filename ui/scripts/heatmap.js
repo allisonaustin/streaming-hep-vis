@@ -1,10 +1,11 @@
 import {
     percentColToD3Rgb,
-    pallette
+    pallette,
+    features
 } from './colors.js';
 
 import * as g from './groups.js';
-import * as m from './main.js';
+import * as u from './update.js';
 
 let timestamps = new Set(); // all timestamps
 let tsArray = []; // timestamps of current window
@@ -12,6 +13,7 @@ let timeInterval;
 let date = '';
 let functs = {};
 let selectedGroup;
+let selectedChart;
 
 function incrementFillColor(fillColor) {
     let currentColor = d3.rgb(fillColor);
@@ -102,9 +104,24 @@ export async function createHeatmaps(svgData) {
 
         const container = chartContainer.append("g")
             .attr('id', `${group}-heatmap`)
-            .attr("transform", `translate(${xOffset}, ${yOffset})`);
+            .attr("transform", `translate(${xOffset}, ${yOffset})`)
         
-            functs = chart(container, targetData[group], group, chartSvgArea)
+        container.append('rect')
+            .attr('id', `${group}-heatmap-cell`)
+            .attr("width", chartWidth + svgData.margin.left - 5)
+            .attr("height", chartHeight + svgData.margin.top - 5)
+            .attr('margin-top', '5px')
+            .attr("transform", `translate(0, -20)`)
+            .attr("fill", () => group === svgData.group ? `#${features[0]}` : 'none')
+            .attr("stroke", "none")
+            .attr("rx", 5) 
+            .attr("ry", 5);
+
+        if (group === svgData.group) {
+            selectedChart = d3.select(`#${group}-heatmap-cell`)
+        }
+        
+        functs = chart(container, targetData[group], group, chartSvgArea)
         
         col++;
         if (col >= numCols) {
@@ -294,7 +311,9 @@ export const chart = (container, groupData, group, svgArea) => {
                     })
                     .on('click', function(event, d) {
                         selectedGroup = group;
-                        m.updateMS(group)
+                        selectedChart.attr('fill', 'none');
+                        selectedChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features[0]}`)
+                        u.updateMS(group);
                     });
             }
         });

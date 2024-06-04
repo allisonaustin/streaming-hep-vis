@@ -1,6 +1,6 @@
 import * as heatMapView from './heatmap.js'
 import * as m from './model.js';
-import * as main from './main.js';
+import * as msplot from './msplot.d3.js'
 
 export const updateCharts = (svg) => {
   const filename = `far_data_${svg.date}.csv`
@@ -23,3 +23,18 @@ export const updateCharts = (svg) => {
         });
     } 
 } 
+
+export const updateMS = (group) => {
+  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${group}`;
+  fetch(flaskUrl)
+    .then(res => {
+      if (res.ok) {
+        return res.json();
+      } else {
+        throw new Error('Error getting data:', farmGroup);
+      }
+    })
+    .then(data => {
+      msplot.updateScatterPlot(data.data, [group], data.nodeIds);
+    });
+}
