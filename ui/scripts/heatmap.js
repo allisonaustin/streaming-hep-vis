@@ -6,14 +6,16 @@ import {
 
 import * as g from './groups.js';
 import * as u from './update.js';
+import { setFeature1, setFeature2, getFeature1, getFeature2 } from './select.js';
 
 let timestamps = new Set(); // all timestamps
 let tsArray = []; // timestamps of current window
 let timeInterval;
 let date = '';
 let functs = {};
-let selectedGroup;
-let selectedChart;
+let selectedXChart;
+let selectedYChart;
+let svgdata;
 
 function incrementFillColor(fillColor) {
     let currentColor = d3.rgb(fillColor);
@@ -52,7 +54,7 @@ export async function createHeatmaps(svgData) {
     svgData.svg.selectAll("*").remove();
     const svgArea = svgData.svgArea;
     date = svgData.date.date;
-    selectedGroup = svgData.group;
+    svgdata = svgData;
     const chartContainer = svgData.svg;
     chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width + svgData.margin.left, svgArea.height + svgData.margin.top]);
     
@@ -106,20 +108,27 @@ export async function createHeatmaps(svgData) {
             .attr('id', `${group}-heatmap`)
             .attr("transform", `translate(${xOffset}, ${yOffset})`)
         
+        // feature 1 highlight
         container.append('rect')
             .attr('id', `${group}-heatmap-cell`)
             .attr("width", chartWidth + svgData.margin.left - 5)
             .attr("height", chartHeight + svgData.margin.top - 5)
             .attr('margin-top', '5px')
             .attr("transform", `translate(0, -20)`)
-            .attr("fill", () => group === svgData.group ? `#${features[0]}` : 'none')
+            .attr("fill", () => {
+                if (group === svgData.selectedX) {
+                    selectedXChart = d3.select(`#${group}-heatmap-cell`)
+                    return `#${features.blue}`
+                } else if (group === svgData.selectedY) {
+                    selectedYChart = d3.select(`#${group}-heatmap-cell`)
+                    return `#${features.teal}`
+                } else {
+                    return 'none'
+                }
+            })
             .attr("stroke", "none")
             .attr("rx", 5) 
             .attr("ry", 5);
-
-        if (group === svgData.group) {
-            selectedChart = d3.select(`#${group}-heatmap-cell`)
-        }
         
         functs = chart(container, targetData[group], group, chartSvgArea)
         
@@ -310,10 +319,19 @@ export const chart = (container, groupData, group, svgArea) => {
                         d3.select(this).style("cursor", "default");
                     })
                     .on('click', function(event, d) {
-                        selectedGroup = group;
-                        selectedChart.attr('fill', 'none');
-                        selectedChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features[0]}`)
-                        u.updateMS(group);
+
+                        if (getFeature1() == 1) {
+                            svgdata.selectedX = group;
+                            selectedXChart.attr('fill', 'none');
+                            selectedXChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.blue}`)
+                            u.updateMS(group, svgdata.selectedY);
+                            u.updateCorr(group, svgdata.selectedY);
+                        } else if (getFeature2() == 1) {
+                            svgdata.selectedY = group;
+                            selectedYChart.attr('fill', 'none');
+                            selectedYChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.teal}`)
+                            u.updateCorr(svgdata.selectedX, group);
+                        }
                     });
             }
         });

@@ -13,9 +13,11 @@ let yms;
 let ms_circle_r = 3.5
 let visUpdateFlag;
 let selectednodesMain = [];
+let colordata = [];
 
 const colorRange = d3.schemeCategory10;
 let colorcode;
+
 function formatTick(d) {
     if (Math.abs(d) < 1000) {
         return d3.format(".2f")(d);
@@ -31,6 +33,7 @@ function init(msdata, nodes) {
     marginMS = msdata.margin
     height = msdata.svgArea.height;
     width = msdata.svgArea.width;
+    colordata = msdata.colordata;
 
     msPlotSvg = msdata.svg
         // .attr('width', width)
@@ -41,9 +44,14 @@ function init(msdata, nodes) {
     msContainer = msPlotSvg
         .append('g').attr('id', 'ms-container')
 
-    colorcode = d3.scaleOrdinal()
-        .domain(nodes)
-        .range(colorRange);
+    // coloring by nodeId
+    // colorcode = d3.scaleOrdinal()
+    //     .domain(nodes)
+    //     .range(colorRange);
+
+    colorcode = d3.scaleLinear()
+        .domain([0, d3.max(colordata, d => d.var)])
+        .range(['white', 'darkblue']);
 };
 
 //process the input data
@@ -70,7 +78,10 @@ function appendAxis() {
     xAxis = msContainer.append("g")
         .attr("id", "xmsaxis-container")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(xms).tickFormat(formatTick));
+        .call(d3.axisBottom(xms).tickFormat(formatTick))
+        .selectAll("text")
+           .attr("transform", "rotate(-45)")
+           .style("text-anchor", "end");
 
     // Add the Y Axis
     yAxis = msContainer.append("g")
@@ -111,10 +122,12 @@ function appendCircles(cols, nodes){
         .attr("r", ms_circle_r)
         .attr("stroke", "black")
         .attr("stroke-width", "1px")
-        .attr('fill', (d, i) => colorcode(nodes[i]))
+        .attr('fill', (d, i) => {
+            return colorcode(colordata.find(item => item.nodeId === nodes[i]).var);
+        })
         .on("mouseover", function(){
             tooltipM.getTooltip("msTooltip");
-            tooltipM.addToolTip(d3.select(this).attr("id"), d3.event.pageX, d3.event.pageY - 20);
+            tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX, d3.event.pageY - 20);
         })
         .on("mouseout", function(){
             d3.select("#msTooltip").remove();
@@ -164,13 +177,12 @@ function appendAxisLabels(cols){
 };
 
 
-function appendDataModules(msdata, cols, nodes){
-
+function appendDataModules(msdata, nodes){
     init(msdata, nodes)
     processInput(msdata.data);
     appendAxis();
-    appendCircles(cols, nodes);
-    appendAxisLabels(cols);
+    appendCircles(msdata.group, nodes);
+    appendAxisLabels(msdata.group);
 };
 
 function updateData(msdata){
@@ -307,7 +319,7 @@ export function appendScatterPlot(msdata, cols, nodes){
 
 }
 
-export function updateScatterPlot(msdata, group, nodes){
+export function updateScatterPlot(msdata, group, colordata){
     updateData(msdata);
     updateAxis();
     updateTitle(group);

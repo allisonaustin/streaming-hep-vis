@@ -1,6 +1,9 @@
-import * as heatMapView from './heatmap.js'
 import * as m from './model.js';
+import * as heatMapView from './heatmap.js'
+import * as cluster from './line-cluster.js'
 import * as msplot from './msplot.d3.js'
+
+let hmData;
 
 export const updateCharts = (svg) => {
   const filename = `far_data_${svg.date}.csv`
@@ -11,11 +14,12 @@ export const updateCharts = (svg) => {
           if (res.ok) {
             return res.json();
           } else {
-            throw new Error('Error getting data:', farmGroup);
+            throw new Error('Error getting data.');
           }
         })
         .then(data => {
-          svg.data = svg.data.concat(data);
+          hmData = svg.data.concat(data);
+          svg.data = hmData;
           heatMapView.updateHeatmaps(svg, data);
         })
         .catch(error => {
@@ -24,17 +28,21 @@ export const updateCharts = (svg) => {
     } 
 } 
 
-export const updateMS = (group) => {
-  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${group}`;
+export const updateCorr = (group1, group2) => {
+  cluster.updatePlot(group1, group2);
+}
+
+export const updateMS = (msGroup, colorGroup) => {
+  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}`;
   fetch(flaskUrl)
     .then(res => {
       if (res.ok) {
         return res.json();
       } else {
-        throw new Error('Error getting data:', farmGroup);
+        throw new Error('Error getting data.');
       }
     })
     .then(data => {
-      msplot.updateScatterPlot(data.data, [group], data.nodeIds);
+      msplot.updateScatterPlot(data.data, [msGroup], data.variance);
     });
 }

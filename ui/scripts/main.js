@@ -3,6 +3,7 @@ import axios from 'axios';
 /* MODEL */
 import * as m from './model.js';
 import * as g from './groups.js';
+import { setFeature1, setFeature2 } from './select.js';
 
 /* UPDATE */
 import * as u from './update.js';
@@ -65,12 +66,13 @@ function getCorrelationData() {
   }
 }
 
-function initHeatmap(data, dateValue, type, group) {
+function initHeatmap(data, dateValue, type, xGroup, yGroup) {
   heatmapSvgData.domId = 'ts_view';
   heatmapSvgData.svg = d3.select(`#${type}_svg`);
   heatmapSvgData.data = data;
   heatmapSvgData.date = dateValue;
-  heatmapSvgData.group = group;
+  heatmapSvgData.selectedX = xGroup;
+  heatmapSvgData.selectedY = yGroup;
   const margin = { 
     top: 40,
     right: 10,
@@ -91,13 +93,13 @@ function initHeatmap(data, dateValue, type, group) {
   heatMapView.createHeatmaps(heatmapSvgData);
 }
 
-function initClusterView(data, dateValue) {
+function initClusterView(data, dateValue, xGroup, yGroup) {
   lineSvgData.domId = 'fc_view';
   lineSvgData.svg = d3.select(`#line_svg`);
   lineSvgData.data = data;
   lineSvgData.date = dateValue;
-  lineSvgData.selectedX = 'cpu_nice'
-  lineSvgData.selectedY = 'bytes_in'
+  lineSvgData.selectedX = xGroup;
+  lineSvgData.selectedY = yGroup;
   const marginLC = {
     top: 20,
     right: 10,
@@ -122,6 +124,8 @@ function initMsPlotView(response, group) {
   msPlotData.domId = 'fc_view';
   msPlotData.svg = d3.select(`#msplot-svg`);
   msPlotData.data = response.data;
+  msPlotData.group = group;
+  msPlotData.colordata = response.variance;
   const margin = {
     top: 30,
     right: 10,
@@ -139,21 +143,22 @@ function initMsPlotView(response, group) {
     }
   );
   msPlotData.margin = margin;
-  msplot.appendScatterPlot(msPlotData, [group], response.nodeIds);
+  msplot.appendScatterPlot(msPlotData, response.nodeIds);
 }
 
 async function init(dateValue, type) {
   const filename = `far_data_${dateValue}.csv`;
-  const group = 'cpu_idle'
+  const xGroup = 'cpu_idle'
+  const yGroup = 'bytes_in'
   const data = await getData(filename, 0);
-  const msData = await getMsData(group);
+  const msData = await getMsData(xGroup);
   // const uniqueNodes = new Set();
   // data.forEach(obj => {
   //   uniqueNodes.add(obj.nodeId);
   // });
-  initHeatmap(data, dateValue, type, group)
-  initClusterView(data, dateValue, group)
-  initMsPlotView(msData, group)
+  initHeatmap(data, dateValue, type, xGroup, yGroup)
+  initClusterView(data, dateValue, xGroup, yGroup)
+  initMsPlotView(msData, xGroup)
 }
 
 window.updateChart = () => {
@@ -180,4 +185,14 @@ document.addEventListener('DOMContentLoaded', function() {
   .catch(error => {
     console.error('Error fetching data:', error);
   });
+});
+
+document.getElementById('feature-1').addEventListener('click', () => {
+  setFeature1(1);
+  setFeature2(0);
+});
+
+document.getElementById('feature-2').addEventListener('click', () => {
+  setFeature1(0);
+  setFeature2(1);
 });

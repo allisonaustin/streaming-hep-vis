@@ -65,13 +65,15 @@ def get_ms_inc(group):
     global cols 
 
     ms_data = df.set_index('timestamp') \
-                .pivot(columns='nodeId', values=group) \
-                .transpose()
+                .pivot(columns='nodeId', values=group)
     
+    var = ms_data.var()
+    var_lis = [{'nodeId': node_id, 'var': variance} for node_id, variance in var.items()]
+
     inc_fdo = IncFDO()
-    inc_fdo.initial_fit(ms_data)
+    inc_fdo.initial_fit(ms_data.transpose())
     lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
-    response = {'data': lis, 'nodeIds': inc_fdo.VO.index.tolist()}
+    response = {'data': lis, 'variance': var_lis, 'nodeIds': inc_fdo.VO.index.tolist()}
     return Response(json.dumps(response), mimetype='application/json')
 
 if __name__ == '__main__':

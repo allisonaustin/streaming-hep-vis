@@ -16,5 +16,11 @@ export const pallette = {
     brown: [0.61, 0.46, 0.38],
   };
 
-export const features = ['8292af', '8fbcb4']
+export const features = {
+  title: '78a39b',
+  teal: '8fbcb4',
+  darkteal: '78a39b',
+  blue: '8292af',
+  darkblue: '687996'
+}
   

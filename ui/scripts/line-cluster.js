@@ -3,10 +3,17 @@ import {
     pallette
 } from './colors.js';
 
+let container;
+let svgArea;
+let margin;
+let data;
+let selectedX;
+let selectedY;
+let date = '';
+
 let timestamps = new Set(); // all timestamps
 let tsArray = []; // timestamps of current window
 let timeInterval;
-let date = '';
 let functs = {};
 
 function groupByNode(data) {
@@ -32,20 +39,18 @@ function groupByNode(data) {
 
 export async function drawSvg(svgData) {
     svgData.svg.selectAll("*").remove();
-    const svgArea = svgData.svgArea;
+    svgArea = svgData.svgArea;
     date = svgData.date.date;
-    const chartContainer = svgData.svg;
-    chartContainer.attr('viewBox', [0, 0, svgArea.width + svgData.margin.left + svgData.margin.right, svgArea.height]);
-    let targetData = groupByNode(svgData.data);
-    functs = chart(chartContainer, targetData, svgData)
+    margin = svgData.margin;
+    container = svgData.svg;
+    container.attr('viewBox', [0, 0, svgArea.width + svgData.margin.left + svgData.margin.right, svgArea.height]);
+    data = groupByNode(svgData.data); 
+    selectedX = svgData.selectedX;
+    selectedY = svgData.selectedY;
+    functs = chart()
 }
 
-export const chart = (container, groupData, svgData) => {
-    const data = groupData;   
-    const svgArea = svgData.svgArea;
-    const selectedX = svgData.selectedX;
-    const selectedY = svgData.selectedY;
-
+export const chart = () => {  
     const customColorScale = d3.scaleOrdinal()
         .domain(Object.keys(pallette))
         .range(Object.values(pallette).map(percentColToD3Rgb));
@@ -66,7 +71,7 @@ export const chart = (container, groupData, svgData) => {
       .range([svgArea.height, 0]);
     
     container.append('g')
-      .attr('transform', `translate(${svgData.margin.left},${svgArea.height})`)
+      .attr('transform', `translate(${margin.left},${svgArea.height})`)
       .call(d3.axisBottom(xScale))
       .selectAll('text')
       .attr('transform', 'rotate(-45)')
@@ -74,7 +79,7 @@ export const chart = (container, groupData, svgData) => {
       .style('display', 'none'); // hiding tick values
     
     container.append('g')
-      .attr('transform', `translate(${svgData.margin.left},0)`)
+      .attr('transform', `translate(${margin.left},0)`)
       .call(d3.axisLeft(yScale))
       .selectAll('text')
       .style('display', 'none');
@@ -82,7 +87,7 @@ export const chart = (container, groupData, svgData) => {
     container.append('text')
       .attr('class', 'axis-label')
       .attr('x', svgArea.width / 1.5) 
-      .attr('y', svgArea.height + svgData.margin.top + svgData.margin.bottom) 
+      .attr('y', svgArea.height + margin.top + margin.bottom) 
       .style('text-anchor', 'middle') 
       .style('font-size', '16')
       .text(selectedX);
@@ -91,7 +96,7 @@ export const chart = (container, groupData, svgData) => {
       .attr('class', 'axis-label')
       .attr('transform', 'rotate(-90)') 
       .attr('x', -svgArea.height / 2) 
-      .attr('y', svgData.margin.right + 15)
+      .attr('y', margin.right + 15)
       .style('text-anchor', 'middle')
       .style('font-size', '16')
       .text(selectedY);
@@ -101,7 +106,7 @@ export const chart = (container, groupData, svgData) => {
       .y((d, i) => yScale(d.y));
 
     const linesGroup = container.append('g')
-                        .attr('transform', `translate(${svgData.margin.left}, 0)`)
+                        .attr('transform', `translate(${margin.left}, 0)`)
                         .attr('id', 'lines-group');
 
     const gradientColors = [
@@ -143,4 +148,11 @@ export const chart = (container, groupData, svgData) => {
             .attr('offset', '100%')
             .attr('stop-color', 'darkblue');
     });
+}
+
+export const updatePlot = (xGroup, yGroup) => {
+  container.selectAll("*").remove();
+  selectedX = xGroup;
+  selectedY = yGroup;
+  functs = chart()
 }
