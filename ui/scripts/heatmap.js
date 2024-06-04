@@ -320,13 +320,13 @@ export const chart = (container, groupData, group, svgArea) => {
                     })
                     .on('click', function(event, d) {
 
-                        if (getFeature1() == 1) {
+                        if (getFeature1() == 1 && group != svgdata.selectedY) {
                             svgdata.selectedX = group;
                             selectedXChart.attr('fill', 'none');
                             selectedXChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.blue}`)
                             u.updateMS(group, svgdata.selectedY);
                             u.updateCorr(group, svgdata.selectedY);
-                        } else if (getFeature2() == 1) {
+                        } else if (getFeature2() == 1 && group != svgdata.selectedX) {
                             svgdata.selectedY = group;
                             selectedYChart.attr('fill', 'none');
                             selectedYChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.teal}`)
@@ -376,8 +376,8 @@ export const updateChart = (container, data, group, svgArea, x, y) => {
     let timeExtent = d3.extent(tsArray);
     
     // updating x axis
-    // x.domain([timeExtent[0].getTime(), timeExtent[1].getTime()]) 
-    // let xDomain = d3.timeMinute.every(5).range(...timeExtent);
+    x.domain([timeExtent[0].getTime(), timeExtent[1].getTime()]) 
+    let xDomain = d3.timeMinute.every(5).range(...timeExtent);
     // let labels = xDomain.filter((_, i) => i % 3 === 0);
     // let chartXAxis = d3.axisBottom(x)
     //     .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
