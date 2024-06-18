@@ -32,8 +32,32 @@ export const updateCorr = (group1, group2) => {
   cluster.updatePlot(group1, group2);
 }
 
-export const updateMS = (msGroup, colorGroup) => {
+export const updateMS = (msGroup, colorGroup, colorType='var', newData=false) => {
   const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}`;
+    fetch(flaskUrl)
+    .then(res => {
+      if (res.ok) {
+        return res.json();
+      } else {
+        throw new Error('Error getting data.');
+      }
+    })
+    .then(data => {
+      let colordata = []
+      if (colorType == 'var') {
+        colordata = data.variance;
+      } else if (colorType == 'min') {
+        colordata = data.min;
+      } else {
+        colordata = data.max;
+      }
+      msplot.updateScatterPlot(data.data, [msGroup], colordata);
+    });
+}
+
+
+export const updatePCA = (group) => {
+  const flaskUrl = m.flaskUrl + `/getFPCA/${group}`;
   fetch(flaskUrl)
     .then(res => {
       if (res.ok) {
@@ -43,6 +67,6 @@ export const updateMS = (msGroup, colorGroup) => {
       }
     })
     .then(data => {
-      msplot.updateScatterPlot(data.data, [msGroup], data.variance);
+      heatMapView.appendFPCA()
     });
 }

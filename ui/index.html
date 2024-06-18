@@ -16,9 +16,9 @@
     <div class='wrapper_top'>
       <div id='ts_view'>
         <div class='view_title'>Abstract View</div>
-        <div id='farm_selection' onchange="updateChart()">
+        <div id='farm_selection'>
           Date
-          <select id='date_selection'>
+          <select id='date_selection' onchange="updateChart()">
           </select>
           Stream data
           <label class="switch">
@@ -32,16 +32,23 @@
         </div>
         <svg id='farm_svg'></svg>
         <div class="tooltip" id="heatmap-tooltip"></div>
-        <div id="node_options" style="display:none" class="node_selection">
-        </div>
       </div>
       <div id="fc_view">
         <div class="view_title">MS Plot</div>
+          <div id="node_color" class="color-selection" onchange="handleColorChange()">
+            <input type="radio" id="var" name="color" value="var" checked>
+              <label for="var">variance</label><br>
+            <input type="radio" id="min" name="color" value="min">
+              <label for="min">min</label><br>
+            <input type="radio" id="max" name="color" value="max">
+              <label for="max">max</label><br>
+          </div>
         <svg id="msplot-svg"></svg>
       </div>
       <div id="fc_view">
         <div class="view_title">Correlation View</div>
         <div id='fc_view_left'>
+          <svg id="corr-map"></svg>
           <svg id='line_svg'></svg>
         </div>
       </div>

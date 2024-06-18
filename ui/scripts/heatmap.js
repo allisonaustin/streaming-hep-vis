@@ -131,7 +131,7 @@ export async function createHeatmaps(svgData) {
             .attr("ry", 5);
         
         functs = chart(container, targetData[group], group, chartSvgArea)
-        
+
         col++;
         if (col >= numCols) {
             row++;
@@ -199,7 +199,20 @@ export const chart = (container, groupData, group, svgArea) => {
     //     .style('font-size', '12')
         // .text('Value')
 
-    let grid = container.append('g').attr('class', 'grid').attr('id', `grid_${group}`).attr('transform', `translate(0, -${svgArea.margin.bottom})`)
+    let grid = container.append('g').attr('class', 'grid')
+        .attr('id', `grid_${group}`)
+        .attr('transform', `translate(0, -${svgArea.margin.bottom})`)
+        // .on('mouseover', function (event, d) {
+        //     linesGroup.selectAll('path')
+        //         .attr('stroke-opacity', 1)
+        //     d3.select(this).style("cursor", "pointer");
+        // })
+        // .on("mouseout", function(d) {
+        //     linesGroup.selectAll('path')
+        //         .attr('stroke-opacity', 0)
+        //     d3.select(this).style("cursor", "default");
+        // })
+                    
     
     let counts = []
     for (let i = 0; i <= ticksCount; i++) {
@@ -308,23 +321,13 @@ export const chart = (container, groupData, group, svgArea) => {
                     .attr('fill', colorBand(counts[i][j]))
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
-                    .on('mouseover', function (event, d) {
-                        // linesGroup.selectAll('path')
-                        //     .attr('stroke-opacity', 1)
-                        d3.select(this).style("cursor", "pointer");
-                    })
-                    .on("mouseout", function(d) {
-                        // linesGroup.selectAll('path')
-                        //     .attr('stroke-opacity', 0)
-                        d3.select(this).style("cursor", "default");
-                    })
                     .on('click', function(event, d) {
 
                         if (getFeature1() == 1 && group != svgdata.selectedY) {
                             svgdata.selectedX = group;
                             selectedXChart.attr('fill', 'none');
                             selectedXChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.blue}`)
-                            u.updateMS(group, svgdata.selectedY);
+                            u.updateMS(group, svgdata.selectedY, true);
                             u.updateCorr(group, svgdata.selectedY);
                         } else if (getFeature2() == 1 && group != svgdata.selectedX) {
                             svgdata.selectedY = group;
@@ -443,3 +446,98 @@ export const updateChart = (container, data, group, svgArea, x, y) => {
     return {x, y};
 
 }
+
+export const appendFPCA = (container, data, xDomain, yDomain, sliceFpcs=4) => {
+    d3.select('#fpca-container').remove();
+    let width = svgdata.svgArea.width 
+    let height = svgdata.svgArea.height
+    let fpcaContainer = container.append('g')
+        .attr('id', 'fpca-container')
+        .attr('transform', 'translate('+(width + svgdata.margin.left - svgdata.margin.right)+',0')
+    
+    var fpcaW = svgdata.margin.right,
+        fpcaH = height/2;
+    var xfpca = d3.scaleLinear().range([0, fpcaW]);
+    var yfpca = d3.scaleLinear().range([fpcaH , 0]);
+
+    var xfpcaeffect = d3.scaleLinear().range([0, svgdata.margin.right]);
+    var yfpcaeffect = d3.scaleLinear().range([height/2, 0]);
+    const effectCols = ["mean", "minus", "plus"];
+    var myFPCAcolor = d3.scaleOrdinal(d3.schemeAccent)
+
+    d3.select('#fpca-container')
+        .call(d3.brushX()
+            .extent([[0,0], [fpcaW, fpcaH]])
+            .on('start', () => {x.domain(xDomain)})
+            .on('end', updateChart));
+
+    colnames = Object.keys(data[0]).slice(0, sliceFpcs).filter(function(col) {
+        return col !== "";
+    })
+
+    data.forEach(function(d){
+        colnames.forEach(function(c){
+            if(c !=="")
+                d[c] = +d[c]
+        }) 
+    });
+
+    xfpca.domain([0, data.length]);
+    var yextent = getExtent(colnames, data);
+    yfpca.domain(yextent);
+
+    // X axis
+    fpcaContainer.append('g')
+        .attr("id", "xfpcsaxis-container")
+        .attr("transform", "translate(0," + (height/2) + ")")
+        .call(d3.axisBottom(xfpca))
+        .style("text-anchor", "end")
+        .attr("dx", "-.8em")
+        .attr("dy", ".15em")
+        .selectAll("text")
+        .attr("transform", "rotate(-65)");
+
+    // Y Axis
+    fpcaContainer.append('g')
+        .attr('id', 'yfpcaaxis-container')
+        .call(d3.axisLeft(yfpca))
+
+    // append g for lines
+    var dl = fpcaContainer.append('g')
+        .attr('id', 'fpca-lines')
+
+    columns.forEach(function (c){
+        if(c !== ""){
+
+            var valueline = d3.line()
+                .x(function (d, i) {
+                    return xfpca(i);
+                })
+                .y(function (d) {
+                    return yfpca(d[c]);
+                });
+
+            dl.append("path")
+                .data([data])
+                .attr("class", "line-fpca")
+                .attr("id", "fpca"+c.split("V")[1])
+                .attr("stroke", function(d, i){
+                    return myFPCAcolor(c.split("V")[1])
+                })
+                .attr("d", valueline)
+                .on("click", function(){
+
+                    if(d3.select(this) === undefined) return;
+
+                    var fpcLine = d3.select(this);
+                    var h = fpcLine.property("id");
+                    var fcolor = fpcLine.style('stroke');
+                    let fpcColor = d3.color(fcolor).formatHex().split("#")[1];
+                    // get main contributors of FPC on main plot
+                })
+                // .on("mouseover", fpcahover)
+                // .on("mouseout", fpcahoverout)
+            }
+    });
+    console.log("appendLines done!!")
+} // end of fpca

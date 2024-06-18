@@ -182,11 +182,11 @@ select {
     overflow: scroll;
 }
 
-/* .node_selection input[type="checkbox"] {
+/* .selection input[type="checkbox"] {
     display: none;
 }
 
-.node_selection input[type="checkbox"]+label {
+.selection input[type="checkbox"]+label {
     display: none;
     cursor: pointer;
     display: inline-block;
@@ -196,7 +196,7 @@ select {
     padding-right: 5px;
 }
 
-.node_selection input[type="checkbox"]+label::before {
+.selection input[type="checkbox"]+label::before {
     content: "";
     position: absolute;
     display: block;
@@ -208,11 +208,11 @@ select {
     top: 50%;
     border: 1px solid;
     border-radius: 2px;
-    /* border-color: #88888;
-    background-color: #ffffff; 
+    /* /* border-color: #88888;
+    background-color: #ffffff;
 } 
 
-.node_selection input[type="checkbox"]:checked+label::after {
+.selection input[type="checkbox"]:checked+label::after {
     content: "";
     position: absolute;
     display: block;

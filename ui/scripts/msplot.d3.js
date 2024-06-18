@@ -50,7 +50,7 @@ function init(msdata, nodes) {
     //     .range(colorRange);
 
     colorcode = d3.scaleLinear()
-        .domain([0, d3.max(colordata, d => d.var)])
+        .domain([0, d3.max(colordata, d => d.val)])
         .range(['white', 'darkblue']);
 };
 
@@ -79,9 +79,9 @@ function appendAxis() {
         .attr("id", "xmsaxis-container")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(xms).tickFormat(formatTick))
-        .selectAll("text")
-           .attr("transform", "rotate(-45)")
-           .style("text-anchor", "end");
+        // .selectAll("text")
+        //    .attr("transform", "rotate(-45)")
+        //    .style("text-anchor", "end");
 
     // Add the Y Axis
     yAxis = msContainer.append("g")
@@ -123,7 +123,7 @@ function appendCircles(cols, nodes){
         .attr("stroke", "black")
         .attr("stroke-width", "1px")
         .attr('fill', (d, i) => {
-            return colorcode(colordata.find(item => item.nodeId === nodes[i]).var);
+            return colorcode(colordata.find(item => item.nodeId === nodes[i]).val);
         })
         .on("mouseover", function(){
             tooltipM.getTooltip("msTooltip");
@@ -210,6 +210,9 @@ function updateTitle(title){
 function updateCircles(){
 
     // console.log("data INC", data)
+    colorcode = d3.scaleLinear()
+        .domain([0, d3.max(colordata, d => d.val)])
+        .range(['white', 'darkblue']);
 
     let circles = msContainer
         .selectAll(".ms-circle")
@@ -221,6 +224,9 @@ function updateCircles(){
         .attr("cx", d => xms(d[0]))
         .attr("cy", d => yms(d[1]))
         .attr("r", ms_circle_r)
+        .attr('fill', (d, i) => {
+            return colorcode(colordata[i].val);
+        })
 };
 
 
@@ -319,7 +325,8 @@ export function appendScatterPlot(msdata, cols, nodes){
 
 }
 
-export function updateScatterPlot(msdata, group, colordata){
+export function updateScatterPlot(msdata, group, cdata){
+    colordata = cdata
     updateData(msdata);
     updateAxis();
     updateTitle(group);
