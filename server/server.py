@@ -61,7 +61,6 @@ def get_data(filename, inc):
 
     df['timestamp'] = df['timestamp'].apply(lambda x: int(x) * 1000 if isinstance(x, int) else int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
     final_df = df.replace({np.nan: None})
-    print(final_df)
     return Response(final_df.to_json(orient='records'), mimetype='application/json')
 
 @app.route('/getCorr')
@@ -69,7 +68,7 @@ def get_corr():
     global df 
     if df.empty:
         return
-    dat = df.drop(columns=['timestamp', 'nodeId'])
+    dat = df.iloc[:, :34].drop(columns=['timestamp', 'nodeId', 'mem_shared'])
     dat = dat.replace({np.nan: None})
     corr_df = dat.corr().round(2)
     return Response(corr_df.to_json(orient='records'), mimetype='application/json')
@@ -79,8 +78,8 @@ def get_ms_inc(group):
     global df 
     global cols 
 
-    ms_data = df.set_index('nodeId') \
-                .pivot(columns='timestamp', values=group)
+    ms_data = df.set_index('timestamp') \
+                .pivot(columns='nodeId', values=group).T
     
     var_ms = ms_data.var(axis=1)
     min_ms = ms_data.min(axis=1)
@@ -106,9 +105,9 @@ def get_fpca(group):
     nodes = df_baseline.index.to_list()
     args = ["df_save.csv", nodes, bs, k, str(optimizer)[2:-2], method]
 
-    df_baseline = df.set_index('nodeId') \
-                    .pivot(columns='timestamp', values=group) \
-                    .apply(lambda col: col.fillna(col.mean()), axis=1)
+    df_baseline = df.set_index('timestamp') \
+                    .pivot(columns='nodeId', values=group) \
+                    .apply(lambda col: col.fillna(col.mean()), axis=1).T
 
     tract = np.arange(len(df_baseline))
 

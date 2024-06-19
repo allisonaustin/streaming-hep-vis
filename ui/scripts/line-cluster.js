@@ -37,7 +37,7 @@ function groupByNode(data) {
 }
 
 
-export async function drawSvg(svgData) {
+export function drawSvg(svgData) {
     svgData.svg.selectAll("*").remove();
     svgArea = svgData.svgArea;
     date = svgData.date.date;

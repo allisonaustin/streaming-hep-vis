@@ -12,6 +12,7 @@ import * as u from './update.js';
 import * as lineClusterView from './line-cluster.js';
 import * as heatMapView from './heatmap.js';
 import * as msplot from './msplot.d3.js';
+import * as correlationView from './corr-matrix.js';
 
 import { 
   calcContainerWidth, 
@@ -22,6 +23,7 @@ import {
 const heatmapSvgData = m.svgData();
 const lineSvgData = m.svgData();
 const msPlotData = m.svgData();
+const corrSvgData = m.svgData();
 let xGroup = 'cpu_idle';
 let yGroup = 'bytes_in';
 let refreshIntervalId;
@@ -76,48 +78,45 @@ async function initHeatmap(data, dateValue, type) {
   heatmapSvgData.date = dateValue;
   heatmapSvgData.selectedX = xGroup;
   heatmapSvgData.selectedY = yGroup;
-  const margin = { 
-    top: 40,
-    right: 10,
-    bottom: 20,
-    left: 20
-  };
+  const margin = { top: 15, right: 10, bottom: 10, left: 10 };
   heatmapSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${heatmapSvgData.domId}`),
     calcContainerHeight(`#${heatmapSvgData.domId}`),
-    margin || {
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0
-    }
+    margin || { top: 0, right: 0, bottom: 0, left: 0 }
   );
   heatmapSvgData.margin = margin;
   heatMapView.createHeatmaps(heatmapSvgData);
 }
 
-async function initClusterView(data, corrData, dateValue) {
-  lineSvgData.domId = 'fc_view';
+async function initCorrelationView(data) {
+  corrSvgData.domId = 'fc_view';
+  corrSvgData.svg = d3.select(`#corr_map`);
+  corrSvgData.data = data;
+  corrSvgData.date = dateValue;
+  corrSvgData.selectedX = xGroup;
+  corrSvgData.selectedY = yGroup;
+  const margin = {top: 20, right:10, bottom:10, left:20}
+  corrSvgData.svgArea = prepareSvgArea(
+    calcContainerWidth(`#${corrSvgData.domId}`),
+    calcContainerHeight(`#${corrSvgData.domId}`),
+    margin || { top: 0, right: 0, bottom: 0, left: 0 }
+  );
+  corrSvgData.margin = margin;
+  correlationView.drawSvg(corrSvgData);
+}
+
+async function initClusterView(data, dateValue) {
+  lineSvgData.domId = 'fc_view_bottom';
   lineSvgData.svg = d3.select(`#line_svg`);
   lineSvgData.data = data;
   lineSvgData.date = dateValue;
   lineSvgData.selectedX = xGroup;
   lineSvgData.selectedY = yGroup;
-  const marginLC = {
-    top: 20,
-    right: 10,
-    bottom: 20,
-    left: 60
-  }
+  const marginLC = {top: 20, right: 10, bottom: 10, left: 10}
   lineSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${lineSvgData.domId}`),
     calcContainerHeight(`#${lineSvgData.domId}`),
-    marginLC || {
-      top: 0,
-      right: 0,
-      bottom: 0,
-      left: 0
-    }
+    marginLC || { top: 0, right: 0, bottom: 0, left: 0 }
   );
   lineSvgData.margin = marginLC;
   lineClusterView.drawSvg(lineSvgData);
@@ -135,7 +134,7 @@ async function initMsPlotView(response) {
     top: 30,
     right: 10,
     bottom: 20,
-    left: 40
+    left: 20
   }
   msPlotData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${msPlotData.domId}`),
@@ -161,7 +160,8 @@ async function init(type, dateValue) {
   //   uniqueNodes.add(obj.nodeId);
   // });
   initHeatmap(data, dateValue, type)
-  initClusterView(data, corrData, dateValue)
+  initClusterView(data, dateValue)
+  initCorrelationView(corrData)
   initMsPlotView(msData)
 }
 
@@ -170,13 +170,16 @@ window.handleColorChange = () => {
   u.updateMS(msPlotData.selectedX, msPlotData.selectedY, option, false)
 }
 
-window.updateChart = () => {
+window.updateDate = () => {
   if (document.getElementById('date_selection') != dateValue) {
     dateValue = document.querySelector('#date_selection').value
     init('farm', dateValue)
   }
+}
+
+window.updateChart = () => {
   if (document.getElementById('data-stream-option').checked) {
-    refreshIntervalId = setInterval(() => u.updateCharts(heatmapSvgData), 1000);
+    refreshIntervalId = setInterval(() => u.updateCharts(heatmapSvgData), 500);
   } else {
     clearInterval(refreshIntervalId);
   }

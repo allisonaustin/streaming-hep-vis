@@ -24,7 +24,7 @@ select {
     height: 100%;
 }
 
-#fc_view {
+#ms_view {
     display: flex;
     flex-direction: column;
     position: relative;
@@ -33,23 +33,27 @@ select {
     border-style: solid;
     border-width: thin;
     border-color: #DDDDDD;
+}
+
+#fc_view {
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    width: auto;
+    height: 50%;
+    border-style: solid;
+    border-width: thin;
+    border-color: #DDDDDD;
     /* border-bottom-color: #FFFFFF; */
   }
-  
-  #fc_view_left {
-    display: flex;
-    position: relative;
-    width: 65%;
-    height: 100%;
-  }
-  
-  #fc_view_right {
-    display: flex;
-    position: relative;
-    width: 35%;
-    height: 100%;
-  }
-  
+
+#fc_view_bottom {
+  display: flex;
+  position: relative;
+  width: 60%;
+  height: 100%;
+  padding: 20px;
+}
 
 .view_title {
     position: absolute;
@@ -84,7 +88,6 @@ select {
     position: absolute;
     top: 5px;
     left: 10px;
-    display: flex;
     justify-content: center;
     align-items: center;
 }
@@ -109,20 +112,25 @@ select {
     margin-right: 20px;
 }
 
+#farm_svg {
+  margin-top: 30px;
+}
+
 #ts_view {
     float: left;
     position: relative;
     display:flex;
-    width: 60%;
-    height: 100%;
+    width: 50%;
+    height: 70%;
     padding-top: 0px;
     border-style: solid;
     border-width: thin;
     border-color: #DDDDDD;
+    margin-right: 0px;
 }
 
 .ts_title {
-    float: left;
+    float: right;
     position: relative;
     top: 12%;
     left: 50%;

@@ -5,11 +5,11 @@ import * as msplot from './msplot.d3.js'
 
 let hmData;
 
-export const updateCharts = (svg) => {
+export const updateCharts = async (svg) => {
   const filename = `far_data_${svg.date}.csv`
   const flaskUrl = m.flaskUrl + `/getData/${filename}/1`;
   if (document.getElementById('data-stream-option').checked) {
-    fetch(flaskUrl)
+    await fetch(flaskUrl)
       .then(res => {
           if (res.ok) {
             return res.json();
@@ -32,9 +32,9 @@ export const updateCorr = (group1, group2) => {
   cluster.updatePlot(group1, group2);
 }
 
-export const updateMS = (msGroup, colorGroup, colorType='var', newData=false) => {
+export const updateMS = async (msGroup, colorGroup, colorType='var', newData=false) => {
   const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}`;
-    fetch(flaskUrl)
+    await fetch(flaskUrl)
     .then(res => {
       if (res.ok) {
         return res.json();
@@ -56,9 +56,9 @@ export const updateMS = (msGroup, colorGroup, colorType='var', newData=false) =>
 }
 
 
-export const updatePCA = (group) => {
+export const updatePCA = async (group) => {
   const flaskUrl = m.flaskUrl + `/getFPCA/${group}`;
-  fetch(flaskUrl)
+  await fetch(flaskUrl)
     .then(res => {
       if (res.ok) {
         return res.json();

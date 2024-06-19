@@ -50,7 +50,7 @@ function groupByDataType(data) {
 }
 
 
-export async function createHeatmaps(svgData) {
+export function createHeatmaps(svgData) {
     svgData.svg.selectAll("*").remove();
     const svgArea = svgData.svgArea;
     date = svgData.date.date;
@@ -111,10 +111,10 @@ export async function createHeatmaps(svgData) {
         // feature 1 highlight
         container.append('rect')
             .attr('id', `${group}-heatmap-cell`)
-            .attr("width", chartWidth + svgData.margin.left - 5)
-            .attr("height", chartHeight + svgData.margin.top - 5)
+            .attr("width", chartWidth + svgData.margin.left)
+            .attr("height", chartHeight + svgData.margin.top)
             .attr('margin-top', '5px')
-            .attr("transform", `translate(0, -20)`)
+            .attr("transform", `translate(0, -10)`)
             .attr("fill", () => {
                 if (group === svgData.selectedX) {
                     selectedXChart = d3.select(`#${group}-heatmap-cell`)
