@@ -15,7 +15,7 @@ export function drawSvg(svgData) {
     let date = svgData.date.date;
     let margin = svgData.margin;
     let container = svgData.svg;
-    container.attr('viewBox', [0, 0, svgArea.width + svgData.margin.left + svgData.margin.right, svgArea.height]);
+    container.attr('viewBox', [0, 0, svgArea.width + svgData.margin.left + svgData.margin.right, svgArea.height + svgData.margin.top + svgData.margin.bottom]);
     let data = svgData.data;
     let selectedX = svgData.selectedX;
     let selectedY = svgData.selectedY;
@@ -28,37 +28,38 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
     const colorscale = d3.scaleSequential(d3.interpolateViridis)
         .domain([-1, 1]);
 
-    let numRows = cols.length;
-    let numCols = cols.length;
-    const paddingLeft = 40;
+    const numRows = cols.length;
+    const numCols = cols.length;
 
-    const gridSize = Math.min(area.width / numCols, area.height / numRows);
+    // Calculate the grid size considering the available area and margins
+    const gridSize = (area.width - margin.left - margin.right) / numCols;
 
-    // top labels
+    // Top labels
     container.selectAll('.x-label')
         .data(cols)
         .enter()
         .append('text')
         .attr('class', 'label-text')
-        .attr('transform', (d, i) => `translate(${i * gridSize + margin.left + paddingLeft}, ${margin.top}) rotate(-45)`)
+        .attr('transform', (d, i) => `translate(${i * gridSize + margin.left + margin.right + 30}, ${-margin.top - margin.bottom - 50}) rotate(-45)`)
         .text(d => d);
 
-    // left labels
+    // Left labels
     container.selectAll('.y-label')
         .data(cols)
         .enter()
         .append('text')
         .attr('class', 'label-text y-label-text')
-        .attr('x', 10)
-        .attr('y', (d, i) => i * gridSize + margin.top + 10)
+        .attr('x', 40)
+        .attr('y', (d, i) => i * gridSize - margin.top - margin.bottom - 50)
+        .style('text-anchor', 'end')
         .text(d => d);
 
     let grid = container.append('g').attr('class', 'grid')
-        .attr('transform', `translate(${margin.left + paddingLeft},${margin.top})`);
+        .attr('transform', `translate(${margin.left + margin.right + 20}, ${-margin.top - margin.bottom - 50})`)
  
-    for (let i=0; i<numRows; i++) {
-        for (let j=0; j<numCols; j++) {
-            const value = data[i][cols[j]]
+    for (let i = 0; i < numRows; i++) {
+        for (let j = 0; j < numCols; j++) {
+            const value = data[i][cols[j]];
             grid.append('rect')
                 .attr('class', 'grid-rect')
                 .attr('id', `t_${i}_${j}`)
@@ -68,7 +69,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                 .attr('height', gridSize)
                 .attr('fill', colorscale(value))
                 .attr('stroke', 'black')
-                .attr('stroke-width', 0.3)
+                .attr('stroke-width', 0.3);
         }
     }
-} 
+}

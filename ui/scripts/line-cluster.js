@@ -96,7 +96,7 @@ export const chart = () => {
       .attr('class', 'axis-label')
       .attr('transform', 'rotate(-90)') 
       .attr('x', -svgArea.height / 2) 
-      .attr('y', margin.right + 15)
+      .attr('y', 10)
       .style('text-anchor', 'middle')
       .style('font-size', '16')
       .text(selectedY);

@@ -112,7 +112,7 @@ async function initClusterView(data, dateValue) {
   lineSvgData.date = dateValue;
   lineSvgData.selectedX = xGroup;
   lineSvgData.selectedY = yGroup;
-  const marginLC = {top: 20, right: 10, bottom: 10, left: 10}
+  const marginLC = {top: 20, right: 10, bottom: 10, left: 30}
   lineSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${lineSvgData.domId}`),
     calcContainerHeight(`#${lineSvgData.domId}`),
