@@ -73,17 +73,22 @@ def get_corr():
     corr_df = dat.corr().round(2)
     return Response(corr_df.to_json(orient='records'), mimetype='application/json')
 
-@app.route('/getMagnitudeShapeFDA/<group>')
-def get_ms_inc(group):
+@app.route('/getMagnitudeShapeFDA/<xgroup>/<ygroup>')
+def get_ms_inc(xgroup, ygroup):
     global df 
     global cols 
 
     ms_data = df.set_index('timestamp') \
-                .pivot(columns='nodeId', values=group).T
+                .pivot(columns='nodeId', values=xgroup) \
+                .apply(lambda row: row.fillna(row.mean()), axis=0).T
+    # fix me!!!
+    color_data = df.set_index('timestamp') \
+                    .pivot(columns='nodeId', values=xgroup) \
+                    .apply(lambda row: row.fillna(row.mean()), axis=0).T
     
-    var_ms = ms_data.var(axis=1)
-    min_ms = ms_data.min(axis=1)
-    max_ms = ms_data.max(axis=1)
+    var_ms = color_data.var(axis=1)
+    min_ms = color_data.min(axis=1)
+    max_ms = color_data.max(axis=1)
     var_lis = [{'nodeId': node_id, 'val': variance} for node_id, variance in var_ms.items()]
     min_lis = [{'nodeId': node_id, 'val': min_val} for node_id, min_val in min_ms.items()]
     max_lis = [{'nodeId': node_id, 'val': max_val} for node_id, max_val in max_ms.items()]

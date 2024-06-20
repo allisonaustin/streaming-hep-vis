@@ -6,7 +6,7 @@ import {
 
 import * as g from './groups.js';
 import * as u from './update.js';
-import { setFeature1, setFeature2, getFeature1, getFeature2 } from './select.js';
+import { getState1, getState2, setValue, getType } from './stateManager.js';
 
 let timestamps = new Set(); // all timestamps
 let tsArray = []; // timestamps of current window
@@ -323,16 +323,19 @@ export const chart = (container, groupData, group, svgArea) => {
                     .attr('stroke-width', 0.5)
                     .on('click', function(event, d) {
 
-                        if (getFeature1() == 1 && group != svgdata.selectedY) {
+                        if (getState1() == 1 && group != svgdata.selectedY) { // new Feature 1
                             svgdata.selectedX = group;
+                            setValue(group, svgdata.selectedY); // updating state manager
                             selectedXChart.attr('fill', 'none');
-                            selectedXChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.blue}`)
-                            u.updateMS(group, svgdata.selectedY, true);
+                            selectedXChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.blue}`);
+                            u.updateMS(group, svgdata.selectedY, getType(), true);
                             u.updateCorr(group, svgdata.selectedY);
-                        } else if (getFeature2() == 1 && group != svgdata.selectedX) {
+                        } else if (getState2() == 1 && group != svgdata.selectedX) { // new Feature 2
                             svgdata.selectedY = group;
+                            setValue(svgdata.selectedX, group);
                             selectedYChart.attr('fill', 'none');
                             selectedYChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.teal}`)
+                            document.getElementById('yGroupLabel').innerText = group;
                             u.updateCorr(svgdata.selectedX, group);
                         }
                     });

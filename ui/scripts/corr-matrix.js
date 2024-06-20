@@ -6,7 +6,6 @@ import {
 
 import * as g from './groups.js';
 import * as u from './update.js';
-import { setFeature1, setFeature2, getFeature1, getFeature2 } from './select.js';
 
 
 export function drawSvg(svgData) {
@@ -76,9 +75,10 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                         .filter(function (d, index) {
                             const thisRect = d3.select(this);
                             const thisId = thisRect.attr('id').split('_').slice(1).map(Number);
-                            return thisId[0] === i || thisId[1] === j;
+                            return (thisId[0] == i && thisId[1] <= j) || (thisId[0] <= i && thisId[1] == j);
                         })
-                        .style('opacity', 1);
+                        .style('opacity', 1)
+                        .attr('stroke-width', 0.6)
 
                     xLabels.filter((d, idx) => idx === j)
                         .style('font-weight', 'bold');
@@ -87,7 +87,8 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                 })
                 .on('mouseout', function () {
                     d3.selectAll('.corr-rect')
-                        .style('opacity', 0.6);
+                        .style('opacity', 0.6)
+                        .attr('stroke-width', 0.3)
 
                     xLabels.style('font-weight', 'normal');
                     yLabels.style('font-weight', 'normal');

@@ -15,7 +15,7 @@
   <div class='wrapper_main'>
     <div class='wrapper_top'>
       <div id='ts_view'>
-        <div class='view_title'>Abstract View</div>
+        <div class='view_title'>Overview</div>
         <div id='farm_selection'>
           Date
           <select id='date_selection' onchange="updateDate()">
@@ -36,7 +36,7 @@
       <div id="ms_view">
         <svg id="msplot-svg"></svg>
         <div class="view_title">MS Plot</div>
-          Color
+          Color: <span id="yGroupLabel"></span>
           <div id="node_color" class="color-selection" onchange="handleColorChange()">
             <input type="radio" id="var" name="color" value="var" checked>
               <label for="var">variance</label><br>

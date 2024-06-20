@@ -4,6 +4,7 @@ import * as cluster from './line-cluster.js'
 import * as msplot from './msplot.d3.js'
 
 let hmData;
+let msData;
 
 export const updateCharts = async (svg) => {
   const filename = `far_data_${svg.date}.csv`
@@ -33,7 +34,9 @@ export const updateCorr = (group1, group2) => {
 }
 
 export const updateMS = async (msGroup, colorGroup, colorType='var', newData=false) => {
-  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}`;
+  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}/${colorGroup}`;
+  let colordata = [];
+  if (newData) {
     await fetch(flaskUrl)
     .then(res => {
       if (res.ok) {
@@ -43,7 +46,7 @@ export const updateMS = async (msGroup, colorGroup, colorType='var', newData=fal
       }
     })
     .then(data => {
-      let colordata = []
+      msData = data;
       if (colorType == 'var') {
         colordata = data.variance;
       } else if (colorType == 'min') {
@@ -51,8 +54,17 @@ export const updateMS = async (msGroup, colorGroup, colorType='var', newData=fal
       } else {
         colordata = data.max;
       }
-      msplot.updateScatterPlot(data.data, [msGroup], colordata);
     });
+  } else {
+    if (colorType === 'var') {
+      colordata = msData.variance; 
+    } else if (colorType === 'min') {
+        colordata = msData.min; 
+    } else {
+        colordata = msData.max;
+    }
+  }
+  msplot.updateScatterPlot(msData.data, [msGroup], colordata);
 }
 
 

@@ -208,7 +208,6 @@ function updateTitle(title){
 }
 
 function updateCircles(){
-
     // console.log("data INC", data)
     colorcode = d3.scaleLinear()
         .domain([0, d3.max(colordata, d => d.val)])
