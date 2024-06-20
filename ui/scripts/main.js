@@ -3,7 +3,7 @@ import axios from 'axios';
 /* MODEL */
 import * as m from './model.js';
 import * as g from './groups.js';
-import { getFeature1, getFeature2, setState, setType } from './stateManager.js';
+import { setValue, getFeature1, getFeature2, setState, setType } from './stateManager.js';
 
 /* UPDATE */
 import * as u from './update.js';
@@ -198,6 +198,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       document.querySelector('#date_selection').value = data.dates[0];
       dateValue = document.querySelector('#date_selection').value
+      setValue(xGroup, yGroup)
       init('farm', dateValue);
   })
   .catch(error => {

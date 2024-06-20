@@ -6,7 +6,7 @@ import {
 
 import * as g from './groups.js';
 import * as u from './update.js';
-
+import { getFeature1, getFeature2, setValue, getType } from './stateManager.js';
 
 export function drawSvg(svgData) {
     svgData.svg.selectAll("*").remove();
@@ -70,12 +70,33 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                 .style('opacity', 0.6)
                 .attr('stroke', 'black')
                 .attr('stroke-width', 0.3)
+                .on('click', function(event, d) {
+                    const xLabel = cols[j];
+                    const yLabel = cols[i];
+
+                    const prevX = getFeature1()
+                    const prevY = getFeature2()
+                
+                    let prevSelectedXChart = d3.select(`#${prevX}-heatmap-cell`)
+                    let prevSelectedYChart = d3.select(`#${prevY}-heatmap-cell`)
+                    let selectedXChart =  d3.select(`#${xLabel}-heatmap-cell`)
+                    let selectedYChart = d3.select(`#${yLabel}-heatmap-cell`)
+                    prevSelectedXChart.attr('fill', 'none');
+                    prevSelectedYChart.attr('fill', 'none');
+                    selectedXChart.attr('fill', `#${features.blue}`);
+                    selectedYChart.attr('fill', `#${features.teal}`);
+                    setValue(xLabel, yLabel);
+                    u.updateMS(xLabel, yLabel, getType(), true);
+                    u.updateCorr(xLabel, yLabel);
+                })
                 .on('mouseover', function () {
+                    d3.select(this).style("cursor", "pointer");
                     d3.selectAll('.corr-rect')
                         .filter(function (d, index) {
                             const thisRect = d3.select(this);
                             const thisId = thisRect.attr('id').split('_').slice(1).map(Number);
-                            return (thisId[0] == i && thisId[1] <= j) || (thisId[0] <= i && thisId[1] == j);
+                            return (thisId[0] == i && thisId[1] == j);
+                            // return (thisId[0] == i && thisId[1] <= j) || (thisId[0] <= i && thisId[1] == j);
                         })
                         .style('opacity', 1)
                         .attr('stroke-width', 0.6)
@@ -86,6 +107,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                         .style('font-weight', 'bold');
                 })
                 .on('mouseout', function () {
+                    d3.select(this).style("cursor", "default");
                     d3.selectAll('.corr-rect')
                         .style('opacity', 0.6)
                         .attr('stroke-width', 0.3)

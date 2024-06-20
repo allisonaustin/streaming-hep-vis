@@ -6,15 +6,13 @@ import {
 
 import * as g from './groups.js';
 import * as u from './update.js';
-import { getState1, getState2, setValue, getType } from './stateManager.js';
+import { getFeature1, getFeature2, getState1, getState2, setValue, getType } from './stateManager.js';
 
 let timestamps = new Set(); // all timestamps
 let tsArray = []; // timestamps of current window
 let timeInterval;
 let date = '';
 let functs = {};
-let selectedXChart;
-let selectedYChart;
 let svgdata;
 
 function incrementFillColor(fillColor) {
@@ -117,10 +115,8 @@ export function createHeatmaps(svgData) {
             .attr("transform", `translate(0, -10)`)
             .attr("fill", () => {
                 if (group === svgData.selectedX) {
-                    selectedXChart = d3.select(`#${group}-heatmap-cell`)
                     return `#${features.blue}`
                 } else if (group === svgData.selectedY) {
-                    selectedYChart = d3.select(`#${group}-heatmap-cell`)
                     return `#${features.teal}`
                 } else {
                     return 'none'
@@ -202,16 +198,16 @@ export const chart = (container, groupData, group, svgArea) => {
     let grid = container.append('g').attr('class', 'grid')
         .attr('id', `grid_${group}`)
         .attr('transform', `translate(0, -${svgArea.margin.bottom})`)
-        // .on('mouseover', function (event, d) {
-        //     linesGroup.selectAll('path')
-        //         .attr('stroke-opacity', 1)
-        //     d3.select(this).style("cursor", "pointer");
-        // })
-        // .on("mouseout", function(d) {
-        //     linesGroup.selectAll('path')
-        //         .attr('stroke-opacity', 0)
-        //     d3.select(this).style("cursor", "default");
-        // })
+        .on('mouseover', function (event, d) {
+            // linesGroup.selectAll('path')
+            //     .attr('stroke-opacity', 1)
+            d3.select(this).style("cursor", "pointer");
+        })
+        .on("mouseout", function(d) {
+            // linesGroup.selectAll('path')
+            //     .attr('stroke-opacity', 0)
+            d3.select(this).style("cursor", "default");
+        })
                     
     
     let counts = []
@@ -324,17 +320,29 @@ export const chart = (container, groupData, group, svgArea) => {
                     .on('click', function(event, d) {
 
                         if (getState1() == 1 && group != svgdata.selectedY) { // new Feature 1
-                            svgdata.selectedX = group;
+                            const prevX = getFeature1()
+                            svgdata.selectedX = group; 
+
                             setValue(group, svgdata.selectedY); // updating state manager
-                            selectedXChart.attr('fill', 'none');
-                            selectedXChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.blue}`);
+
+                            let prevSelectedXChart = d3.select(`#${prevX}-heatmap-cell`)
+                            let selectedXChart =  d3.select(`#${group}-heatmap-cell`)
+                            prevSelectedXChart.attr('fill', 'none');
+                            selectedXChart.attr('fill', `#${features.blue}`);
+
                             u.updateMS(group, svgdata.selectedY, getType(), true);
                             u.updateCorr(group, svgdata.selectedY);
                         } else if (getState2() == 1 && group != svgdata.selectedX) { // new Feature 2
+                            const prevY = getFeature2()
                             svgdata.selectedY = group;
+
                             setValue(svgdata.selectedX, group);
-                            selectedYChart.attr('fill', 'none');
-                            selectedYChart = d3.select(`#${group}-heatmap-cell`).attr('fill', `#${features.teal}`)
+
+                            let prevSelectedYChart = d3.select(`#${prevY}-heatmap-cell`)
+                            let selectedYChart =  d3.select(`#${group}-heatmap-cell`)
+                            prevSelectedYChart.attr('fill', 'none');
+                            selectedYChart.attr('fill', `#${features.teal}`);
+
                             document.getElementById('yGroupLabel').innerText = group;
                             u.updateCorr(svgdata.selectedX, group);
                         }
