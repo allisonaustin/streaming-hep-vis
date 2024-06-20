@@ -39,7 +39,8 @@ select {
     display: flex;
     flex-direction: row;
     position: relative;
-    width: auto;
+    float:right;
+    width: 49.7%;
     height: 50%;
     border-style: solid;
     border-width: thin;
@@ -127,6 +128,19 @@ select {
     border-width: thin;
     border-color: #DDDDDD;
     margin-right: 0px;
+}
+
+#e_view {
+  float: left;
+  position: relative;
+  display:flex;
+  width: 50%;
+  height: 30%;
+  padding-top: 0px;
+  border-style: solid;
+  border-width: thin;
+  border-color: #DDDDDD;
+  margin-right: 0px;
 }
 
 .ts_title {

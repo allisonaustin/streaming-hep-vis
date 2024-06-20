@@ -35,7 +35,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
     const gridSize = (area.width - margin.left - margin.right) / numCols;
 
     // Top labels
-    container.selectAll('.x-label')
+    const xLabels = container.selectAll('.x-label')
         .data(cols)
         .enter()
         .append('text')
@@ -44,7 +44,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
         .text(d => d);
 
     // Left labels
-    container.selectAll('.y-label')
+    const yLabels = container.selectAll('.y-label')
         .data(cols)
         .enter()
         .append('text')
@@ -61,15 +61,37 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
         for (let j = 0; j < numCols; j++) {
             const value = data[i][cols[j]];
             grid.append('rect')
-                .attr('class', 'grid-rect')
-                .attr('id', `t_${i}_${j}`)
+                .attr('class', 'corr-rect')
+                .attr('id', `c_${i}_${j}`)
                 .attr('x', j * gridSize)
                 .attr('y', i * gridSize)
                 .attr('width', gridSize)
                 .attr('height', gridSize)
                 .attr('fill', colorscale(value))
+                .style('opacity', 0.6)
                 .attr('stroke', 'black')
-                .attr('stroke-width', 0.3);
+                .attr('stroke-width', 0.3)
+                .on('mouseover', function () {
+                    d3.selectAll('.corr-rect')
+                        .filter(function (d, index) {
+                            const thisRect = d3.select(this);
+                            const thisId = thisRect.attr('id').split('_').slice(1).map(Number);
+                            return thisId[0] === i || thisId[1] === j;
+                        })
+                        .style('opacity', 1);
+
+                    xLabels.filter((d, idx) => idx === j)
+                        .style('font-weight', 'bold');
+                    yLabels.filter((d, idx) => idx === i)
+                        .style('font-weight', 'bold');
+                })
+                .on('mouseout', function () {
+                    d3.selectAll('.corr-rect')
+                        .style('opacity', 0.6);
+
+                    xLabels.style('font-weight', 'normal');
+                    yLabels.style('font-weight', 'normal');
+                });
         }
     }
 }
