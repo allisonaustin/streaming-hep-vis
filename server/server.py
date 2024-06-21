@@ -68,10 +68,24 @@ def get_corr():
     global df 
     if df.empty:
         return
-    dat = df.iloc[:, :34].drop(columns=['timestamp', 'nodeId', 'mem_shared'])
-    dat = dat.replace({np.nan: None})
+    dat = df.iloc[:, :34].drop(columns=['timestamp', 'nodeId', 'mem_free', 'mem_total', 'mem_shared'])
+    # dat = dat.replace({np.nan: None})
+
     corr_df = dat.corr().round(2)
-    return Response(corr_df.to_json(orient='records'), mimetype='application/json')
+    total_corr = np.array(dat.corr().round(2)) # zero-order correlation
+    partial_corr = np.array(dat.pcorr().round(2)) # partial correlation
+
+    upper_total_corr = total_corr[np.triu_indices(dat.shape[1], k=1)]
+    lower_partial_corr = partial_corr[np.tril_indices(dat.shape[1], k=-1)]
+    result_corr = np.identity(dat.shape[1])
+    rows, col = np.triu_indices(dat.shape[1], 1)
+    result_corr[rows, col] = upper_total_corr
+    result_corr[col, rows] = lower_partial_corr
+    result_corr_df = pd.DataFrame(result_corr)
+    result_corr_df.columns = dat.corr().columns
+    result_corr_df.set_index(dat.corr().index, inplace=True)
+
+    return Response(result_corr_df.to_json(orient='records'), mimetype='application/json')
 
 @app.route('/getMagnitudeShapeFDA/<xgroup>/<ygroup>')
 def get_ms_inc(xgroup, ygroup):
