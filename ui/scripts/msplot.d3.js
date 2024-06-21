@@ -36,8 +36,8 @@ function init(msdata, nodes) {
     colordata = msdata.colordata;
 
     msPlotSvg = msdata.svg
-        // .attr('width', width)
-        // .attr('height', height)
+    // .attr('width', width)
+    // .attr('height', height)
 
     msPlotSvg.attr('viewBox', [0, 0, width + marginMS.left + marginMS.right, height + marginMS.top + marginMS.bottom]);
 
@@ -52,24 +52,25 @@ function init(msdata, nodes) {
     colorcode = d3.scaleLinear()
         .domain([0, d3.max(colordata, d => d.val)])
         .range(['white', 'darkblue']);
+
 };
 
 //process the input data
 function processInput(data) {
-    data.forEach(function(d){
-        d.forEach(function(d1){
+    data.forEach(function (d) {
+        d.forEach(function (d1) {
             d1 = +d1;
         })
     });
     let xd = d3.extent(data.map(d => d[0])),
-    yd = d3.extent(data.map(d => d[1]));
+        yd = d3.extent(data.map(d => d[1]));
 
     xms = d3.scaleLinear()
-            .range([marginMS.left, width])
-            .domain([ xd[0]-0.001, xd[1]+0.001 ]).nice();
+        .range([marginMS.left, width])
+        .domain([xd[0] - 0.001, xd[1] + 0.001]).nice();
     yms = d3.scaleLinear()
-            .range([height, marginMS.top])
-            .domain([ yd[0]-0.001, yd[1]+0.001 ]).nice();
+        .range([height, marginMS.top])
+        .domain([yd[0] - 0.001, yd[1] + 0.001]).nice();
 };
 
 //append axis
@@ -79,9 +80,9 @@ function appendAxis() {
         .attr("id", "xmsaxis-container")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(xms).tickFormat(formatTick))
-        // .selectAll("text")
-        //    .attr("transform", "rotate(-45)")
-        //    .style("text-anchor", "end");
+    // .selectAll("text")
+    //    .attr("transform", "rotate(-45)")
+    //    .style("text-anchor", "end");
 
     // Add the Y Axis
     yAxis = msContainer.append("g")
@@ -92,30 +93,30 @@ function appendAxis() {
 };
 
 // append lasso
-function appendLassoInteraction(targetItems){
+function appendLassoInteraction(targetItems) {
     // console.log("lasso interaction", msContainer, d3.select("#msplot-svg", targetItems))
     let lassoRect = d3.select('#msplot-svg')
     let lasso = lassoitem.getInstance(lassoRect, targetItems, ms_circle_r);
     msContainer.call(lasso)
 };
 
-function showMapCircles(){
-    d3.selectAll(".ms-circle").each(function(_){
+function showMapCircles() {
+    d3.selectAll(".ms-circle").each(function (_) {
         let item = d3.select(this).attr("id")
-        d3.select("#co-"+item).style("visibility", "visible");
-        d3.select("#ci-"+item).style("visibility", "visible");
+        d3.select("#co-" + item).style("visibility", "visible");
+        d3.select("#ci-" + item).style("visibility", "visible");
     })
 };
 
 //append scatter plot data
-function appendCircles(cols, nodes){
+function appendCircles(cols, nodes) {
     // append circle for ms scatter plot
     let circs = msContainer.append("g")
         .selectAll(".ms-circle")
         .data(data)
         .enter()
         .append("circle")
-        .attr("class", (d, i) => "ms-circle "+nodes[i])
+        .attr("class", (d, i) => "ms-circle " + nodes[i])
         .attr("id", (d, i) => nodes[i])
         .attr("cx", d => xms(d[0]))
         .attr("cy", d => yms(d[1]))
@@ -125,11 +126,11 @@ function appendCircles(cols, nodes){
         .attr('fill', (d, i) => {
             return colorcode(colordata.find(item => item.nodeId === nodes[i]).val);
         })
-        .on("mouseover", function(){
+        .on("mouseover", function () {
             tooltipM.getTooltip("msTooltip");
             tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX, d3.event.pageY - 20);
         })
-        .on("mouseout", function(){
+        .on("mouseout", function () {
             d3.select("#msTooltip").remove();
         })
         .style("opacity", 0);
@@ -142,42 +143,42 @@ function appendCircles(cols, nodes){
     appendLassoInteraction(circs);
 };
 
-function appendAxisLabels(cols){
+function appendAxisLabels(cols) {
     //x axis label
     msContainer.append("text")
         .attr("transform", "rotate(0)")
-        .attr("x", width/1.8)
+        .attr("x", width / 1.8)
         .attr('y', height + marginMS.top)
-        .attr("font-size","10px")
-        .attr("font-weight","bold")
+        .attr("font-size", "10px")
+        .attr("font-weight", "bold")
         .attr("text-anchor", "middle")
         .text("MO");
 
     //y axis label
     msContainer.append("text")
-        .attr('x', -height/2)
+        .attr('x', -height / 2)
         .attr("y", -marginMS.left - 20)
         .attr("transform", "rotate(-90)")
         .attr("dy", "1em")
-        .attr("font-size","10px")
-        .attr("font-weight","bold")
+        .attr("font-size", "10px")
+        .attr("font-weight", "bold")
         .attr("text-anchor", "middle")
         .text("VO");
 
     // title
     msContainer.append("text")
         .attr("id", "chart-title")
-        .attr("x", width / 1.8) 
-        .attr("y", marginMS.top) 
+        .attr("x", width / 1.8)
+        .attr("y", marginMS.top)
         .attr("dy", "1em")
-        .attr("font-weight","bold")
+        .attr("font-weight", "bold")
         .attr("text-anchor", "middle")
         .style("fill", "black")
         .text(cols);
 };
 
 
-function appendDataModules(msdata, nodes){
+function appendDataModules(msdata, nodes) {
     init(msdata, nodes)
     processInput(msdata.data);
     appendAxis();
@@ -185,29 +186,29 @@ function appendDataModules(msdata, nodes){
     appendAxisLabels(msdata.group);
 };
 
-function updateData(msdata){
+function updateData(msdata) {
 
-    if(data !== undefined){
+    if (data !== undefined) {
         data = msdata;
 
-    }else{
+    } else {
         console.log("Cannot update data")
     }
 
 }
 
-function updateAxis(){
+function updateAxis() {
     processInput(data);
     xAxis.call(d3.axisBottom(xms).tickFormat(formatTick));
     yAxis.call(d3.axisLeft(yms).tickFormat(formatTick));
 };
 
-function updateTitle(title){
+function updateTitle(title) {
     d3.select('#chart-title')
         .text(title);
 }
 
-function updateCircles(){
+function updateCircles() {
     // console.log("data INC", data)
     colorcode = d3.scaleLinear()
         .domain([0, d3.max(colordata, d => d.val)])
@@ -229,7 +230,7 @@ function updateCircles(){
 };
 
 
-function updateCirclesProgressive(newCircleID, newRackID){
+function updateCirclesProgressive(newCircleID, newRackID) {
     // console.log("data P", data.length, newCircleID)
 
     let circles = msContainer
@@ -239,27 +240,27 @@ function updateCirclesProgressive(newCircleID, newRackID){
     let enterCircles = circles
         .enter()
         .append("circle")
-        .attr("class", (d, i) => "ms-circle "+newRackID)
+        .attr("class", (d, i) => "ms-circle " + newRackID)
         .attr("id", newCircleID)
         .attr("cx", d => xms(d[0]))
         .attr("cy", d => yms(d[1]))
         .attr("r", (d, i) => {
-            if( i === (data.length -1) )
+            if (i === (data.length - 1))
                 return 8
             return ms_circle_r
         })
-        .attr("stroke", (d, i)=> {
+        .attr("stroke", (d, i) => {
             // if( i === (data.length -1) )
             //     return "cyan"
             return "black"
         })
         .attr("stroke-width", "1px")
         .attr('fill', colorcode(newRackID))
-        .on("mouseover", function(){
+        .on("mouseover", function () {
             tooltipM.getTooltip("msTooltip");
-            tooltipM.addToolTip(d3.select(this).property("id"), d3.event.pageX, d3.event.pageY-20)
+            tooltipM.addToolTip(d3.select(this).property("id"), d3.event.pageX, d3.event.pageY - 20)
         })
-        .on("mouseout", function(){
+        .on("mouseout", function () {
             d3.select("#msTooltip").remove();
         })
 
@@ -285,14 +286,14 @@ function appendLegend() {
         .attr('height', 40)
 
     const legendGroup = legendContainer.append('g')
-        .attr('transform', `translate(${width/2},30)`)
+        .attr('transform', `translate(${width / 2},30)`)
         .selectAll('.mylegend')
         .data(selectednodesMain).enter()
         .append('g')
     const legend_label = legendGroup.append('text')
         .attr('x', (d, i) => 20 + i * 50)
         .attr('y', 2.5)
-        .style('font-family','Georgia,Serif')
+        .style('font-family', 'Georgia,Serif')
         .style('font-size', '12px')
         .text(d => d)
 
@@ -313,7 +314,7 @@ function appendLegend() {
         })
 }
 
-export function appendScatterPlot(msdata, cols, nodes){
+export function appendScatterPlot(msdata, cols, nodes) {
     // remove older ms plot
     d3.select("#ms-container").remove();
     appendDataModules(msdata, cols, nodes);
@@ -324,7 +325,7 @@ export function appendScatterPlot(msdata, cols, nodes){
 
 }
 
-export function updateScatterPlot(msdata, group, cdata){
+export function updateScatterPlot(msdata, group, cdata) {
     colordata = cdata
     updateData(msdata);
     updateAxis();
@@ -336,7 +337,7 @@ export function updateScatterPlot(msdata, group, cdata){
     appendLegend();
 }
 
-export function updateScatterPlotProgressive(msdata, newCircId, newRackId){
+export function updateScatterPlotProgressive(msdata, newCircId, newRackId) {
     // console.log("newRackID", newRackId)
     updateData(msdata);
     updateAxis();
@@ -348,6 +349,6 @@ export function updateScatterPlotProgressive(msdata, newCircId, newRackId){
 
 }
 
-export function updateVisFlag(){
+export function updateVisFlag() {
     visUpdateFlag = false;
 }

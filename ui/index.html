@@ -29,6 +29,7 @@
             <button id="feature-1" class="left-button">Feature 1</button>
             <button id="feature-2" class="right-button">Feature 2</button>
           </div>
+          <!-- <svg id="heatmap_legend"></svg> -->
         </div>
         <svg id='farm_svg'></svg>
         <div class="tooltip" id="heatmap-tooltip"></div>
@@ -36,23 +37,27 @@
       <div id="ms_view">
         <svg id="msplot-svg"></svg>
         <div class="view_title">MS Plot</div>
-          Color: <span id="yGroupLabel"></span>
-          <div id="node_color" class="color-selection" onchange="handleColorChange()">
-            <input type="radio" id="var" name="color" value="var" checked>
-              <label for="var">variance</label><br>
-            <input type="radio" id="min" name="color" value="min">
-              <label for="min">min</label><br>
-            <input type="radio" id="max" name="color" value="max">
-              <label for="max">max</label><br>
-          </div>
+        Color: <span id="yGroupLabel"></span>
+        <div id="node_color" class="color-selection" onchange="handleColorChange()">
+          <input type="radio" id="var" name="color" value="var" checked>
+          <label for="var">variance</label>
+          <input type="radio" id="min" name="color" value="min">
+          <label for="min">min</label>
+          <input type="radio" id="max" name="color" value="max">
+          <label for="max">max</label><br>
+        </div>
       </div>
       <div id="fc_view">
-        <div class="view_title">Correlation View</div>
+        <div id="corr_view">
+          <div class="view_title">Correlation View</div>
           <svg id="corr_map"></svg>
+        </div>
         <div id="fc_view_bottom">
+          <div class="view_title">Cluster View</div>
           <svg id='line_svg'></svg>
         </div>
       </div>
+
       <div id="e_view">
         <div class='view_title'>Event View</div>
       </div>

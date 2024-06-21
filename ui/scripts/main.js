@@ -14,10 +14,10 @@ import * as heatMapView from './heatmap.js';
 import * as msplot from './msplot.d3.js';
 import * as correlationView from './corr-matrix.js';
 
-import { 
-  calcContainerWidth, 
-  calcContainerHeight, 
-  prepareSvgArea 
+import {
+  calcContainerWidth,
+  calcContainerHeight,
+  prepareSvgArea
 } from './d3_utils.js';
 
 const heatmapSvgData = m.svgData();
@@ -38,7 +38,7 @@ async function getData(filename, inc) {
     }
     const data = await res.json();
     return data
-  } catch(error) {
+  } catch (error) {
     console.error('Error:', error);
   }
 }
@@ -52,7 +52,7 @@ async function getMsData(xGroup, yGroup) {
     }
     const data = res.json();
     return data
-  } catch(error) {
+  } catch (error) {
     console.error('Error:', error);
   }
 }
@@ -66,7 +66,7 @@ async function getCorrelationData() {
     }
     const data = res.json();
     return data
-  } catch(error) {
+  } catch (error) {
     console.error('Error:', error);
   }
 }
@@ -89,13 +89,13 @@ async function initHeatmap(data, dateValue, type) {
 }
 
 async function initCorrelationView(data) {
-  corrSvgData.domId = 'fc_view';
+  corrSvgData.domId = 'corr_view';
   corrSvgData.svg = d3.select(`#corr_map`);
   corrSvgData.data = data;
   corrSvgData.date = dateValue;
   corrSvgData.selectedX = xGroup;
   corrSvgData.selectedY = yGroup;
-  const margin = {top: 20, right:10, bottom:10, left:20}
+  const margin = { top: 100, right: 60, bottom: 60, left: 100 }
   corrSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${corrSvgData.domId}`),
     calcContainerHeight(`#${corrSvgData.domId}`),
@@ -112,7 +112,7 @@ async function initClusterView(data, dateValue) {
   lineSvgData.date = dateValue;
   lineSvgData.selectedX = xGroup;
   lineSvgData.selectedY = yGroup;
-  const marginLC = {top: 20, right: 10, bottom: 10, left: 30}
+  const marginLC = { top: 20, right: 10, bottom: 60, left: 30 }
   lineSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${lineSvgData.domId}`),
     calcContainerHeight(`#${lineSvgData.domId}`),
@@ -186,7 +186,7 @@ window.updateChart = () => {
   }
 }
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   fetch('../data/farm/farm-data-dates.json')
     .then(response => response.json())
     .then(data => {
@@ -200,10 +200,10 @@ document.addEventListener('DOMContentLoaded', function() {
       dateValue = document.querySelector('#date_selection').value
       setValue(xGroup, yGroup)
       init('farm', dateValue);
-  })
-  .catch(error => {
-    console.error('Error fetching data:', error);
-  });
+    })
+    .catch(error => {
+      console.error('Error fetching data:', error);
+    });
 });
 
 document.getElementById('feature-1').addEventListener('click', () => {

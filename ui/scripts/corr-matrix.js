@@ -31,7 +31,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
     const numCols = cols.length;
 
     // Calculate the grid size considering the available area and margins
-    const gridSize = (area.width - margin.left - margin.right) / numCols;
+    const gridSize = (area.width) / numCols;
 
     // Top labels
     const xLabels = container.selectAll('.x-label')
@@ -39,7 +39,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
         .enter()
         .append('text')
         .attr('class', 'label-text')
-        .attr('transform', (d, i) => `translate(${i * gridSize + margin.left + margin.right + 30}, ${-margin.top - margin.bottom - 50}) rotate(-45)`)
+        .attr('transform', (d, i) => `translate(${i * gridSize + margin.left + 25}, ${margin.top - 5}) rotate(-45)`)
         .text(d => d);
 
     // Left labels
@@ -48,14 +48,65 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
         .enter()
         .append('text')
         .attr('class', 'label-text y-label-text')
-        .attr('x', 40)
-        .attr('y', (d, i) => i * gridSize - margin.top - margin.bottom - 50)
+        .attr('x', margin.left + 10)
+        .attr('y', (d, i) => i * gridSize + margin.top + 10)
         .style('text-anchor', 'end')
         .text(d => d);
 
+    let linearGradient = container
+        .append("linearGradient")
+        .attr("id", "linear-gradient")
+
+    //Horizontal gradient
+    linearGradient
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
+    //Append multiple color stops by using D3's data/enter step
+    linearGradient
+        .selectAll("stop")
+        .data(colorscale.ticks(10).map((t, i, n) => {
+            return ({ offset: `${100 * i / n.length}%`, color: colorscale(t) })
+        }))
+        .enter()
+        .append("stop")
+        .attr("offset", function (d) {
+            console.log(d.offset)
+            return d.offset;
+        })
+        .attr("stop-color", function (d) {
+            return d.color;
+        });
+
+    const barHeight = 10
+    const barWidth = 200
+
+    let legend = container.append('g').attr('id', 'corr_legend')
+        .attr('transform', (d, i) =>
+            `translate(${margin.left + 20 + area.width / 2}, ${margin.top + area.width + 10})`)
+    legend.append('rect')
+        .attr("class", "legendRect")
+        .attr("x", -barWidth / 2)
+        .attr("y", 0)
+        .attr("width", barWidth)
+        .attr("height", barHeight)
+        .style("fill", "url(#linear-gradient)")
+    const colorAxisScale = d3.scaleLinear()
+        .domain([colorscale.domain()[0], colorscale.domain()[1]])
+        .range([0, barWidth])
+
+    const colorAxisTicks = d3.axisBottom(colorAxisScale)
+        .ticks(5)
+        .tickSize(-barHeight)
+    const colorAxis = legend.append("g")
+        .attr('transform', `translate(${-barWidth / 2}, ${barHeight})`)
+        .call(colorAxisTicks);
+
+
     let grid = container.append('g').attr('class', 'grid')
-        .attr('transform', `translate(${margin.left + margin.right + 20}, ${-margin.top - margin.bottom - 50})`)
- 
+        .attr('transform', `translate(${margin.left + 20}, ${margin.top})`)
+
     for (let i = 0; i < numRows; i++) {
         for (let j = 0; j < numCols; j++) {
             const value = data[i][cols[j]];
@@ -70,16 +121,16 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                 .style('opacity', 0.6)
                 .attr('stroke', 'black')
                 .attr('stroke-width', 0.3)
-                .on('click', function(event, d) {
+                .on('click', function (event, d) {
                     const xLabel = cols[j];
                     const yLabel = cols[i];
 
                     const prevX = getFeature1()
                     const prevY = getFeature2()
-                
+
                     let prevSelectedXChart = d3.select(`#${prevX}-heatmap-cell`)
                     let prevSelectedYChart = d3.select(`#${prevY}-heatmap-cell`)
-                    let selectedXChart =  d3.select(`#${xLabel}-heatmap-cell`)
+                    let selectedXChart = d3.select(`#${xLabel}-heatmap-cell`)
                     let selectedYChart = d3.select(`#${yLabel}-heatmap-cell`)
                     prevSelectedXChart.attr('fill', 'none');
                     prevSelectedYChart.attr('fill', 'none');
