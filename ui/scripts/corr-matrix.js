@@ -58,7 +58,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
     // Right label
     container.append('text')
         .attr('class', 'label-text')
-        .attr('transform', `translate(${1.5 * area.width}, ${area.height / 1.5}) rotate(-90)`)
+        .attr('transform', `translate(${margin.left + area.width + margin.right / 2}, ${area.height / 1.5}) rotate(-90)`)
         .style('text-anchor', 'end')
         .text('Partial Correlation')
         .style('font-size', '10px');
@@ -66,7 +66,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
     // Bottom label
     container.append('text')
         .attr('class', 'label-text')
-        .attr('transform', `translate(${area.width + 20}, ${margin.top + area.width})`)
+        .attr('transform', `translate(${area.width + 20}, ${margin.top + area.width + 10})`)
         .style('text-anchor', 'end')
         .text('Zero-one Correlation')
         .style('font-size', '10px');
@@ -103,7 +103,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
 
     let legend = container.append('g').attr('id', 'corr_legend')
         .attr('transform', (d, i) =>
-            `translate(${margin.left + 20 + area.width / 2}, ${margin.top + area.width + 10})`)
+            `translate(${margin.left + 20 + area.width / 2}, ${margin.top + area.width + 20})`)
     legend.append('rect')
         .attr("class", "legendRect")
         .attr("x", -barWidth / 2)
