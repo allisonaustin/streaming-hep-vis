@@ -87,9 +87,9 @@ export const chart = () => {
     container.append('text')
       .attr('class', 'axis-label')
       .attr('x', svgArea.width / 1.5) 
-      .attr('y', svgArea.height + margin.top + margin.bottom) 
+      .attr('y', svgArea.height + 20) 
       .style('text-anchor', 'middle') 
-      .style('font-size', '16')
+      .style('font-size', '10px')
       .text(selectedX);
     
     container.append('text')
@@ -98,7 +98,7 @@ export const chart = () => {
       .attr('x', -svgArea.height / 2) 
       .attr('y', 10)
       .style('text-anchor', 'middle')
-      .style('font-size', '16')
+      .style('font-size', '10px')
       .text(selectedY);
         
     const line = d3.line()

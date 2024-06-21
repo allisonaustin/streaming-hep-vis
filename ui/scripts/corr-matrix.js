@@ -40,7 +40,8 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
         .append('text')
         .attr('class', 'label-text')
         .attr('transform', (d, i) => `translate(${i * gridSize + margin.left + 25}, ${margin.top - 5}) rotate(-45)`)
-        .text(d => d);
+        .text(d => d)
+        .style('font-size', '8px');
 
     // Left labels
     const yLabels = container.selectAll('.y-label')
@@ -51,7 +52,8 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
         .attr('x', margin.left + 10)
         .attr('y', (d, i) => i * gridSize + margin.top + 10)
         .style('text-anchor', 'end')
-        .text(d => d);
+        .text(d => d)
+        .style('font-size', '8px');
 
     let linearGradient = container
         .append("linearGradient")

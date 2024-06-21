@@ -318,11 +318,12 @@ export const chart = (container, groupData, group, svgArea) => {
                     .attr('fill', colorBand(counts[i][j]))
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
-                    .on('click', function (event, d) {
+                    .on('click', function(event, d) {
+                        const prevX = getFeature1()
+                        const prevY = getFeature2()
 
                         if (getState1() == 1 && group != svgdata.selectedY) { // new Feature 1
-                            const prevX = getFeature1()
-                            svgdata.selectedX = group;
+                            svgdata.selectedX = group; 
 
                             setValue(group, svgdata.selectedY); // updating state manager
 
@@ -334,7 +335,6 @@ export const chart = (container, groupData, group, svgArea) => {
                             u.updateMS(group, svgdata.selectedY, getType(), true);
                             u.updateCorr(group, svgdata.selectedY);
                         } else if (getState2() == 1 && group != svgdata.selectedX) { // new Feature 2
-                            const prevY = getFeature2()
                             svgdata.selectedY = group;
 
                             setValue(svgdata.selectedX, group);
