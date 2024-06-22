@@ -92,7 +92,7 @@ function appendColorLegend() {
         .attr("y", 0)
         .attr("width", barWidth)
         .attr("height", barHeight)
-        .style("fill", "url(#linear-gradient)")
+        .style("fill", "url(#linear-gradient-ms)")
     colorAxisScale = d3.scaleLinear()
         .domain([colorcode.domain()[0], colorcode.domain()[1]])
         .range([0, barWidth])
