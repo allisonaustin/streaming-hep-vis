@@ -27,6 +27,7 @@ function formatTick(d) {
 }
 
 let xrange, xdomR1, xdomR2, yrange, ydomR1, ydomR2, xAxis, yAxis;
+let linearGradient, legend, colorAxisScale, colorAxisTicks, colorAxis;
 
 function init(msdata, nodes) {
     data = msdata.data;
@@ -54,6 +55,55 @@ function init(msdata, nodes) {
         .range(['white', 'darkblue']);
 
 };
+
+function appendColorLegend() {
+    const barHeight = 10
+    const barWidth = 200
+
+    linearGradient = msContainer
+        .append("linearGradient")
+        .attr("id", "linear-gradient-ms")
+
+    linearGradient
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
+    //Append multiple color stops by using D3's data/enter step
+    linearGradient
+        .selectAll("stop")
+        .data(colorcode.ticks(10).map((t, i, n) => {
+            return ({ offset: `${100 * i / n.length}%`, color: colorcode(t) })
+        }))
+        .enter()
+        .append("stop")
+        .attr("offset", function (d) {
+            return d.offset;
+        })
+        .attr("stop-color", function (d) {
+            return d.color;
+        });
+    legend = msContainer.append('g').attr('id', 'ms_color_legend')
+        .attr('transform', (d, i) =>
+            `translate(${marginMS.left}, ${marginMS.top + height - 10})`)
+    legend.append('rect')
+        .attr("class", "legendRect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", barWidth)
+        .attr("height", barHeight)
+        .style("fill", "url(#linear-gradient)")
+    colorAxisScale = d3.scaleLinear()
+        .domain([colorcode.domain()[0], colorcode.domain()[1]])
+        .range([0, barWidth])
+
+    colorAxisTicks = d3.axisBottom(colorAxisScale)
+        .ticks(5)
+        .tickSize(-barHeight)
+    colorAxis = legend.append("g")
+        .attr('transform', `translate(${0}, ${barHeight})`)
+        .call(colorAxisTicks);
+}
 
 //process the input data
 function processInput(data) {
@@ -322,6 +372,8 @@ export function appendScatterPlot(msdata, cols, nodes) {
     visUpdateFlag = false;
     // console.log("cols for circles",cols, visUpdateFlag)
     appendLegend();
+    appendColorLegend();
+
 
 }
 
@@ -335,6 +387,8 @@ export function updateScatterPlot(msdata, group, cdata) {
     visUpdateFlag = false;
     // console.log("updateScatterPlot", visUpdateFlag)
     appendLegend();
+    appendColorLegend();
+
 }
 
 export function updateScatterPlotProgressive(msdata, newCircId, newRackId) {
@@ -346,6 +400,7 @@ export function updateScatterPlotProgressive(msdata, newCircId, newRackId) {
     visUpdateFlag = false;
     // console.log("updateScatterPlotProgressive", visUpdateFlag)
     appendLegend();
+    appendColorLegend();
 
 }
 
