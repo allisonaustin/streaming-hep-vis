@@ -34,9 +34,10 @@ export const updateCorr = (group1, group2) => {
 }
 
 export const updateMS = async (msGroup, colorGroup, colorType='var', newData=false) => {
-  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}/${colorGroup}`;
+  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}/${colorGroup}/0/0`;
   let colordata = [];
-  if (newData) {
+  console.log(msData)
+  if (newData || msData == null) {
     await fetch(flaskUrl)
     .then(res => {
       if (res.ok) {
@@ -48,20 +49,20 @@ export const updateMS = async (msGroup, colorGroup, colorType='var', newData=fal
     .then(data => {
       msData = data;
       if (colorType == 'var') {
-        colordata = data.variance;
+        colordata = data['variance'];
       } else if (colorType == 'min') {
-        colordata = data.min;
+        colordata = data['min'];
       } else {
-        colordata = data.max;
+        colordata = data['max'];
       }
     });
   } else {
     if (colorType === 'var') {
-      colordata = msData.variance; 
+      colordata = msData['variance']; 
     } else if (colorType === 'min') {
-        colordata = msData.min; 
+        colordata = msData['min']; 
     } else {
-        colordata = msData.max;
+        colordata = msData['max'];
     }
   }
   msplot.updateScatterPlot(msData.data, [msGroup], colordata);

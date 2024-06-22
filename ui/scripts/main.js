@@ -43,8 +43,8 @@ async function getData(filename, inc) {
   }
 }
 
-async function getMsData(xGroup, yGroup) {
-  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${xGroup}/${yGroup}`;
+async function getMsData(xGroup, yGroup, inc=0, prog=0) {
+  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${xGroup}/${yGroup}/${inc}/${prog}`;
   try {
     const res = await fetch(flaskUrl);
     if (!res.ok) {
@@ -153,7 +153,7 @@ async function initMsPlotView(response) {
 async function init(type, dateValue) {
   const filename = `far_data_${dateValue}.csv`;
   const data = await getData(filename, 0);
-  const msData = await getMsData(xGroup, yGroup);
+  const msData = await getMsData(xGroup, yGroup, 0, 0);
   const corrData = await getCorrelationData();
   // const uniqueNodes = new Set();
   // data.forEach(obj => {

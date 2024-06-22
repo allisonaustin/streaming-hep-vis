@@ -20,9 +20,11 @@ df = pd.DataFrame()
 filepath = '../ui/data/farm/'
 fname = ''
 init_timepts = 60000
-inc_rows = 1500
+inc_rows = 1500 
 skip_rows = 15000
 cols = []
+inc = 0
+prog = 0
 
 @app.route("/getData/<filename>/<inc>")
 def get_data(filename, inc):
@@ -40,18 +42,20 @@ def get_data(filename, inc):
     if int(inc) == 0:
         init_timepts = 60000
         skip_rows = 15000
-        cols = ['timestamp', 'cpu_system', 'boottime', 'Pool Size Time_P1', 'mem_free',
-       'Missed Buffers_P1', 'bytes_out', 'cpu_user', 'cpu_idle',
-       'Pool Size Data_P1', 'pkts_out', 'load_fifteen', 'part_max_used',
-       'load_five', 'mem_shared', 'swap_free', 'Pool Size Events_P1',
-       'mem_total', 'load_one', 'mem_cached', 'mem_buffers', 'pkts_in',
-       'cpu_speed', 'bytes_in', 'cpu_wio', 'cpu_nice', 'disk_free',
-       'disk_total', 'cpu_aidle', 'proc_total', 'swap_total', 'proc_run',
-       'cpu_num', 'nodeId', 'RPCRetrans_rate', 'TotalRetrans_rate',
-       'TCPSlowStartRetrans_rate', 'TCPFastRetrans_rate', 'RetransSegs_rate',
-       'TCPLostRetransmit_rate', 'TCPForwardRetrans_rate', 'TotalRetrans',
-       'TCPSlowStartRetrans', 'RPCRetrans', 'TCPFastRetrans',
-       'TCPLostRetransmit', 'TCPForwardRetrans', 'RetransSegs']
+        cols = [
+            'timestamp', 'cpu_system', 'boottime', 'Pool Size Time_P1', 'mem_free',
+            'Missed Buffers_P1', 'bytes_out', 'cpu_user', 'cpu_idle',
+            'Pool Size Data_P1', 'pkts_out', 'load_fifteen', 'part_max_used',
+            'load_five', 'mem_shared', 'swap_free', 'Pool Size Events_P1',
+            'mem_total', 'load_one', 'mem_cached', 'mem_buffers', 'pkts_in',
+            'cpu_speed', 'bytes_in', 'cpu_wio', 'cpu_nice', 'disk_free',
+            'disk_total', 'cpu_aidle', 'proc_total', 'swap_total', 'proc_run',
+            'cpu_num', 'nodeId', 'RPCRetrans_rate', 'TotalRetrans_rate',
+            'TCPSlowStartRetrans_rate', 'TCPFastRetrans_rate', 'RetransSegs_rate',
+            'TCPLostRetransmit_rate', 'TCPForwardRetrans_rate', 'TotalRetrans',
+            'TCPSlowStartRetrans', 'RPCRetrans', 'TCPFastRetrans',
+            'TCPLostRetransmit', 'TCPForwardRetrans', 'RetransSegs'
+        ]
         # cols = pd.read_csv(filepath + filename, nrows=1).columns
         df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=init_timepts, names=cols)
         skip_rows += init_timepts 
@@ -87,18 +91,26 @@ def get_corr():
 
     return Response(result_corr_df.to_json(orient='records'), mimetype='application/json')
 
-@app.route('/getMagnitudeShapeFDA/<xgroup>/<ygroup>')
-def get_ms_inc(xgroup, ygroup):
+@app.route('/getMagnitudeShapeFDA/<xgroup>/<ygroup>/<incremental_update>/<progressive_update>')
+def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
     global df 
+    global fname
     global cols 
+    global init_timepts
+    global inc
+    global prog
+
+    inc = int(incremental_update)
+    prog = int(progressive_update)
 
     ms_data = df.set_index('timestamp') \
-                .pivot(columns='nodeId', values=xgroup) \
-                .apply(lambda row: row.fillna(row.mean()), axis=0).T
+                .pivot(columns='nodeId', values=xgroup).T
+                # .apply(lambda row: row.fillna(row.mean()), axis=0).T
+    
     # fix me!!!
     color_data = df.set_index('timestamp') \
-                    .pivot(columns='nodeId', values=xgroup) \
-                    .apply(lambda row: row.fillna(row.mean()), axis=0).T
+                    .pivot(columns='nodeId', values=xgroup).T
+                    # .apply(lambda row: row.fillna(row.mean()), axis=0).T
     
     var_ms = color_data.var(axis=1)
     min_ms = color_data.min(axis=1)
@@ -107,10 +119,26 @@ def get_ms_inc(xgroup, ygroup):
     min_lis = [{'nodeId': node_id, 'val': min_val} for node_id, min_val in min_ms.items()]
     max_lis = [{'nodeId': node_id, 'val': max_val} for node_id, max_val in max_ms.items()]
 
-    inc_fdo = IncFDO()
-    inc_fdo.initial_fit(ms_data)
-    lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
-    response = {'data': lis, 'variance': var_lis, 'min': min_lis, 'max': max_lis, 'nodeIds': inc_fdo.VO.index.tolist()}
+    response = {'data': [], 'variance': [], 'min': [], 'max': [], 'nodeIds': []}
+    response['variance'] = var_lis
+    response['min'] = min_lis 
+    response['max'] = max_lis 
+    response['nodeIds'] = ms_data.index.tolist()
+
+    if (inc == 0 and prog == 0):
+        inc_fdo = IncFDO()
+        inc_fdo.initial_fit(ms_data)
+        lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
+        response['data'] = lis
+    if (inc == 1):
+        print('incremental update')
+        fd1 = get_data(fname, 1)
+        x_new = fd1.set_index('timestamp').pivot(columns='nodeId', values=xgroup)
+        inc_fdo.partial_fit(x_new)
+        if (inc + 1) % 10 == 0:
+            lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
+            response['data'] = lis
+
     return Response(json.dumps(response), mimetype='application/json')
 
 @app.route('/getFPCA/<group>')

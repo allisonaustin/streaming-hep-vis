@@ -60,6 +60,9 @@ function appendColorLegend() {
     const barHeight = 10
     const barWidth = 200
 
+    d3.select('#linear-gradient-ms').remove();
+    d3.select('#ms_color_legend').remove();
+
     linearGradient = msContainer
         .append("linearGradient")
         .attr("id", "linear-gradient-ms")

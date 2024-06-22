@@ -91,7 +91,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
         .enter()
         .append("stop")
         .attr("offset", function (d) {
-            console.log(d.offset)
+            // console.log(d.offset)
             return d.offset;
         })
         .attr("stop-color", function (d) {
