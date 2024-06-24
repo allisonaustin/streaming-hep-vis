@@ -1,6 +1,6 @@
 import {
-    percentColToD3Rgb,
-    pallette
+  percentColToD3Rgb,
+  pallette
 } from './colors.js';
 
 let container;
@@ -19,18 +19,18 @@ let functs = {};
 function groupByNode(data) {
   const groups = {};
   data.forEach(obj => {
-      const node = obj.nodeId;
-      if (!(node in groups)) {
-          groups[node] = {};
+    const node = obj.nodeId;
+    if (!(node in groups)) {
+      groups[node] = {};
+    }
+    Object.keys(obj).forEach(key => {
+      if (!(key in groups[node])) {
+        groups[node][key] = [];
       }
-      Object.keys(obj).forEach(key => {
-        if (!(key in groups[node])) {
-            groups[node][key] = [];
-        }
-        groups[node][key].push({
-            timestamp: obj.timestamp,
-            value: +obj[key]
-        });
+      groups[node][key].push({
+        timestamp: obj.timestamp,
+        value: +obj[key]
+      });
     });
   });
   return groups;
@@ -38,116 +38,159 @@ function groupByNode(data) {
 
 
 export function drawSvg(svgData) {
-    svgData.svg.selectAll("*").remove();
-    svgArea = svgData.svgArea;
-    date = svgData.date.date;
-    margin = svgData.margin;
-    container = svgData.svg;
-    container.attr('viewBox', [0, 0, svgArea.width + svgData.margin.left + svgData.margin.right, svgArea.height]);
-    data = groupByNode(svgData.data); 
-    selectedX = svgData.selectedX;
-    selectedY = svgData.selectedY;
-    functs = chart()
+  svgData.svg.selectAll("*").remove();
+  svgArea = svgData.svgArea;
+  date = svgData.date.date;
+  margin = svgData.margin;
+  container = svgData.svg;
+  container.attr('viewBox', [0, 0, svgArea.width + svgData.margin.left + svgData.margin.right, svgArea.height]);
+  data = groupByNode(svgData.data);
+  selectedX = svgData.selectedX;
+  selectedY = svgData.selectedY;
+  functs = chart()
 }
 
-export const chart = () => {  
-    const customColorScale = d3.scaleOrdinal()
-        .domain(Object.keys(pallette))
-        .range(Object.values(pallette).map(percentColToD3Rgb));
+export const chart = () => {
+  const customColorScale = d3.scaleOrdinal()
+    .domain(Object.keys(pallette))
+    .range(Object.values(pallette).map(percentColToD3Rgb));
 
-    let xDom = []
-    let yDom = []
-    Object.values(data).forEach(node => {
-      xDom.push(...node[selectedX].map(d => d.value));
-      yDom.push(...node[selectedY].map(d => d.value));
-    });
+  let xDom = []
+  let yDom = []
+  Object.values(data).forEach(node => {
+    xDom.push(...node[selectedX].map(d => d.value));
+    yDom.push(...node[selectedY].map(d => d.value));
+  });
 
-    const xScale = d3.scaleLinear()
-      .domain(d3.extent(xDom))
-      .range([0, svgArea.width]);
-    
-    const yScale = d3.scaleLinear()
-      .domain(d3.extent(yDom))
-      .range([svgArea.height, 0]);
-    
-    container.append('g')
-      .attr('transform', `translate(${margin.left},${svgArea.height})`)
-      .call(d3.axisBottom(xScale))
-      .selectAll('text')
-      .attr('transform', 'rotate(-45)')
-      .style('text-anchor', 'end')
-      .style('display', 'none'); // hiding tick values
-    
-    container.append('g')
-      .attr('transform', `translate(${margin.left},0)`)
-      .call(d3.axisLeft(yScale))
-      .selectAll('text')
-      .style('display', 'none');
+  const xScale = d3.scaleLinear()
+    .domain(d3.extent(xDom))
+    .range([0, svgArea.width]);
 
-    container.append('text')
-      .attr('class', 'axis-label')
-      .attr('x', svgArea.width / 1.5) 
-      .attr('y', svgArea.height + 20) 
-      .style('text-anchor', 'middle') 
-      .style('font-size', '10px')
-      .text(selectedX);
-    
-    container.append('text')
-      .attr('class', 'axis-label')
-      .attr('transform', 'rotate(-90)') 
-      .attr('x', -svgArea.height / 2) 
-      .attr('y', 10)
-      .style('text-anchor', 'middle')
-      .style('font-size', '10px')
-      .text(selectedY);
-        
-    const line = d3.line()
-      .x((d, i) => xScale(d.x))
-      .y((d, i) => yScale(d.y));
+  const yScale = d3.scaleLinear()
+    .domain(d3.extent(yDom))
+    .range([svgArea.height, 0]);
 
-    const linesGroup = container.append('g')
-                        .attr('transform', `translate(${margin.left}, 0)`)
-                        .attr('id', 'lines-group');
+  container.append('g')
+    .attr('transform', `translate(${margin.left},${svgArea.height})`)
+    .call(d3.axisBottom(xScale))
+    .selectAll('text')
+    .attr('transform', 'rotate(-45)')
+    .style('text-anchor', 'end')
+    .style('display', 'none'); // hiding tick values
 
-    const gradientColors = [
-      { offset: '0%', color: 'steelblue' },
-      { offset: '100%', color: 'black' }
-    ];
+  container.append('g')
+    .attr('transform', `translate(${margin.left},0)`)
+    .call(d3.axisLeft(yScale))
+    .selectAll('text')
+    .style('display', 'none');
 
-    const defs = container.append('defs');
+  container.append('text')
+    .attr('class', 'axis-label')
+    .attr('x', svgArea.width / 1.5)
+    .attr('y', svgArea.height + 20)
+    .style('text-anchor', 'middle')
+    .style('font-size', '10px')
+    .text(selectedX);
 
-    Object.keys(data).forEach((node, i) => {
-      const xValues = data[node][selectedX].map(entry => entry.value);
-      const yValues = data[node][selectedY].map(entry => entry.value);
-      const nodeData = xValues.map((selectedX, index) => ({
-        x: selectedX,
-        y: yValues[index],
-      }));
+  container.append('text')
+    .attr('class', 'axis-label')
+    .attr('transform', 'rotate(-90)')
+    .attr('x', -svgArea.height / 2)
+    .attr('y', 10)
+    .style('text-anchor', 'middle')
+    .style('font-size', '10px')
+    .text(selectedY);
 
-      linesGroup.append('path')
-        .datum(nodeData)
-        .attr('class', 'line')
-        .attr('fill', 'none')
-        .attr('id', node)
-        .attr('d', line)
-        .attr('stroke-width', 1)
-        .attr('stroke-opacity', 0.9)
-        .style('stroke', (d,i) => `url(#line-gradient-${i})`);
+  const line = d3.line()
+    .x((d, i) => xScale(d.x))
+    .y((d, i) => yScale(d.y));
 
-        const gradient = defs.append('linearGradient')
-        .attr('id', `line-gradient-${i}`)
-        .attr('gradientUnits', 'userSpaceOnUse')
-        .attr('x1', 0).attr('y1', yScale(yScale.domain()[0]))
-        .attr('x2', 0).attr('y2', yScale(yScale.domain()[1]));
+  const linesGroup = container.append('g')
+    .attr('transform', `translate(${margin.left}, 0)`)
+    .attr('id', 'lines-group');
 
-        gradient.append('stop')
-            .attr('offset', '0%')
-            .attr('stop-color', 'lightblue');
+  const gradientColors = [
+    { offset: '0%', color: 'steelblue' },
+    { offset: '100%', color: 'black' }
+  ];
 
-        gradient.append('stop')
-            .attr('offset', '100%')
-            .attr('stop-color', 'darkblue');
-    });
+  const defs = container.append('defs');
+
+  Object.keys(data).forEach((node, i) => {
+    const xValues = data[node][selectedX].map(entry => entry.value);
+    const yValues = data[node][selectedY].map(entry => entry.value);
+    const nodeData = xValues.map((selectedX, index) => ({
+      x: selectedX,
+      y: yValues[index],
+    }));
+
+    linesGroup.append('path')
+      .datum(nodeData)
+      .attr('class', 'line')
+      .attr('fill', 'none')
+      .attr('id', node)
+      .attr('d', line)
+      .attr('stroke-width', 1)
+      .attr('stroke-opacity', 0.9)
+      .style('stroke', (d, i) => `url(#line-gradient)`);
+
+
+
+    const gradient = defs.append('linearGradient')
+      .attr('id', `line-gradient`)
+    gradient
+      .attr('gradientUnits', 'userSpaceOnUse')
+      .attr('x1', 0).attr('y1', yScale(yScale.domain()[0]))
+      .attr('x2', 0).attr('y2', yScale(yScale.domain()[1]));
+
+    gradient.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', 'lightblue');
+
+    gradient.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', 'darkblue');
+
+    const gradientLegend = container.append('linearGradient')
+      .attr('id', `line-gradient-legend`)
+    gradientLegend
+      .attr('x1', "0%")
+      .attr('y1', "0%")
+      .attr('x2', "100%")
+      .attr('y2', "0%");
+
+    gradientLegend.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', 'lightblue');
+
+    gradientLegend.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', 'darkblue');
+
+    const barHeight = 10
+    const barWidth = 200
+
+    let legend = container.append('g').attr('id', `line-legend`)
+      .attr('transform', (d, i) =>
+        `translate(${margin.left + 20 + svgArea.width / 2}, ${margin.top + svgArea.width + 20})`)
+    legend.append('rect')
+      .attr("class", "legendRect")
+      .attr("x", -barWidth / 2)
+      .attr("y", 0)
+      .attr("width", barWidth)
+      .attr("height", barHeight)
+      .style("fill", "url(#line-gradient-legend)")
+    const colorAxisScale = d3.scaleLinear()
+      .domain([yScale.domain()[0], yScale.domain()[1]])
+      .range([0, barWidth])
+
+    const colorAxisTicks = d3.axisBottom(colorAxisScale)
+      .ticks(5)
+      .tickSize(-barHeight)
+    const colorAxis = legend.append("g")
+      .attr('transform', `translate(${-barWidth / 2}, ${barHeight})`)
+      .call(colorAxisTicks);
+  });
 }
 
 export const updatePlot = (xGroup, yGroup) => {

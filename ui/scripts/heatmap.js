@@ -261,6 +261,7 @@ export const chart = (container, groupData, group, svgArea) => {
     const colorBand = d3.scaleLinear()
         .domain([0, d3.max(counts.flat()) / 2, d3.max(counts.flat())])
         .range(["white", "orange", "red"]);
+    console.log(d3.max(counts.flat()))
 
     // let colorbarSize = {width: 100, height: 10}
 
