@@ -79,7 +79,7 @@ async function initHeatmap(data, dateValue, type) {
   heatmapSvgData.date = dateValue;
   heatmapSvgData.selectedX = xGroup;
   heatmapSvgData.selectedY = yGroup;
-  const margin = { top: 15, right: 10, bottom: 10, left: 10 };
+  const margin = { top: 15, right: 10, bottom: 100, left: 10 };
   heatmapSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${heatmapSvgData.domId}`),
     calcContainerHeight(`#${heatmapSvgData.domId}`),

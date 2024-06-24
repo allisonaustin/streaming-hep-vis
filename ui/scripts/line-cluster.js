@@ -96,8 +96,8 @@ export const chart = () => {
 
   container.append('text')
     .attr('class', 'axis-label')
-    .attr('x', svgArea.width / 1.5)
-    .attr('y', svgArea.height + 20)
+    .attr('x', margin.left + svgArea.width / 2)
+    .attr('y', margin.top + svgArea.height + 15)
     .style('text-anchor', 'middle')
     .style('font-size', '10px')
     .text(selectedX);

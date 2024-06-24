@@ -88,10 +88,10 @@ function appendColorLegend() {
         });
     legend = msContainer.append('g').attr('id', 'ms_color_legend')
         .attr('transform', (d, i) =>
-            `translate(${marginMS.left}, ${marginMS.top + height - 10})`)
+            `translate(${marginMS.left + width / 2}, ${marginMS.top + height - 10})`)
     legend.append('rect')
         .attr("class", "legendRect")
-        .attr("x", 0)
+        .attr("x", -barWidth / 2)
         .attr("y", 0)
         .attr("width", barWidth)
         .attr("height", barHeight)
@@ -104,7 +104,7 @@ function appendColorLegend() {
         .ticks(5)
         .tickSize(-barHeight)
     colorAxis = legend.append("g")
-        .attr('transform', `translate(${0}, ${barHeight})`)
+        .attr('transform', `translate(${-barWidth / 2}, ${barHeight})`)
         .call(colorAxisTicks);
 }
 

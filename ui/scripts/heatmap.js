@@ -124,14 +124,13 @@ export function createHeatmaps(svgData) {
     const barWidth = 200
 
 
-    const xOffset = 3.5 * (chartWidth + svgData.margin.left);
-    const yOffset = 4.5 * (chartHeight + svgData.margin.top);
+    console.log(svgData.margin)
     let legend = chartContainer.append('g').attr('id', 'heatmap_legend')
         .attr('transform', (d, i) =>
-            `translate(${xOffset}, ${yOffset})`)
+            `translate(${svgData.margin.left + svgArea.width / 2}, ${svgData.margin.top + svgArea.height - 20})`)
     legend.append('rect')
         .attr("class", "legendRect")
-        .attr("x", 0)
+        .attr("x", -barWidth / 2)
         .attr("y", 0)
         .attr("width", barWidth)
         .attr("height", barHeight)
@@ -145,7 +144,7 @@ export function createHeatmaps(svgData) {
         .tickFormat((d, i) => ["min", "max"][i])
         .tickSize(-barHeight)
     const colorAxis = legend.append("g")
-        .attr('transform', `translate(${0}, ${barHeight})`)
+        .attr('transform', `translate(${-barWidth / 2}, ${barHeight})`)
         .call(colorAxisTicks);
 
     for (let group in targetData) {
