@@ -124,7 +124,7 @@ export function createHeatmaps(svgData) {
     const barWidth = 200
 
 
-    const xOffset = 3 * (chartWidth + svgData.margin.left);
+    const xOffset = 3.5 * (chartWidth + svgData.margin.left);
     const yOffset = 4.5 * (chartHeight + svgData.margin.top);
     let legend = chartContainer.append('g').attr('id', 'heatmap_legend')
         .attr('transform', (d, i) =>
