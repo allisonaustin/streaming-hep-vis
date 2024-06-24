@@ -96,7 +96,7 @@ async function initCorrelationView(data) {
   corrSvgData.date = dateValue;
   corrSvgData.selectedX = xGroup;
   corrSvgData.selectedY = yGroup;
-  const margin = { top: 60, right: 100, bottom: 60, left: 60 }
+  const margin = { top: 60, right: 70, bottom: 60, left: 70 }
   corrSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${corrSvgData.domId}`),
     calcContainerHeight(`#${corrSvgData.domId}`),
