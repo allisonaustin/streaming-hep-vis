@@ -124,7 +124,6 @@ export function createHeatmaps(svgData) {
     const barWidth = 200
 
 
-    console.log(svgData.margin)
     let legend = chartContainer.append('g').attr('id', 'heatmap_legend')
         .attr('transform', (d, i) =>
             `translate(${svgData.margin.left + svgArea.width / 2}, ${svgData.margin.top + svgArea.height - 20})`)

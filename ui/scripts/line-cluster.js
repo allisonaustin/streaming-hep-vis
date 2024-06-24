@@ -74,14 +74,14 @@ export const chart = () => {
 
   const yScale = d3.scaleLinear()
     .domain(d3.extent(yDom))
-    .range([svgArea.height, 0]);
+    .range([svgArea.width, 0]);
 
   const timeExtent = d3.extent(tDom)
   const tScale = d3.scaleTime()
     .domain([timeExtent[0], timeExtent[1]])
 
   container.append('g')
-    .attr('transform', `translate(${margin.left},${margin.top + svgArea.height})`)
+    .attr('transform', `translate(${margin.left},${margin.top + svgArea.width})`)
     .call(d3.axisBottom(xScale))
     .selectAll('text')
     .attr('transform', 'rotate(-45)')
@@ -97,7 +97,7 @@ export const chart = () => {
   container.append('text')
     .attr('class', 'axis-label')
     .attr('x', margin.left + svgArea.width / 2)
-    .attr('y', margin.top + svgArea.height + 15)
+    .attr('y', margin.top + svgArea.width + 15)
     .style('text-anchor', 'middle')
     .style('font-size', '10px')
     .text(selectedX);
@@ -129,7 +129,7 @@ export const chart = () => {
 
   let legend = container.append('g').attr('id', `line-legend`)
     .attr('transform', (d, i) =>
-      `translate(${margin.left + svgArea.width / 2}, ${margin.top + svgArea.height + 20})`)
+      `translate(${margin.left + svgArea.width / 2}, ${margin.top + svgArea.width + 20})`)
   legend.append('rect')
     .attr("class", "legendRect")
     .attr("x", -barWidth / 2)

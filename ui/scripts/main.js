@@ -96,7 +96,7 @@ async function initCorrelationView(data) {
   corrSvgData.date = dateValue;
   corrSvgData.selectedX = xGroup;
   corrSvgData.selectedY = yGroup;
-  const margin = { top: 100, right: 100, bottom: 100, left: 100 }
+  const margin = { top: 60, right: 100, bottom: 60, left: 60 }
   corrSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${corrSvgData.domId}`),
     calcContainerHeight(`#${corrSvgData.domId}`),
@@ -113,7 +113,7 @@ async function initClusterView(data, dateValue) {
   lineSvgData.date = dateValue;
   lineSvgData.selectedX = xGroup;
   lineSvgData.selectedY = yGroup;
-  const marginLC = { top: 75, right: 20, bottom: 60, left: 30 }
+  const marginLC = { top: 60, right: 20, bottom: 60, left: 30 }
   lineSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${lineSvgData.domId}`),
     calcContainerHeight(`#${lineSvgData.domId}`),
