@@ -118,7 +118,6 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
     color_data = X_ori.set_index('timestamp') \
                     .pivot(columns='nodeId', values=xgroup).T
                     # .apply(lambda row: row.fillna(row.mean()), axis=0).T
-    
     var_ms = color_data.var(axis=1)
     min_ms = color_data.min(axis=1)
     max_ms = color_data.max(axis=1)

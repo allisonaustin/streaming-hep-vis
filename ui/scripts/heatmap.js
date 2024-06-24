@@ -62,7 +62,6 @@ export function createHeatmaps(svgData) {
 
     let targetData = groupByDataType(svgData.data);
     let numCharts = Object.keys(targetData).length;
-
     let hiddenHeatmaps = [];
 
     for (let group in targetData) {

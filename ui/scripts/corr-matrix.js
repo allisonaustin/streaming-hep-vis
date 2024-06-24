@@ -22,14 +22,22 @@ export function drawSvg(svgData) {
 }
 
 const chart = (container, area, margin, data, selectedX, selectedY) => {
-    const cols = Array.from(new Set(data.flatMap(Object.keys)));
+    let cols = Array.from(new Set(data.flatMap(Object.keys)));
+    const filteredCols = cols.filter((d, i) =>
+        g.groups.cpu.includes(d) ||
+        g.groups.network.includes(d) ||
+        g.groups.disk.includes(d) ||
+        g.groups.memory.includes(d) ||
+        g.groups.process.includes(d) ||
+        g.groups.system.includes(d) ||
+        g.groups.load.includes(d)
+    )
 
     const colorscale = d3.scaleSequential(d3.interpolateViridis)
         .domain([-1, 1]);
 
-    const numRows = cols.length;
-    const numCols = cols.length;
-
+    const numRows = filteredCols.length;
+    const numCols = filteredCols.length;
     // Calculate the grid size considering the available area and margins
     const gridSize = (area.width) / numCols;
 
@@ -128,7 +136,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
 
     for (let i = 0; i < numRows; i++) {
         for (let j = 0; j < numCols; j++) {
-            const value = data[i][cols[j]];
+            const value = data[cols.findIndex((d) => d === filteredCols[i])][filteredCols[j]];
             grid.append('rect')
                 .attr('class', 'corr-rect')
                 .attr('id', `c_${i}_${j}`)

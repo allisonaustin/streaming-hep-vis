@@ -49,10 +49,13 @@ function init(msdata, nodes) {
     // colorcode = d3.scaleOrdinal()
     //     .domain(nodes)
     //     .range(colorRange);
-
     colorcode = d3.scaleLinear()
-        .domain([0, d3.max(colordata, d => d.val)])
-        .range(['white', 'darkblue']);
+        .domain([0, 0.25 * d3.max(colordata, d => d.val),
+            0.5 * d3.max(colordata, d => d.val),
+            0.75 * d3.max(colordata, d => d.val),
+            d3.max(colordata, d => d.val)
+        ])
+        .range(['#f1ffez', '#c2e7da', '#41a0ae', '#36669c', '#3a2f6b']);
 
 };
 
@@ -75,7 +78,7 @@ function appendColorLegend() {
     //Append multiple color stops by using D3's data/enter step
     linearGradient
         .selectAll("stop")
-        .data(colorcode.ticks(10).map((t, i, n) => {
+        .data(colorcode.ticks(5).map((t, i, n) => {
             return ({ offset: `${100 * i / n.length}%`, color: colorcode(t) })
         }))
         .enter()
@@ -174,7 +177,7 @@ function appendCircles(cols, nodes) {
         .attr("cx", d => xms(d[0]))
         .attr("cy", d => yms(d[1]))
         .attr("r", ms_circle_r)
-        .attr("stroke", "black")
+        .attr("stroke", "#D3D3D3")
         .attr("stroke-width", "1px")
         .attr('fill', (d, i) => {
             return colorcode(colordata.find(item => item.nodeId === nodes[i]).val);
@@ -264,8 +267,12 @@ function updateTitle(title) {
 function updateCircles() {
     console.log("data INC", data)
     colorcode = d3.scaleLinear()
-        .domain([0, d3.max(colordata, d => d.val)])
-        .range(['white', 'darkblue']);
+        .domain([0, 0.25 * d3.max(colordata, d => d.val),
+            0.5 * d3.max(colordata, d => d.val),
+            0.75 * d3.max(colordata, d => d.val),
+            d3.max(colordata, d => d.val)
+        ])
+        .range(['#f1ffez', '#c2e7da', '#41a0ae', '#36669c', '#3a2f6b']);
 
     let circles = msContainer
         .selectAll(".ms-circle")
@@ -305,7 +312,7 @@ function updateCirclesProgressive(newCircleID, newRackID) {
         .attr("stroke", (d, i) => {
             // if( i === (data.length -1) )
             //     return "cyan"
-            return "black"
+            return "#D3D3D3"
         })
         .attr("stroke-width", "1px")
         .attr('fill', colorcode(newRackID))
