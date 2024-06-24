@@ -19,9 +19,9 @@ export const updateCharts = async (svg) => {
           }
         })
         .then(data => {
-          hmData = svg.data.concat(data);
+          hmData = svg.data.concat(data.data);
           svg.data = hmData;
-          heatMapView.updateHeatmaps(svg, data);
+          heatMapView.updateHeatmaps(svg, data.data);
         })
         .catch(error => {
           console.error('Error:', error);

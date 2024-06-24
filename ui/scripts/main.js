@@ -160,8 +160,9 @@ async function init(type, dateValue) {
   // data.forEach(obj => {
   //   uniqueNodes.add(obj.nodeId);
   // });
-  initHeatmap(data, dateValue, type)
-  initClusterView(data, dateValue)
+  console.log(data)
+  initHeatmap(data.data, dateValue, type)
+  initClusterView(data.data, dateValue)
   initCorrelationView(corrData)
   initMsPlotView(msData)
 }

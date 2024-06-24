@@ -38,40 +38,36 @@ def get_data(filename, inc):
     global init_timepts
     global skip_rows 
     global inc_rows
+    global n_inc
     global cols 
 
     rows = init_timepts
     fname = filename
 
-    cols = [
-        'timestamp', 'cpu_system', 'boottime', 'Pool Size Time_P1', 'mem_free',
-        'Missed Buffers_P1', 'bytes_out', 'cpu_user', 'cpu_idle',
-        'Pool Size Data_P1', 'pkts_out', 'load_fifteen', 'part_max_used',
-        'load_five', 'mem_shared', 'swap_free', 'Pool Size Events_P1',
-        'mem_total', 'load_one', 'mem_cached', 'mem_buffers', 'pkts_in',
-        'cpu_speed', 'bytes_in', 'cpu_wio', 'cpu_nice', 'disk_free',
-        'disk_total', 'cpu_aidle', 'proc_total', 'swap_total', 'proc_run',
-        'cpu_num', 'nodeId', 'RPCRetrans_rate', 'TotalRetrans_rate',
-        'TCPSlowStartRetrans_rate', 'TCPFastRetrans_rate', 'RetransSegs_rate',
-        'TCPLostRetransmit_rate', 'TCPForwardRetrans_rate', 'TotalRetrans',
-        'TCPSlowStartRetrans', 'RPCRetrans', 'TCPFastRetrans',
-        'TCPLostRetransmit', 'TCPForwardRetrans', 'RetransSegs'
-    ]
-
     if int(inc) == 0:
         skip_rows = 15000
-        # cols = pd.read_csv(filepath + filename, nrows=1).columns
+        cols = pd.read_csv(filepath + filename, nrows=1).columns
         df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=init_timepts, names=cols)
+        nan_events = df.iloc[:, :33]
         X_ori = df
         skip_rows += init_timepts 
     else:
         skip_rows += inc_rows
         n_inc += 1
         df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=inc_rows, names=cols)
+        nan_events = df.iloc[:, :33]
 
+    nan_events['timestamp'] = pd.to_datetime(nan_events['timestamp'])
+    event_counts = nan_events.set_index('timestamp').isna().sum(axis=1).resample('T').sum()
+    event_counts.index = event_counts.index.astype(str)
     df['timestamp'] = df['timestamp'].apply(lambda x: int(x) * 1000 if isinstance(x, int) else int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
     final_df = df.replace({np.nan: None})
-    return Response(final_df.to_json(orient='records'), mimetype='application/json')
+    
+    response = {
+        'data': final_df.to_dict(orient='records'),
+        'event_counts': event_counts.to_dict()
+    }
+    return Response(json.dumps(response), mimetype='application/json')
 
 @app.route('/getCorr')
 def get_corr():
