@@ -115,6 +115,8 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
     init_n = len(X_ori['nodeId'].unique())
 
     # fix me!!!
+    print(X_ori.set_index('timestamp').pivot(columns='nodeId', values=xgroup))
+    print(X_ori.set_index('timestamp').pivot(columns='nodeId', values=ygroup))
     color_data = X_ori.set_index('timestamp') \
                     .pivot(columns='nodeId', values=xgroup).T
                     # .apply(lambda row: row.fillna(row.mean()), axis=0).T

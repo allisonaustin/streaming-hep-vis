@@ -43,7 +43,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
 
     // Top labels
     const xLabels = container.selectAll('.x-label')
-        .data(cols)
+        .data(filteredCols)
         .enter()
         .append('text')
         .attr('class', 'label-text')
@@ -53,7 +53,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
 
     // Left labels
     const yLabels = container.selectAll('.y-label')
-        .data(cols)
+        .data(filteredCols)
         .enter()
         .append('text')
         .attr('class', 'label-text y-label-text')
