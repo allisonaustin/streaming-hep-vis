@@ -97,6 +97,56 @@ export function createHeatmaps(svgData) {
     }
     let row = 0;
     let col = 0;
+    let linearGradient = chartContainer
+        .append("linearGradient")
+        .attr("id", "linear-gradient-heatmap")
+
+    //Horizontal gradient
+    linearGradient
+        .attr("x1", "0%")
+        .attr("y1", "0%")
+        .attr("x2", "100%")
+        .attr("y2", "0%");
+    //Append multiple color stops by using D3's data/enter step
+    linearGradient
+        .append("stop")
+        .attr("offset", "0%")
+        .attr("stop-color", "white")
+    linearGradient
+        .append("stop")
+        .attr("offset", "50%")
+        .attr("stop-color", "orange")
+    linearGradient
+        .append("stop")
+        .attr("offset", "100%")
+        .attr("stop-color", "red")
+    const barHeight = 10
+    const barWidth = 200
+
+
+    const xOffset = 3 * (chartWidth + svgData.margin.left);
+    const yOffset = 4.5 * (chartHeight + svgData.margin.top);
+    let legend = chartContainer.append('g').attr('id', 'heatmap_legend')
+        .attr('transform', (d, i) =>
+            `translate(${xOffset}, ${yOffset})`)
+    legend.append('rect')
+        .attr("class", "legendRect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", barWidth)
+        .attr("height", barHeight)
+        .style("fill", "url(#linear-gradient-heatmap)")
+    const colorAxisScale = d3.scaleLinear()
+        .domain([0, 1])
+        .range([0, barWidth])
+
+    const colorAxisTicks = d3.axisBottom(colorAxisScale)
+        .tickValues([0, 1])
+        .tickFormat((d, i) => ["min", "max"][i])
+        .tickSize(-barHeight)
+    const colorAxis = legend.append("g")
+        .attr('transform', `translate(${0}, ${barHeight})`)
+        .call(colorAxisTicks);
 
     for (let group in targetData) {
 

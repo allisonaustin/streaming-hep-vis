@@ -43,7 +43,8 @@ export function drawSvg(svgData) {
   date = svgData.date.date;
   margin = svgData.margin;
   container = svgData.svg;
-  container.attr('viewBox', [0, 0, svgArea.width + svgData.margin.left + svgData.margin.right, svgArea.height]);
+  container.attr('viewBox', [0, 0, svgArea.width + margin.left + margin.right,
+    margin.top + margin.bottom + svgArea.height]);
   data = groupByNode(svgData.data);
   selectedX = svgData.selectedX;
   selectedY = svgData.selectedY;
@@ -54,7 +55,7 @@ export const chart = () => {
   const customColorScale = d3.scaleOrdinal()
     .domain(Object.keys(pallette))
     .range(Object.values(pallette).map(percentColToD3Rgb));
-  
+
   const timeFormat = d3.timeFormat('%H:%M');
 
   let xDom = []
@@ -77,10 +78,10 @@ export const chart = () => {
 
   const timeExtent = d3.extent(tDom)
   const tScale = d3.scaleTime()
-      .domain([timeExtent[0], timeExtent[1]])
+    .domain([timeExtent[0], timeExtent[1]])
 
   container.append('g')
-    .attr('transform', `translate(${margin.left},${svgArea.height})`)
+    .attr('transform', `translate(${margin.left},${margin.top + svgArea.height})`)
     .call(d3.axisBottom(xScale))
     .selectAll('text')
     .attr('transform', 'rotate(-45)')
@@ -88,7 +89,7 @@ export const chart = () => {
     .style('display', 'none'); // hiding tick values
 
   container.append('g')
-    .attr('transform', `translate(${margin.left},0)`)
+    .attr('transform', `translate(${margin.left},${margin.top})`)
     .call(d3.axisLeft(yScale))
     .selectAll('text')
     .style('display', 'none');
@@ -115,7 +116,7 @@ export const chart = () => {
     .y((d, i) => yScale(d.y));
 
   const linesGroup = container.append('g')
-    .attr('transform', `translate(${margin.left}, 0)`)
+    .attr('transform', `translate(${margin.left}, ${margin.top})`)
     .attr('id', 'lines-group');
 
   const gradientColors = [
@@ -128,7 +129,7 @@ export const chart = () => {
 
   let legend = container.append('g').attr('id', `line-legend`)
     .attr('transform', (d, i) =>
-      `translate(${margin.left + 20 + svgArea.width / 2}, ${margin.top + svgArea.width})`)
+      `translate(${margin.left + svgArea.width / 2}, ${margin.top + svgArea.height + 20})`)
   legend.append('rect')
     .attr("class", "legendRect")
     .attr("x", -barWidth / 2)
@@ -167,10 +168,13 @@ export const chart = () => {
       .attr('d', line)
       .attr('stroke-width', 1)
       .attr('stroke-opacity', 0.9)
-      .style('stroke', (d, i) => `url(#line-gradient)`);
+      .style('stroke', (d, i) => `url(#line-gradient-${i})`);
 
     const gradient = defs.append('linearGradient')
-      .attr('id', `line-gradient`)
+      .attr('id', `line-gradient-${i}`)
+
+    const colorscale = d3.scaleSequential(d3.interpolateViridis)
+      .domain(tScale.domain);
     gradient
       .attr('gradientUnits', 'userSpaceOnUse')
       .attr('x1', 0).attr('y1', tScale(tScale.domain()[0]))
@@ -184,22 +188,22 @@ export const chart = () => {
       .attr('offset', '100%')
       .attr('stop-color', 'darkblue');
 
-    const gradientLegend = container.append('linearGradient')
-      .attr('id', `line-gradient-legend`)
-    gradientLegend
-      .attr('x1', "0%")
-      .attr('y1', "0%")
-      .attr('x2', "100%")
-      .attr('y2', "0%");
-
-    gradientLegend.append('stop')
-      .attr('offset', '0%')
-      .attr('stop-color', 'lightblue');
-
-    gradientLegend.append('stop')
-      .attr('offset', '100%')
-      .attr('stop-color', 'darkblue');
   });
+  const gradientLegend = container.append('linearGradient')
+    .attr('id', `line-gradient-legend`)
+  gradientLegend
+    .attr('x1', "0%")
+    .attr('y1', "0%")
+    .attr('x2', "100%")
+    .attr('y2', "0%");
+
+  gradientLegend.append('stop')
+    .attr('offset', '0%')
+    .attr('stop-color', 'lightblue');
+
+  gradientLegend.append('stop')
+    .attr('offset', '100%')
+    .attr('stop-color', 'darkblue');
 }
 
 export const updatePlot = (xGroup, yGroup) => {
