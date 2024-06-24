@@ -33,10 +33,9 @@ export const updateCorr = (group1, group2) => {
   cluster.updatePlot(group1, group2);
 }
 
-export const updateMS = async (msGroup, colorGroup, colorType='var', newData=false) => {
-  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}/${colorGroup}/0/0`;
+export const updateMS = async (msGroup, colorGroup, colorType='var', newData=false, inc=0) => {
+  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}/${colorGroup}/${inc}/0`;
   let colordata = [];
-  console.log(msData)
   if (newData || msData == null) {
     await fetch(flaskUrl)
     .then(res => {
@@ -47,6 +46,7 @@ export const updateMS = async (msGroup, colorGroup, colorType='var', newData=fal
       }
     })
     .then(data => {
+      console.log(data)
       msData = data;
       if (colorType == 'var') {
         colordata = data['variance'];

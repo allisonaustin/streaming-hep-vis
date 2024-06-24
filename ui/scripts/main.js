@@ -28,6 +28,7 @@ let xGroup = 'cpu_idle';
 let yGroup = 'cpu_nice';
 let refreshIntervalId;
 let dateValue;
+let option;
 
 async function getData(filename, inc) {
   const flaskUrl = m.flaskUrl + `/getData/${filename}/${inc}`;
@@ -43,7 +44,7 @@ async function getData(filename, inc) {
   }
 }
 
-async function getMsData(xGroup, yGroup, inc = 0, prog = 0) {
+async function getMsData(xGroup, yGroup, inc=0, prog=0) {
   const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${xGroup}/${yGroup}/${inc}/${prog}`;
   try {
     const res = await fetch(flaskUrl);
@@ -166,9 +167,9 @@ async function init(type, dateValue) {
 }
 
 window.handleColorChange = () => {
-  let option = document.querySelector('input[name="color"]:checked').value;
+  option = document.querySelector('input[name="color"]:checked').value;
   setType(option);
-  u.updateMS(getFeature1(), getFeature2(), option, false);
+  u.updateMS(getFeature1(), getFeature2(), option, false, 0);
 }
 
 window.updateDate = () => {
@@ -180,7 +181,10 @@ window.updateDate = () => {
 
 window.updateChart = () => {
   if (document.getElementById('data-stream-option').checked) {
-    refreshIntervalId = setInterval(() => u.updateCharts(heatmapSvgData), 500);
+    refreshIntervalId = setInterval(() => {
+      u.updateCharts(heatmapSvgData);
+      u.updateMS(getFeature1(), getFeature2(), option, true, 1);
+    }, 500);
   } else {
     clearInterval(refreshIntervalId);
   }

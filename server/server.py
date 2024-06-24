@@ -17,18 +17,22 @@ app = Flask(__name__)
 cors = CORS(app)
 
 df = pd.DataFrame()
+X_ori = pd.DataFrame()
 filepath = '../ui/data/farm/'
 fname = ''
 init_timepts = 60000
 inc_rows = 1500 
 skip_rows = 15000
 cols = []
+n_inc = 0
 inc = 0
 prog = 0
+inc_fdo = IncFDO()
 
 @app.route("/getData/<filename>/<inc>")
 def get_data(filename, inc):
     global df 
+    global X_ori
     global filepath
     global fname
     global init_timepts
@@ -39,28 +43,30 @@ def get_data(filename, inc):
     rows = init_timepts
     fname = filename
 
+    cols = [
+        'timestamp', 'cpu_system', 'boottime', 'Pool Size Time_P1', 'mem_free',
+        'Missed Buffers_P1', 'bytes_out', 'cpu_user', 'cpu_idle',
+        'Pool Size Data_P1', 'pkts_out', 'load_fifteen', 'part_max_used',
+        'load_five', 'mem_shared', 'swap_free', 'Pool Size Events_P1',
+        'mem_total', 'load_one', 'mem_cached', 'mem_buffers', 'pkts_in',
+        'cpu_speed', 'bytes_in', 'cpu_wio', 'cpu_nice', 'disk_free',
+        'disk_total', 'cpu_aidle', 'proc_total', 'swap_total', 'proc_run',
+        'cpu_num', 'nodeId', 'RPCRetrans_rate', 'TotalRetrans_rate',
+        'TCPSlowStartRetrans_rate', 'TCPFastRetrans_rate', 'RetransSegs_rate',
+        'TCPLostRetransmit_rate', 'TCPForwardRetrans_rate', 'TotalRetrans',
+        'TCPSlowStartRetrans', 'RPCRetrans', 'TCPFastRetrans',
+        'TCPLostRetransmit', 'TCPForwardRetrans', 'RetransSegs'
+    ]
+
     if int(inc) == 0:
-        init_timepts = 60000
         skip_rows = 15000
-        cols = [
-            'timestamp', 'cpu_system', 'boottime', 'Pool Size Time_P1', 'mem_free',
-            'Missed Buffers_P1', 'bytes_out', 'cpu_user', 'cpu_idle',
-            'Pool Size Data_P1', 'pkts_out', 'load_fifteen', 'part_max_used',
-            'load_five', 'mem_shared', 'swap_free', 'Pool Size Events_P1',
-            'mem_total', 'load_one', 'mem_cached', 'mem_buffers', 'pkts_in',
-            'cpu_speed', 'bytes_in', 'cpu_wio', 'cpu_nice', 'disk_free',
-            'disk_total', 'cpu_aidle', 'proc_total', 'swap_total', 'proc_run',
-            'cpu_num', 'nodeId', 'RPCRetrans_rate', 'TotalRetrans_rate',
-            'TCPSlowStartRetrans_rate', 'TCPFastRetrans_rate', 'RetransSegs_rate',
-            'TCPLostRetransmit_rate', 'TCPForwardRetrans_rate', 'TotalRetrans',
-            'TCPSlowStartRetrans', 'RPCRetrans', 'TCPFastRetrans',
-            'TCPLostRetransmit', 'TCPForwardRetrans', 'RetransSegs'
-        ]
         # cols = pd.read_csv(filepath + filename, nrows=1).columns
         df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=init_timepts, names=cols)
+        X_ori = df
         skip_rows += init_timepts 
     else:
         skip_rows += inc_rows
+        n_inc += 1
         df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=inc_rows, names=cols)
 
     df['timestamp'] = df['timestamp'].apply(lambda x: int(x) * 1000 if isinstance(x, int) else int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
@@ -94,11 +100,14 @@ def get_corr():
 @app.route('/getMagnitudeShapeFDA/<xgroup>/<ygroup>/<incremental_update>/<progressive_update>')
 def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
     global df 
+    global X_ori
     global fname
     global cols 
     global init_timepts
     global inc
+    global n_inc
     global prog
+    global inc_fdo
 
     inc = int(incremental_update)
     prog = int(progressive_update)
@@ -106,9 +115,11 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
     ms_data = df.set_index('timestamp') \
                 .pivot(columns='nodeId', values=xgroup).T
                 # .apply(lambda row: row.fillna(row.mean()), axis=0).T
-    
+
+    init_n = len(X_ori['nodeId'].unique())
+
     # fix me!!!
-    color_data = df.set_index('timestamp') \
+    color_data = X_ori.set_index('timestamp') \
                     .pivot(columns='nodeId', values=xgroup).T
                     # .apply(lambda row: row.fillna(row.mean()), axis=0).T
     
@@ -131,13 +142,13 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
         lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
         response['data'] = lis
     if (inc == 1):
-        print('incremental update')
-        fd1 = get_data(fname, 1)
-        x_new = fd1.set_index('timestamp').pivot(columns='nodeId', values=xgroup)
+        # taking average over inc interval
+        ms_data['avg'] = ms_data.mean(axis=1)
+        x_new = ms_data.iloc[:init_n, -1].to_numpy()
         inc_fdo.partial_fit(x_new)
-        if (inc + 1) % 10 == 0:
-            lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
-            response['data'] = lis
+        # if (n_inc + 1) % 10 == 0:
+        lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
+        response['data'] = lis
 
     return Response(json.dumps(response), mimetype='application/json')
 

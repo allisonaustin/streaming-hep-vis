@@ -54,12 +54,17 @@ export const chart = () => {
   const customColorScale = d3.scaleOrdinal()
     .domain(Object.keys(pallette))
     .range(Object.values(pallette).map(percentColToD3Rgb));
+  
+  const timeFormat = d3.timeFormat('%H:%M');
 
   let xDom = []
   let yDom = []
+  let tDom = []
+
   Object.values(data).forEach(node => {
     xDom.push(...node[selectedX].map(d => d.value));
     yDom.push(...node[selectedY].map(d => d.value));
+    tDom.push(...node[selectedY].map(d => d.timestamp));
   });
 
   const xScale = d3.scaleLinear()
@@ -69,6 +74,10 @@ export const chart = () => {
   const yScale = d3.scaleLinear()
     .domain(d3.extent(yDom))
     .range([svgArea.height, 0]);
+
+  const timeExtent = d3.extent(tDom)
+  const tScale = d3.scaleTime()
+      .domain([timeExtent[0], timeExtent[1]])
 
   container.append('g')
     .attr('transform', `translate(${margin.left},${svgArea.height})`)
@@ -114,6 +123,32 @@ export const chart = () => {
     { offset: '100%', color: 'black' }
   ];
 
+  const barHeight = 10
+  const barWidth = 200
+
+  let legend = container.append('g').attr('id', `line-legend`)
+    .attr('transform', (d, i) =>
+      `translate(${margin.left + 20 + svgArea.width / 2}, ${margin.top + svgArea.width})`)
+  legend.append('rect')
+    .attr("class", "legendRect")
+    .attr("x", -barWidth / 2)
+    .attr("y", 0)
+    .attr("width", barWidth)
+    .attr("height", barHeight)
+    .style("fill", "url(#line-gradient-legend)")
+  const colorAxisScale = d3.scaleLinear()
+    .domain([tScale.domain()[0], tScale.domain()[1]])
+    .range([0, barWidth])
+
+  const colorAxisTicks = d3.axisBottom(colorAxisScale)
+    .ticks(5)
+    .tickSize(-barHeight)
+    .tickFormat((d, i) => timeFormat(d))
+
+  const colorAxis = legend.append("g")
+    .attr('transform', `translate(${-barWidth / 2}, ${barHeight})`)
+    .call(colorAxisTicks);
+
   const defs = container.append('defs');
 
   Object.keys(data).forEach((node, i) => {
@@ -134,14 +169,12 @@ export const chart = () => {
       .attr('stroke-opacity', 0.9)
       .style('stroke', (d, i) => `url(#line-gradient)`);
 
-
-
     const gradient = defs.append('linearGradient')
       .attr('id', `line-gradient`)
     gradient
       .attr('gradientUnits', 'userSpaceOnUse')
-      .attr('x1', 0).attr('y1', yScale(yScale.domain()[0]))
-      .attr('x2', 0).attr('y2', yScale(yScale.domain()[1]));
+      .attr('x1', 0).attr('y1', tScale(tScale.domain()[0]))
+      .attr('x2', 0).attr('y2', tScale(tScale.domain()[1]));
 
     gradient.append('stop')
       .attr('offset', '0%')
@@ -166,30 +199,6 @@ export const chart = () => {
     gradientLegend.append('stop')
       .attr('offset', '100%')
       .attr('stop-color', 'darkblue');
-
-    const barHeight = 10
-    const barWidth = 200
-
-    let legend = container.append('g').attr('id', `line-legend`)
-      .attr('transform', (d, i) =>
-        `translate(${margin.left + 20 + svgArea.width / 2}, ${margin.top + svgArea.width + 20})`)
-    legend.append('rect')
-      .attr("class", "legendRect")
-      .attr("x", -barWidth / 2)
-      .attr("y", 0)
-      .attr("width", barWidth)
-      .attr("height", barHeight)
-      .style("fill", "url(#line-gradient-legend)")
-    const colorAxisScale = d3.scaleLinear()
-      .domain([yScale.domain()[0], yScale.domain()[1]])
-      .range([0, barWidth])
-
-    const colorAxisTicks = d3.axisBottom(colorAxisScale)
-      .ticks(5)
-      .tickSize(-barHeight)
-    const colorAxis = legend.append("g")
-      .attr('transform', `translate(${-barWidth / 2}, ${barHeight})`)
-      .call(colorAxisTicks);
   });
 }
 
