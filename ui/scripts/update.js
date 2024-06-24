@@ -46,7 +46,6 @@ export const updateMS = async (msGroup, colorGroup, colorType='var', newData=fal
       }
     })
     .then(data => {
-      console.log(data)
       msData = data;
       if (colorType == 'var') {
         colordata = data['variance'];

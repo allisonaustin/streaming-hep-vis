@@ -177,8 +177,8 @@ export const chart = () => {
       .domain(tScale.domain);
     gradient
       .attr('gradientUnits', 'userSpaceOnUse')
-      .attr('x1', 0).attr('y1', tScale(tScale.domain()[0]))
-      .attr('x2', 0).attr('y2', tScale(tScale.domain()[1]));
+      .attr('x1', 0).attr('y1', yScale(yScale.domain()[0]))
+      .attr('x2', 0).attr('y2', yScale(yScale.domain()[1]));
 
     gradient.append('stop')
       .attr('offset', '0%')
