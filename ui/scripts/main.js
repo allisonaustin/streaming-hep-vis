@@ -13,6 +13,7 @@ import * as lineClusterView from './line-cluster.js';
 import * as heatMapView from './heatmap.js';
 import * as msplot from './msplot.d3.js';
 import * as correlationView from './corr-matrix.js';
+import * as eventView from './bar-chart.js';
 
 import {
   calcContainerWidth,
@@ -24,6 +25,7 @@ const heatmapSvgData = m.svgData();
 const lineSvgData = m.svgData();
 const msPlotData = m.svgData();
 const corrSvgData = m.svgData();
+const barSvgData = m.svgData();
 let xGroup = 'cpu_idle';
 let yGroup = 'cpu_nice';
 let refreshIntervalId;
@@ -123,6 +125,21 @@ async function initClusterView(data, dateValue) {
   lineClusterView.drawSvg(lineSvgData);
 }
 
+async function initEventView(data) {
+  barSvgData.domId = 'e_view';
+  barSvgData.svg = d3.select(`#bar_svg`);
+  barSvgData.data = data;
+  barSvgData.date = dateValue;
+  const margin = { top: 15, right: 10, bottom: 20, left: 40 }
+  barSvgData.svgArea = prepareSvgArea(
+    calcContainerWidth(`#${barSvgData.domId}`),
+    calcContainerHeight(`#${barSvgData.domId}`),
+    margin || { top: 0, right: 0, bottom: 0, left: 0 }
+  );
+  barSvgData.margin = margin;
+  eventView.drawSvg(barSvgData);
+}
+
 async function initMsPlotView(response) {
   msPlotData.domId = 'fc_view';
   msPlotData.svg = d3.select(`#msplot-svg`);
@@ -160,11 +177,11 @@ async function init(type, dateValue) {
   // data.forEach(obj => {
   //   uniqueNodes.add(obj.nodeId);
   // });
-  console.log(data)
   initHeatmap(data.data, dateValue, type)
   initClusterView(data.data, dateValue)
   initCorrelationView(corrData)
   initMsPlotView(msData)
+  initEventView(data.event_counts)
 }
 
 window.handleColorChange = () => {

@@ -137,7 +137,7 @@ select {
   position: relative;
   display: flex;
   width: 50%;
-  height: 80%;
+  height: 70%;
   padding-top: 0px;
   border-style: solid;
   border-width: thin;
@@ -150,7 +150,7 @@ select {
   position: relative;
   display: flex;
   width: 50%;
-  height: 20%;
+  height: 30%;
   padding-top: 0px;
   border-style: solid;
   border-width: thin;

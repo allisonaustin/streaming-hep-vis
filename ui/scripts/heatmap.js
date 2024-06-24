@@ -191,8 +191,6 @@ export const chart = (container, groupData, group, svgArea) => {
     // granularity of heatmap, edit later to be configurable in UI ?
     let ticksCount = 15
 
-    // tooltip
-    let tooltip = d3.select('#heatmap-tooltip')
     let timeExtent = d3.extent(tsArray);
 
     let x = d3.scaleTime()
