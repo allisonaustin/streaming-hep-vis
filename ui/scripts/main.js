@@ -3,7 +3,7 @@ import axios from 'axios';
 /* MODEL */
 import * as m from './model.js';
 import * as g from './groups.js';
-import { setValue, getFeature1, getFeature2, setState, setType } from './stateManager.js';
+import { setValue, getFeature1, getFeature2, setState, setType, setGridType, setOverviewType } from './stateManager.js';
 
 /* UPDATE */
 import * as u from './update.js';
@@ -173,6 +173,8 @@ async function init(type, dateValue) {
   const data = await getData(filename, 0);
   const msData = await getMsData(xGroup, yGroup, 0, 0);
   const corrData = await getCorrelationData();
+  setGridType(1);
+  setOverviewType('heatmap')
   // const uniqueNodes = new Set();
   // data.forEach(obj => {
   //   uniqueNodes.add(obj.nodeId);
@@ -197,10 +199,33 @@ window.updateDate = () => {
   }
 }
 
+window.updateGrid = () => {
+  const isChecked = document.getElementById('gridType').checked;
+  setGridType(isChecked ? 1 : 0);
+  d3.selectAll('.grid-rect')
+      .attr('display', isChecked ? 'block' : 'none');
+}
+
+window.handleGridChange = () => {
+  option = document.querySelector('input[name="grid"]:checked').value;
+  setGridType(option);
+  if (option == 'lines') {
+    // d3.selectAll('.grid-rect')
+    //   .attr('fill', 'none');
+    d3.selectAll('.lines-group')
+      .selectAll('path')
+        .attr('stroke-opacity', 1)
+  } else {
+    d3.selectAll('.lines-group')
+      .selectAll('path')
+        .attr('stroke-opacity', 0)
+  }
+}
+
 window.updateChart = () => {
   if (document.getElementById('data-stream-option').checked) {
     refreshIntervalId = setInterval(() => {
-      u.updateCharts(heatmapSvgData);
+      u.updateCharts(heatmapSvgData, barSvgData);
       u.updateMS(getFeature1(), getFeature2(), option, true, 1);
     }, 500);
   } else {

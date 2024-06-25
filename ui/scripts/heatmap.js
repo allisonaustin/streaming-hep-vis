@@ -6,7 +6,7 @@ import {
 
 import * as g from './groups.js';
 import * as u from './update.js';
-import { getFeature1, getFeature2, getState1, getState2, setValue, getType } from './stateManager.js';
+import { getFeature1, getFeature2, getState1, getState2, setValue, getType, getGridType, getOverviewType } from './stateManager.js';
 
 let timestamps = new Set(); // all timestamps
 let tsArray = []; // timestamps of current window
@@ -14,6 +14,7 @@ let timeInterval;
 let date = '';
 let functs = {};
 let svgdata;
+let xDomain;
 
 function incrementFillColor(fillColor) {
     let currentColor = d3.rgb(fillColor);
@@ -196,7 +197,7 @@ export const chart = (container, groupData, group, svgArea) => {
         .domain([timeExtent[0].getTime(), timeExtent[1].getTime()])
         .range([svgArea.margin.left, svgArea.width - svgArea.margin.right])
 
-    let xDomain = d3.timeMinute.every(5).range(...timeExtent);
+    xDomain = d3.timeMinute.every(5).range(...timeExtent);
     let labels = xDomain.filter((_, i) => i % 3 === 0);
 
     const chartXAxis = d3.axisBottom(x)
@@ -255,7 +256,6 @@ export const chart = (container, groupData, group, svgArea) => {
             d3.select(this).style("cursor", "default");
         })
 
-
     let counts = []
     for (let i = 0; i <= ticksCount; i++) {
         counts.push(new Array(xDomain.length - 1).fill(0));
@@ -280,6 +280,7 @@ export const chart = (container, groupData, group, svgArea) => {
     // adding lines to chart
     const linesGroup = container.append('g')
         .attr('id', `lines-group_${group}`)
+        .attr('class', 'lines-group')
 
     const clipPathId = "clip-path";
     container.append("defs")
@@ -298,7 +299,7 @@ export const chart = (container, groupData, group, svgArea) => {
             .attr('clip-path', `url(#${clipPathId})`)
             .attr('stroke', 'steelblue')
             .attr('stroke-width', 1)
-            .attr('stroke-opacity', 0)
+            .attr('stroke-opacity', getOverviewType() == 'line' ? 1 : 0)
             .attr('d', line);
     }
 
@@ -347,7 +348,6 @@ export const chart = (container, groupData, group, svgArea) => {
     //     .attr('transform', `translate(${svgArea.width + colorbarSize.height}, 0)`) 
     //     .call(colorAxisTicks);
 
-
     // constructing grid
     for (let i = 0; i <= ticksCount; i++) {
         xDomain.forEach((xValue, j) => {
@@ -360,7 +360,7 @@ export const chart = (container, groupData, group, svgArea) => {
                     .attr('y', y(yDomain[i]))
                     .attr('width', width)
                     .attr('height', y(0) - y(yInterval))
-                    .attr('fill', colorBand(counts[i][j]))
+                    .attr('fill', getGridType() == 1 ? colorBand(counts[i][j]) : 'none')
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
                     .on('click', function (event, d) {
@@ -459,14 +459,14 @@ export const updateChart = (container, data, group, svgArea, x, y) => {
     let yDomain = d3.range(yDom[0], yDom[1] + yInterval + yInterval, yInterval).map(value => +value.toFixed(2));
 
     // updating lines
-    // const line = d3.line()
-    //     .x(d => x(d.timestamp))
-    //     .y(d => y(+d.value));
+    const line = d3.line()
+        .x(d => x(d.timestamp))
+        .y(d => y(+d.value));
 
-    // let linesGroup = d3.select(`#lines-group_${group}`);
-    // linesGroup.selectAll('path')
-    //     .datum((_, i) => Object.values(data)[i])
-    //     .attr('d', line);
+    let linesGroup = d3.select(`#lines-group_${group}`);
+    linesGroup.selectAll('path')
+        .datum((_, i) => Object.values(data)[i])
+        .attr('d', line);
 
     // updating counts fixme!!!
     let counts = []

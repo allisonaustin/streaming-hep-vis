@@ -32,6 +32,11 @@
           <div class="button-container">
             <button id="feature-1" class="left-button">Feature 1</button>
             <button id="feature-2" class="right-button">Feature 2</button>
+            <input id="gridType" type="checkbox" onchange="updateGrid()" checked>Grid
+            <div id="grid-selection" onchange="handleGridChange()">
+              <input type="radio" id="lines" name="grid" value="lines">Lines
+              <input type="radio" id="heatmap" name="grid" value="heatmap" checked>Heatmap
+            </div>
           </div>
           <!-- <svg id="heatmap_legend"></svg> -->
         </div>

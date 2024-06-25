@@ -5,6 +5,9 @@ let svgArea;
 let margin;
 let data;
 let date = '';
+const timeFormat = d3.timeFormat('%H:%M');
+const timeParse = d3.timeParse('%Y-%m-%d %H:%M:%S');
+const formatCount = d3.format(",.0f");
 
 export function drawSvg(svgData) {
     svgData.svg.selectAll("*").remove();
@@ -13,14 +16,10 @@ export function drawSvg(svgData) {
     container = svgData.svg;
     data = svgData.data;
     container.attr('viewBox', [0, 0, svgArea.width, svgArea.height]);
-    var functs = chart()
+     chart()
   }
 
 export const chart = () => {
-    const timeFormat = d3.timeFormat('%H:%M');
-    const timeParse = d3.timeParse('%Y-%m-%d %H:%M:%S');
-    const formatCount = d3.format(",.0f");
-
     let eventData = Object.keys(data).map(key => ({
         timestamp: timeParse(key),
         count: +parseInt(data[key])
@@ -90,6 +89,7 @@ export const chart = () => {
         .selectAll("rect")
         .data(eventData)
         .join("rect")
+            .attr("class", 'bar')
           .attr("x", (d, i) => xScale(d.timestamp))
           .attr("y", (d, i) => yScale(d.count))
           .attr("height", (d, i) => yScale(0) - yScale(d.count))
@@ -107,4 +107,62 @@ export const chart = () => {
     container.append("g")
         .attr("transform", `translate(0,${svgArea.height - margin.bottom})`)
         .call(xAxis);
+}
+
+export const updateChart = (svg, newData) => {
+    let eventData = Object.keys(svg.data).map(key => ({
+        timestamp: timeParse(key),
+        count: +parseInt(svg.data[key])
+    }));
+
+    const xScale = d3.scaleBand()
+        .domain(eventData.map(d => d.timestamp))
+        .range([margin.left, svgArea.width - margin.right])
+        .padding(0.1);
+
+    const yMax = d3.max(eventData, d => d.count);
+    const yScale = d3.scaleLinear()
+        .domain([0, yMax])
+        .range([svgArea.height - margin.bottom, margin.top]);
+
+    const xAxis = d3.axisBottom(xScale)
+        .tickValues(eventData.filter((d, i) => i % 15 === 0).map(d => d.timestamp))
+        .tickFormat(d3.timeFormat('%H:%M'))
+        .tickSizeOuter(0);
+
+    container.select(".x-axis")
+        .transition()
+        .duration(750)
+        .call(xAxis);
+
+    // Update the y-axis
+    const yAxis = d3.axisLeft(yScale).ticks(svgArea.height / 40);
+
+    container.select(".y-axis")
+        .transition()
+        .duration(750)
+        .call(yAxis);
+
+    // Update the bars
+    const bars = container.selectAll(".bar")
+        .data(eventData);
+
+    bars.enter()
+        .append("rect")
+        .attr("class", "bar")
+        .attr("fill", "lightblue")
+        .attr("x", d => xScale(d.timestamp))
+        .attr("y", d => yScale(d.count))
+        .attr("height", d => svgArea.height - margin.bottom - yScale(d.count))
+        .attr("width", xScale.bandwidth())
+        .merge(bars)
+        .transition()
+        .duration(500)
+        .attr("x", d => xScale(d.timestamp))
+        .attr("y", d => yScale(d.count))
+        .attr("height", d => svgArea.height - margin.bottom - yScale(d.count))
+        .attr("width", xScale.bandwidth());
+
+    bars.exit().remove();
+
 }

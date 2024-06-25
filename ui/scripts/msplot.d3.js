@@ -239,7 +239,6 @@ function appendDataModules(msdata, nodes) {
     processInput(msdata.data);
     appendAxis();
     appendCircles(msdata.group, nodes);
-    console.log(msdata.group)
     appendAxisLabels(msdata.group);
 };
 
