@@ -113,7 +113,6 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
                 .pivot(columns='nodeId', values=xgroup).T
                 # .apply(lambda row: row.fillna(row.mean()), axis=0).T
     init_n = len(X_ori['nodeId'].unique())
-
     # fix me!!!
 
     color_data = X_ori.set_index('timestamp') \
@@ -122,8 +121,8 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
     var_ms = color_data.var(axis=1)
     min_ms = color_data.min(axis=1)
     max_ms = color_data.max(axis=1)
-    var_lis = [{'nodeId': node_id, 'val': variance} for node_id, variance in var_ms.items() if not math.isnan(variance) ]
-    min_lis = [{'nodeId': node_id, 'val': min_val} for node_id, min_val in min_ms.items() if not math.isnan(min_val) ]
+    var_lis = [{'nodeId': node_id, 'val': variance} for node_id, variance in var_ms.items() if not math.isnan(variance)]
+    min_lis = [{'nodeId': node_id, 'val': min_val} for node_id, min_val in min_ms.items() if not math.isnan(min_val)]
     max_lis = [{'nodeId': node_id, 'val': max_val} for node_id, max_val in max_ms.items() if not math.isnan(max_val)]
 
     response = {'data': [], 'variance': [], 'min': [], 'max': [], 'nodeIds': []}

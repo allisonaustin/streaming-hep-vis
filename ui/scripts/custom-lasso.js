@@ -1,32 +1,32 @@
-let lasso; 
+let lasso;
 let selectedItems = [];
 let selectedNodes = [];
 let ms_circle_r;
 
 function mapReset() {
-    d3.selectAll(".circleOut").each(function(_){
+    d3.selectAll(".circleOut").each(function (_) {
         d3.select(this).attr("r", "3")
             .style("stroke-width", "0px")
             .style("fill", "gray")
     });
-    d3.selectAll(".circleIn").each(function(_){
+    d3.selectAll(".circleIn").each(function (_) {
         d3.select(this).attr("r", "2")
             .style("fill", "darkgray")
     });
 };
 
-function mapResetFpc(sels=[]) {
-    if(sels.length != 0){
-        sels.forEach(function(item){
-            let itemID = item.replace('_temp','');
-            d3.select("#co-"+itemID).style("stroke-width", "0px")
+function mapResetFpc(sels = []) {
+    if (sels.length != 0) {
+        sels.forEach(function (item) {
+            let itemID = item.replace('_temp', '');
+            d3.select("#co-" + itemID).style("stroke-width", "0px")
         });
-    }else{
-        selectedFpcLines.forEach(function(item){
-            d3.select("#co-"+item).attr("r", "4")
+    } else {
+        selectedFpcLines.forEach(function (item) {
+            d3.select("#co-" + item).attr("r", "4")
                 .style("stroke-width", "0px")
                 .style("fill", tableauColors['tab:brown'])
-            d3.select("#ci-"+item).attr("r", "3")
+            d3.select("#ci-" + item).attr("r", "3")
                 .style("fill", tableauColors['tab:brown'])
         });
 
@@ -35,14 +35,14 @@ function mapResetFpc(sels=[]) {
 
 function initLasso(container, targetItems) {
     // Ensure these are defined before use
-    const lassoStart = function() {
+    const lassoStart = function () {
         lasso.items()
             .attr("r", 4) // reset size
             .classed("not_possible", true)
             .classed("selected", false);
     };
 
-    const lassoDraw = function() {
+    const lassoDraw = function () {
         // Style the possible dots
         lasso.possibleItems()
             .classed("not_possible", false)
@@ -54,12 +54,12 @@ function initLasso(container, targetItems) {
             .classed("possible", false);
     };
 
-    const lassoEnd = function() {
+    const lassoEnd = function () {
         // Reset the color of all dots
         lasso.items()
             .classed("not_possible", false)
             .classed("possible", false)
-            .style("stroke", "black")
+            .style("stroke", "#D3D3D3")
             .style("opacity", 1)
             .style("stroke-width", "1px");
 
@@ -76,7 +76,7 @@ function initLasso(container, targetItems) {
 
         selectedItems = [];
         selectedNodes = [];
-        selectedcircles.each(function() {
+        selectedcircles.each(function () {
             selectedItems.push(d3.select(this).property("id"));
             var node = d3.select(this).attr("class").substring("ms-circle ".length).replace(" selected", "");
             selectedNodes.push(node);
@@ -88,7 +88,7 @@ function initLasso(container, targetItems) {
 
         // call fpca
         if (selectedItems.length !== 0) {
-            selectedItems.forEach(function(item) {
+            selectedItems.forEach(function (item) {
                 let itemID = item.replace('_temp', '');
                 d3.select("#co-" + itemID).attr("r", "4")
                     .style("stroke-width", "0px")
