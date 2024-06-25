@@ -149,9 +149,8 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                 .attr('stroke', 'black')
                 .attr('stroke-width', 0.3)
                 .on('click', function (event, d) {
-                    const xLabel = cols[j];
-                    const yLabel = cols[i];
-
+                    const xLabel = filteredCols[j];
+                    const yLabel = filteredCols[i];
                     const prevX = getFeature1()
                     const prevY = getFeature2()
 
