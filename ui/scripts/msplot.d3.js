@@ -106,6 +106,7 @@ function appendColorLegend() {
     colorAxisTicks = d3.axisBottom(colorAxisScale)
         .ticks(5)
         .tickSize(-barHeight)
+        .tickFormat((d) => d3.format(".2g")(d))
     colorAxis = legend.append("g")
         .attr('transform', `translate(${0}, ${barHeight})`)
         .call(colorAxisTicks);
