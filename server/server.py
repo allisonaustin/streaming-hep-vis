@@ -9,6 +9,7 @@ from datetime import datetime
 import os
 import json
 import time
+import math
 
 from inc_ms_fda import IncFDO
 from prog_ms_fda import ProgressiveFDA
@@ -111,21 +112,19 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
     ms_data = df.set_index('timestamp') \
                 .pivot(columns='nodeId', values=xgroup).T
                 # .apply(lambda row: row.fillna(row.mean()), axis=0).T
-
     init_n = len(X_ori['nodeId'].unique())
 
     # fix me!!!
-    print(X_ori.set_index('timestamp').pivot(columns='nodeId', values=xgroup))
-    print(X_ori.set_index('timestamp').pivot(columns='nodeId', values=ygroup))
+
     color_data = X_ori.set_index('timestamp') \
-                    .pivot(columns='nodeId', values=xgroup).T
+                    .pivot(columns='nodeId', values=ygroup).T
                     # .apply(lambda row: row.fillna(row.mean()), axis=0).T
     var_ms = color_data.var(axis=1)
     min_ms = color_data.min(axis=1)
     max_ms = color_data.max(axis=1)
-    var_lis = [{'nodeId': node_id, 'val': variance} for node_id, variance in var_ms.items()]
-    min_lis = [{'nodeId': node_id, 'val': min_val} for node_id, min_val in min_ms.items()]
-    max_lis = [{'nodeId': node_id, 'val': max_val} for node_id, max_val in max_ms.items()]
+    var_lis = [{'nodeId': node_id, 'val': variance} for node_id, variance in var_ms.items() if not math.isnan(variance) ]
+    min_lis = [{'nodeId': node_id, 'val': min_val} for node_id, min_val in min_ms.items() if not math.isnan(min_val) ]
+    max_lis = [{'nodeId': node_id, 'val': max_val} for node_id, max_val in max_ms.items() if not math.isnan(max_val)]
 
     response = {'data': [], 'variance': [], 'min': [], 'max': [], 'nodeIds': []}
     response['variance'] = var_lis

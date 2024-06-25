@@ -114,7 +114,6 @@ export const chart = () => {
   const line = d3.line()
     .x((d, i) => xScale(d.x))
     .y((d, i) => yScale(d.y));
-
   const linesGroup = container.append('g')
     .attr('transform', `translate(${margin.left}, ${margin.top})`)
     .attr('id', 'lines-group');

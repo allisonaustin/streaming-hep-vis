@@ -55,7 +55,7 @@ function init(msdata, nodes) {
             0.75 * d3.max(colordata, d => d.val),
             d3.max(colordata, d => d.val)
         ])
-        .range(['#f1ffez', '#c2e7da', '#41a0ae', '#36669c', '#3a2f6b']);
+        .range(['#0000FF', '#00FF00', '#FFFF00', '#FF7F00', '#FF0000']);
 
 };
 
@@ -272,7 +272,7 @@ function updateCircles() {
             0.75 * d3.max(colordata, d => d.val),
             d3.max(colordata, d => d.val)
         ])
-        .range(['#f1ffez', '#c2e7da', '#41a0ae', '#36669c', '#3a2f6b']);
+        .range(['#0000FF', '#00FF00', '#FFFF00', '#FF7F00', '#FF0000']);
 
     let circles = msContainer
         .selectAll(".ms-circle")
