@@ -390,6 +390,7 @@ export const chart = (container, groupData, group, svgArea) => {
                             selectedYChart.attr('fill', `#${features.teal}`);
 
                             document.getElementById('yGroupLabel').innerText = group;
+                            u.updateMS(svgdata.selectedX, group, getType(), true);
                             u.updateCorr(svgdata.selectedX, group);
                         }
                     });

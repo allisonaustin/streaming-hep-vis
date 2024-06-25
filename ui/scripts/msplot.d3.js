@@ -180,7 +180,7 @@ function appendCircles(cols, nodes) {
         .attr("stroke", "#D3D3D3")
         .attr("stroke-width", "1px")
         .attr('fill', (d, i) => {
-            return colorcode(colordata.find(item => item.nodeId === nodes[i]).val);
+            return colorcode(colordata.find(item => item.nodeId === nodes[i])?.val || '#000000');
         })
         .on("mouseover", function () {
             tooltipM.getTooltip("msTooltip");
@@ -239,6 +239,7 @@ function appendDataModules(msdata, nodes) {
     processInput(msdata.data);
     appendAxis();
     appendCircles(msdata.group, nodes);
+    console.log(msdata.group)
     appendAxisLabels(msdata.group);
 };
 
@@ -265,7 +266,7 @@ function updateTitle(title) {
 }
 
 function updateCircles() {
-    console.log("data INC", data)
+    // console.log("data INC", data)
     colorcode = d3.scaleLinear()
         .domain([0, 0.25 * d3.max(colordata, d => d.val),
             0.5 * d3.max(colordata, d => d.val),
@@ -285,7 +286,7 @@ function updateCircles() {
         .attr("cy", d => yms(d[1]))
         .attr("r", ms_circle_r)
         .attr('fill', (d, i) => {
-            return colorcode(colordata[i].val);
+            return colorcode(colordata[i]?.val || '#000000');
         })
 };
 
