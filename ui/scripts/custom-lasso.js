@@ -1,3 +1,5 @@
+import { getOverviewType } from './stateManager.js'
+
 let lasso;
 let selectedItems = [];
 let selectedNodes = [];
@@ -25,9 +27,14 @@ function mapReset() {
         d3.select(this).attr("r", "2")
             .style("fill", "darkgray")
     });
-
-    d3.selectAll('.lines-group path')
-        .attr('stroke-opacity', 0);
+    
+    if (getOverviewType() == 'heatmap') {
+        d3.selectAll('.lines-group path')
+            .attr('stroke-opacity', 0);
+    } else {
+        d3.selectAll('.lines-group path')
+            .attr('stroke', 'steelblue')
+    }
 };
 
 function initLasso(container, targetItems) {
@@ -87,7 +94,9 @@ function initLasso(container, targetItems) {
                     .filter(function() {
                         return d3.select(this).attr('class') === itemId;
                     })
-                    .attr('stroke-opacity', 1);
+                    .attr('stroke-opacity', 1)
+                    .attr('stroke', tableauColors['tab:brown'])
+                    .raise();
             });
         } else {
             mapReset();

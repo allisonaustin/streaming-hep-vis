@@ -208,7 +208,7 @@ window.updateGrid = () => {
 
 window.handleGridChange = () => {
   option = document.querySelector('input[name="grid"]:checked').value;
-  setGridType(option);
+  setOverviewType(option);
   if (option == 'lines') {
     // d3.selectAll('.grid-rect')
     //   .attr('fill', 'none');
