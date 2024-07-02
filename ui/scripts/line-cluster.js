@@ -165,6 +165,8 @@ export const chart = () => {
       .attr('fill', 'none')
       .attr('id', node)
       .attr('d', line)
+      // .transition()  
+      // .duration(2000)
       .attr('stroke-width', 1)
       .attr('stroke-opacity', 0.9)
       .style('stroke', (d, i) => `url(#line-gradient-${i})`);

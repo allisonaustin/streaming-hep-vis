@@ -2,6 +2,18 @@ let lasso;
 let selectedItems = [];
 let selectedNodes = [];
 let ms_circle_r;
+var tableauColors = {'tab:blue': '#1f77b4',
+    'tab:orange': '#ff7f0e',
+    'tab:green': '#2ca02c',
+    'tab:red': '#d62728',
+    'tab:purple': '#9467bd',
+    'tab:brown': '#8c564b',
+    'tab:pink': '#e377c2',
+    'tab:gray': '#7f7f7f',
+    'tab:olive': '#bcbd22',
+    'tab:cyan': '#17becf',
+    'tab:yellow':'#edc948',
+    'tab:blueDeep':'#76b7b2'}
 
 function mapReset() {
     d3.selectAll(".circleOut").each(function (_) {
@@ -13,25 +25,10 @@ function mapReset() {
         d3.select(this).attr("r", "2")
             .style("fill", "darkgray")
     });
+
+    d3.selectAll('.lines-group path')
+        .attr('stroke-opacity', 0);
 };
-
-function mapResetFpc(sels = []) {
-    if (sels.length != 0) {
-        sels.forEach(function (item) {
-            let itemID = item.replace('_temp', '');
-            d3.select("#co-" + itemID).style("stroke-width", "0px")
-        });
-    } else {
-        selectedFpcLines.forEach(function (item) {
-            d3.select("#co-" + item).attr("r", "4")
-                .style("stroke-width", "0px")
-                .style("fill", tableauColors['tab:brown'])
-            d3.select("#ci-" + item).attr("r", "3")
-                .style("fill", tableauColors['tab:brown'])
-        });
-
-    }
-}
 
 function initLasso(container, targetItems) {
     // Ensure these are defined before use
@@ -82,24 +79,20 @@ function initLasso(container, targetItems) {
             selectedNodes.push(node);
         });
 
-        selectedFpcLines = selectedItems;
-
-        // console.log("selected items", selectedItems, selectedNodes);
-
-        // call fpca
+        console.log("selected items", selectedItems, selectedNodes);
+        
         if (selectedItems.length !== 0) {
-            selectedItems.forEach(function (item) {
-                let itemID = item.replace('_temp', '');
-                d3.select("#co-" + itemID).attr("r", "4")
-                    .style("stroke-width", "0px")
-                    .style("fill", tableauColors['tab:brown']);
-                d3.select("#ci-" + itemID).attr("r", "3")
-                    .style("fill", tableauColors['tab:brown']);
+            selectedItems.forEach(itemId => {
+                d3.selectAll('path')
+                    .filter(function() {
+                        return d3.select(this).attr('class') === itemId;
+                    })
+                    .attr('stroke-opacity', 1);
             });
-
         } else {
             mapReset();
         }
+
     };
 
     lasso = d3.lasso()
