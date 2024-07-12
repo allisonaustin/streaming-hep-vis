@@ -174,7 +174,7 @@ async function init(type, dateValue) {
   const msData = await getMsData(xGroup, yGroup, 0, 0);
   const corrData = await getCorrelationData();
   setGridType(1);
-  setOverviewType('heatmap')
+  setOverviewType('heatmap');
   // const uniqueNodes = new Set();
   // data.forEach(obj => {
   //   uniqueNodes.add(obj.nodeId);
@@ -186,6 +186,23 @@ async function init(type, dateValue) {
   initEventView(data.event_counts)
 }
 
+async function updateView(date) {
+  const filename = `far_data_${date}.csv`;
+  const data = await getData(filename, 0);
+  const msData = await getMsData(xGroup, yGroup, 0, 0);
+  const corrData = await getCorrelationData();
+  heatmapSvgData.data = data.data;
+  heatMapView.createHeatmaps(heatmapSvgData);
+  lineSvgData.data = data.data;
+  lineClusterView.drawSvg(lineSvgData);
+  corrSvgData.data = corrData;
+  correlationView.drawSvg(corrSvgData);
+  msPlotData.data = msData.data;
+  msplot.appendScatterPlot(msPlotData, msData.nodeIds);
+  barSvgData.data = data.event_counts;
+  eventView.drawSvg(barSvgData);
+}
+
 window.handleColorChange = () => {
   option = document.querySelector('input[name="color"]:checked').value;
   setType(option);
@@ -195,7 +212,12 @@ window.handleColorChange = () => {
 window.updateDate = () => {
   if (document.getElementById('date_selection') != dateValue) {
     dateValue = document.querySelector('#date_selection').value
-    init('farm', dateValue)
+    document.getElementById('gridType').checked = true;
+    document.getElementById('lines').checked = true;
+    document.getElementById('heatmap').checked = true;
+    setGridType(1);
+    setOverviewType('heatmap');
+    updateView(dateValue);
   }
 }
 
@@ -243,7 +265,7 @@ document.addEventListener('DOMContentLoaded', function () {
         option.value = date;
         document.querySelector('#date_selection').appendChild(option);
       }
-      document.querySelector('#date_selection').value = data.dates[0];
+      document.querySelector('#date_selection').value = data.dates[1];
       dateValue = document.querySelector('#date_selection').value
       setValue(xGroup, yGroup)
       init('farm', dateValue);

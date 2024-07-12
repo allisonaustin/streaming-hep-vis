@@ -60,12 +60,12 @@ function initLasso(container, targetItems) {
 
     const lassoEnd = function () {
         // Reset the color of all dots
-        lasso.items()
-            .classed("not_possible", false)
-            .classed("possible", false)
-            .style("stroke", "#D3D3D3")
-            .style("opacity", 1)
-            .style("stroke-width", "1px");
+        // lasso.items()
+        //     .classed("not_possible", false)
+        //     .classed("possible", false)
+        //     .style("stroke", "#D3D3D3")
+        //     .style("opacity", 1)
+        //     .style("stroke-width", "1px");
 
         let selectedcircles = lasso.selectedItems()
             .classed("selected", true);

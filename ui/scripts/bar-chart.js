@@ -62,7 +62,7 @@ export const chart = () => {
           .attr("y", 5)
           .attr("fill", "currentColor")
           .attr("text-anchor", "start")
-          .text("Number of Sensors Down")); // Y label
+          .text("Number of Null Values")); // Y label
 
     // Tooltip
     const tooltip = container.append("g")

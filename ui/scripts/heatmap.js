@@ -297,7 +297,7 @@ export const chart = (container, groupData, group, svgArea) => {
             .attr('class', nodeId)
             .attr('fill', 'none')
             .attr('clip-path', `url(#${clipPathId})`)
-            .attr('stroke', 'steelblue')
+            .attr('stroke', '#555555')
             .attr('stroke-width', 1)
             .attr('stroke-opacity', getOverviewType() == 'line' ? 1 : 0)
             .attr('d', line);
