@@ -165,6 +165,14 @@ function showMapCircles() {
     })
 };
 
+export function showTooltip(item) {
+    tooltipM.getTooltip("msTooltip");
+    const circle = d3.select(item);
+    const circleX = parseFloat(circle.attr("cx"));
+    const circleY = parseFloat(circle.attr("cy"));
+    tooltipM.addToolTip(`${circle.attr("id")}`, circleX + 10, circleY - 20);
+}
+
 //append scatter plot data
 function appendCircles(cols, nodes) {
     // append circle for ms scatter plot

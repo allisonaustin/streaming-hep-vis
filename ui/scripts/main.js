@@ -75,7 +75,7 @@ async function getCorrelationData() {
 }
 
 async function initHeatmap(data, dateValue, type) {
-  heatmapSvgData.domId = 'ts_view';
+  heatmapSvgData.domId = 'farm_view';
   heatmapSvgData.svg = d3.select(`#${type}_svg`);
   heatmapSvgData.data = data;
   heatmapSvgData.date = dateValue;
@@ -126,7 +126,7 @@ async function initClusterView(data, dateValue) {
 }
 
 async function initEventView(data) {
-  barSvgData.domId = 'e_view';
+  barSvgData.domId = 'ts_view';
   barSvgData.svg = d3.select(`#bar_svg`);
   barSvgData.data = data;
   barSvgData.date = dateValue;
@@ -173,13 +173,15 @@ async function init(type, dateValue) {
   const data = await getData(filename, 0);
   const msData = await getMsData(xGroup, yGroup, 0, 0);
   const corrData = await getCorrelationData();
-  setGridType(1);
-  setOverviewType('heatmap');
+  setGridType(0);
+  setOverviewType('lines');
   // const uniqueNodes = new Set();
   // data.forEach(obj => {
   //   uniqueNodes.add(obj.nodeId);
   // });
   initHeatmap(data.data, dateValue, type)
+  d3.selectAll('.grid-rect')
+      .attr('display', 'none');
   initClusterView(data.data, dateValue)
   initCorrelationView(corrData)
   initMsPlotView(msData)
@@ -214,9 +216,9 @@ window.updateDate = () => {
     dateValue = document.querySelector('#date_selection').value
     document.getElementById('gridType').checked = true;
     document.getElementById('lines').checked = true;
-    document.getElementById('heatmap').checked = true;
-    setGridType(1);
-    setOverviewType('heatmap');
+    document.getElementById('heatmap').checked = false;
+    setGridType(0);
+    setOverviewType('lines');
     updateView(dateValue);
   }
 }
@@ -234,10 +236,14 @@ window.handleGridChange = () => {
   if (option == 'lines') {
     // d3.selectAll('.grid-rect')
     //   .attr('fill', 'none');
+    d3.selectAll('.grid-rect')
+      .attr('display', 'none');
     d3.selectAll('.lines-group')
       .selectAll('path')
         .attr('stroke-opacity', 1)
   } else {
+    d3.selectAll('.grid-rect')
+      .attr('display', 'block');
     d3.selectAll('.lines-group')
       .selectAll('path')
         .attr('stroke-opacity', 0)
@@ -275,12 +281,12 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
-document.getElementById('feature-1').addEventListener('click', () => {
-  setState(1, 0);
-});
+// document.getElementById('feature-1').addEventListener('click', () => {
+//   setState(1, 0);
+// });
 
-document.getElementById('feature-2').addEventListener('click', () => {
-  setState(0, 1);
-});
+// document.getElementById('feature-2').addEventListener('click', () => {
+//   setState(0, 1);
+// });
 
 document.getElementById('yGroupLabel').innerText = yGroup;

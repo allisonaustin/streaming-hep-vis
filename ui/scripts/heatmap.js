@@ -63,7 +63,6 @@ export function createHeatmaps(svgData) {
 
     let targetData = groupByDataType(svgData.data);
     let numCharts = Object.keys(targetData).length;
-    let hiddenHeatmaps = [];
 
     for (let group in targetData) {
         let yDom = d3.extent(Object.values(targetData[group]).flatMap(array => array.map(obj => obj.value)))
@@ -127,13 +126,7 @@ export function createHeatmaps(svgData) {
     let legend = chartContainer.append('g').attr('id', 'heatmap_legend')
         .attr('transform', (d, i) =>
             `translate(${svgData.margin.left + svgArea.width / 2}, ${svgData.margin.top + svgArea.height - 20})`)
-    legend.append('rect')
-        .attr("class", "legendRect")
-        .attr("x", -barWidth / 2)
-        .attr("y", 0)
-        .attr("width", barWidth)
-        .attr("height", barHeight)
-        .style("fill", "url(#linear-gradient-heatmap)")
+
     const colorAxisScale = d3.scaleLinear()
         .domain([0, 1])
         .range([0, barWidth])
@@ -142,9 +135,20 @@ export function createHeatmaps(svgData) {
         .tickValues([0, 1])
         .tickFormat((d, i) => ["min", "max"][i])
         .tickSize(-barHeight)
-    const colorAxis = legend.append("g")
-        .attr('transform', `translate(${-barWidth / 2}, ${barHeight})`)
-        .call(colorAxisTicks);
+
+    if (getOverviewType() == 'heatmap') {
+        legend.append('rect')
+            .attr("class", "legendRect")
+            .attr("x", -barWidth / 2)
+            .attr("y", 0)
+            .attr("width", barWidth)
+            .attr("height", barHeight)
+            .style("fill", "url(#linear-gradient-heatmap)")
+
+        const colorAxis = legend.append("g")
+            .attr('transform', `translate(${-barWidth / 2}, ${barHeight})`)
+            .call(colorAxisTicks);
+    }
 
     for (let group in targetData) {
 
@@ -155,22 +159,22 @@ export function createHeatmaps(svgData) {
             .attr('id', `${group}-heatmap`)
             .attr("transform", `translate(${xOffset}, ${yOffset})`)
 
-        // feature 1 highlight
         container.append('rect')
             .attr('id', `${group}-heatmap-cell`)
             .attr("width", chartWidth + svgData.margin.left)
             .attr("height", chartHeight + svgData.margin.top)
             .attr('margin-top', '5px')
             .attr("transform", `translate(0, -10)`)
-            .attr("fill", () => {
-                if (group === svgData.selectedX) {
-                    return `#${features.blue}`
-                } else if (group === svgData.selectedY) {
-                    return `#${features.teal}`
-                } else {
-                    return 'none'
-                }
-            })
+            // .attr("fill", () => {
+            //     if (group === svgData.selectedX) {
+            //         return `#${features.blue}`
+            //     } else if (group === svgData.selectedY) {
+            //         return `#${features.teal}`
+            //     } else {
+            //         return 'none'
+            //     }
+            // })
+            .attr('fill', 'none')
             .attr("stroke", "none")
             .attr("rx", 5)
             .attr("ry", 5);
@@ -222,7 +226,7 @@ export const chart = (container, groupData, group, svgArea) => {
 
     // container.append('g')
     //     .attr('class', `x-axis-${group}`)
-    //     .attr('transform', `translate(0, ${svgArea.height + svgArea.margin.bottom})`)
+    //     .attr('transform', `translate(0, ${svgArea.height})`)
     //     .call(chartXAxis)
     //     .selectAll('text')
     //     .attr('transform', 'rotate(-45)') 
@@ -233,6 +237,19 @@ export const chart = (container, groupData, group, svgArea) => {
     //     .attr('class', 'y-axis')
     //     .attr('transform', `translate(${svgArea.margin.left}, 0)`)
     //     .call(d3.axisLeft(y))
+
+    // container.selectAll(".tick text").style("opacity", 0);
+    // container.selectAll(".tick line").style("opacity", 0);
+
+
+    container.append("rect")
+        .attr("x", svgArea.margin.left)
+        .attr("y", svgArea.margin.bottom + svgArea.margin.top)
+        .attr("width", svgArea.width - svgArea.margin.left - svgArea.margin.right)
+        .attr("height", svgArea.height)
+        .attr("stroke", "black")
+        .attr("fill", "none")
+        .attr("stroke-width", 1);
 
     // y label
     // container.append('text')
@@ -299,7 +316,7 @@ export const chart = (container, groupData, group, svgArea) => {
             .attr('clip-path', `url(#${clipPathId})`)
             .attr('stroke', '#555555')
             .attr('stroke-width', 1)
-            .attr('stroke-opacity', getOverviewType() == 'line' ? 1 : 0)
+            .attr('stroke-opacity', getOverviewType() == 'lines' ? 1 : 0)
             .attr('d', line);
     }
 
@@ -360,7 +377,7 @@ export const chart = (container, groupData, group, svgArea) => {
                     .attr('y', y(yDomain[i]))
                     .attr('width', width)
                     .attr('height', y(0) - y(yInterval))
-                    .attr('fill', getGridType() == 1 ? colorBand(counts[i][j]) : 'none')
+                    .attr('fill', colorBand(counts[i][j]))
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)
                     .on('click', function (event, d) {
@@ -375,7 +392,7 @@ export const chart = (container, groupData, group, svgArea) => {
                             let prevSelectedXChart = d3.select(`#${prevX}-heatmap-cell`)
                             let selectedXChart = d3.select(`#${group}-heatmap-cell`)
                             prevSelectedXChart.attr('fill', 'none');
-                            selectedXChart.attr('fill', `#${features.blue}`);
+                            // selectedXChart.attr('fill', `#${features.blue}`);
 
                             u.updateMS(group, svgdata.selectedY, getType(), true);
                             u.updateCorr(group, svgdata.selectedY);
@@ -387,7 +404,7 @@ export const chart = (container, groupData, group, svgArea) => {
                             let prevSelectedYChart = d3.select(`#${prevY}-heatmap-cell`)
                             let selectedYChart = d3.select(`#${group}-heatmap-cell`)
                             prevSelectedYChart.attr('fill', 'none');
-                            selectedYChart.attr('fill', `#${features.teal}`);
+                            // selectedYChart.attr('fill', `#${features.teal}`);
 
                             document.getElementById('yGroupLabel').innerText = group;
                             u.updateMS(svgdata.selectedX, group, getType(), true);
@@ -405,6 +422,7 @@ export const chart = (container, groupData, group, svgArea) => {
         .attr("dy", "1em")
         .style("text-anchor", "middle")
         .style("fill", "black")
+        .style('font-size', '10')
         .text(group);
 
     // title.attr("transform", "rotate(-90)");

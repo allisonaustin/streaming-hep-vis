@@ -160,8 +160,8 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                     let selectedYChart = d3.select(`#${yLabel}-heatmap-cell`)
                     prevSelectedXChart.attr('fill', 'none');
                     prevSelectedYChart.attr('fill', 'none');
-                    selectedXChart.attr('fill', `#${features.blue}`);
-                    selectedYChart.attr('fill', `#${features.teal}`);
+                    // selectedXChart.attr('fill', `#${features.blue}`);
+                    // selectedYChart.attr('fill', `#${features.teal}`);
                     setValue(xLabel, yLabel);
                     document.getElementById('yGroupLabel').innerText = yLabel;
                     u.updateMS(xLabel, yLabel, getType(), true);

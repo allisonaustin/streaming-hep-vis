@@ -1,4 +1,5 @@
 import { getOverviewType } from './stateManager.js'
+import { showTooltip } from './msplot.d3.js'
 
 let lasso;
 let selectedItems = [];
@@ -33,8 +34,10 @@ function mapReset() {
             .attr('stroke-opacity', 0);
     } else {
         d3.selectAll('.lines-group path')
-            .attr('stroke', 'steelblue')
+            .attr('stroke', '#555555')
     }
+
+    d3.selectAll("#msTooltip").remove();
 };
 
 function initLasso(container, targetItems) {
@@ -83,6 +86,7 @@ function initLasso(container, targetItems) {
         selectedcircles.each(function () {
             selectedItems.push(d3.select(this).property("id"));
             var node = d3.select(this).attr("class").substring("ms-circle ".length).replace(" selected", "");
+            showTooltip(this);
             selectedNodes.push(node);
         });
 

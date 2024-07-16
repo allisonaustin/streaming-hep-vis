@@ -13,35 +13,7 @@
 
 <body>
   <div class='wrapper_main'>
-    <div class='wrapper_top'>
-      <div id="e_view">
-        <div class='view_title'>Event View</div>
-        <svg id="bar_svg"></svg>
-      </div>
-      <div id='ts_view'>
-        <div class='view_title'>Overview</div>
-        <div id='farm_selection'>
-          Date
-          <select id='date_selection' onchange="updateDate()">
-          </select>
-          Stream data
-          <label class="switch">
-            <input id="data-stream-option" type="checkbox" onchange="updateChart()">
-            <span class="slider round"></span>
-          </label>
-          <div class="button-container">
-            <button id="feature-1" class="left-button">Feature 1</button>
-            <button id="feature-2" class="right-button">Feature 2</button>
-            <input id="gridType" type="checkbox" onchange="updateGrid()" checked>Grid
-            <div id="grid-selection" onchange="handleGridChange()">
-              <input type="radio" id="lines" name="grid" value="lines">Lines
-              <input type="radio" id="heatmap" name="grid" value="heatmap" checked>Heatmap
-            </div>
-          </div>
-          <!-- <svg id="heatmap_legend"></svg> -->
-        </div>
-        <svg id='farm_svg'></svg>
-      </div>
+    <div class='wrapper_left'>
       <div id="ms_view">
         <svg id="msplot-svg"></svg>
         <div class="view_title">MS Plot</div>
@@ -57,13 +29,39 @@
       </div>
       <div id="fc_view">
         <div id="corr_view">
-          <div class="view_title">Correlation View</div>
+          <div class="view_title">Manager View</div>
           <svg id="corr_map"></svg>
         </div>
-        <div id="fc_view_bottom">
-          <div class="view_title">Cluster View</div>
-          <svg id='line_svg'></svg>
+      </div>
+    </div>
+    <div class="wrapper_right">
+      <div id='farm_view'>
+        <div class='view_title'>Farm View</div>
+        <svg id='farm_svg'></svg>
+        <div id='farm_selection'>
+          Date
+          <select id='date_selection' onchange="updateDate()">
+          </select>
+          Stream data
+          <label class="switch">
+            <input id="data-stream-option" type="checkbox" onchange="updateChart()">
+            <span class="slider round"></span>
+          </label>
+          <div class="button-container">
+            <!-- <button id="feature-1" class="left-button">Feature 1</button>
+            <button id="feature-2" class="right-button">Feature 2</button> -->
+            <!-- <input id="gridType" type="checkbox" onchange="updateGrid()">Grid -->
+            <div id="grid-selection" onchange="handleGridChange()">
+              <input type="radio" id="lines" name="grid" value="lines" checked>Lines
+              <input type="radio" id="heatmap" name="grid" value="heatmap">Heatmap
+            </div>
+          </div>
+          <!-- <svg id="heatmap_legend"></svg> -->
         </div>
+      </div>
+      <div id="ts_view">
+        <div class='view_title'>Time Series View</div>
+        <svg id="bar_svg"></svg>
       </div>
     </div>
   </div>
