@@ -34,7 +34,8 @@ function mapReset() {
             .attr('stroke-opacity', 0);
     } else {
         d3.selectAll('.lines-group path')
-            .attr('stroke', '#555555')
+            .attr('stroke-opacity', 1)
+            .attr('stroke', '#555555');
     }
 
     d3.selectAll("#msTooltip").remove();
@@ -93,13 +94,16 @@ function initLasso(container, targetItems) {
         console.log("selected items", selectedItems, selectedNodes);
         
         if (selectedItems.length !== 0) {
+            d3.selectAll('path')
+                .attr('stroke-opacity', 0.5);
+            
             selectedItems.forEach(itemId => {
                 d3.selectAll('path')
                     .filter(function() {
                         return d3.select(this).attr('class') === itemId;
                     })
                     .attr('stroke-opacity', 1)
-                    .attr('stroke', tableauColors['tab:brown'])
+                    .attr('stroke', tableauColors['tab:blue'])
                     .raise();
             });
         } else {

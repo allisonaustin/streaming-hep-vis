@@ -80,10 +80,14 @@ export function createHeatmaps(svgData) {
     tsArray = [...timestamps]
     timeInterval = tsArray[1] - tsArray[0];
 
-    const numRows = Math.ceil(Math.sqrt(numCharts));
-    const numCols = Math.ceil(numCharts / numRows);
+    const numRows = numCharts;
+    const numCols = 1;
     const chartWidth = (svgArea.width - (numCols) * svgData.margin.left) / numCols;
-    const chartHeight = (svgArea.height - (numRows) * svgData.margin.top) / numRows;
+    const chartHeight = svgArea.height / 5;
+
+    // updating chart height
+    svgArea.height = chartHeight * numCharts;
+
     const chartSvgArea = {
         height: chartHeight,
         width: chartWidth,
@@ -152,8 +156,8 @@ export function createHeatmaps(svgData) {
 
     for (let group in targetData) {
 
-        const xOffset = col * (chartWidth + svgData.margin.left);
-        const yOffset = row * (chartHeight + svgData.margin.top);
+        const xOffset = 0;
+        const yOffset = row * (chartHeight + svgData.margin.top + 15);
 
         const container = chartContainer.append("g")
             .attr('id', `${group}-heatmap`)
@@ -161,7 +165,7 @@ export function createHeatmaps(svgData) {
 
         container.append('rect')
             .attr('id', `${group}-heatmap-cell`)
-            .attr("width", chartWidth + svgData.margin.left)
+            .attr("width", chartWidth)
             .attr("height", chartHeight + svgData.margin.top)
             .attr('margin-top', '5px')
             .attr("transform", `translate(0, -10)`)
@@ -202,7 +206,7 @@ export const chart = (container, groupData, group, svgArea) => {
         .range([svgArea.margin.left, svgArea.width - svgArea.margin.right])
 
     xDomain = d3.timeMinute.every(5).range(...timeExtent);
-    let labels = xDomain.filter((_, i) => i % 3 === 0);
+    let labels = xDomain.filter((_, i) => i % 5 === 0);
 
     const chartXAxis = d3.axisBottom(x)
         .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
@@ -224,32 +228,31 @@ export const chart = (container, groupData, group, svgArea) => {
         .domain([yDomain[0], yDomain[yDomain.length - 1]])
         .range([svgArea.height - svgArea.margin.bottom, 0])
 
-    // container.append('g')
-    //     .attr('class', `x-axis-${group}`)
-    //     .attr('transform', `translate(0, ${svgArea.height})`)
-    //     .call(chartXAxis)
-    //     .selectAll('text')
-    //     .attr('transform', 'rotate(-45)') 
-    //     .style('font-size', '10')
-    //     .style('text-anchor', 'end');
+    container.append('g')
+        .attr('class', `x-axis-${group}`)
+        .attr('transform', `translate(0, ${svgArea.height})`)
+        .call(chartXAxis)
+        .selectAll('text')
+        // .attr('transform', 'rotate(-45)') 
+        .style('font-size', '10')
+        .style('text-anchor', 'end');
 
-    // container.append('g')
-    //     .attr('class', 'y-axis')
-    //     .attr('transform', `translate(${svgArea.margin.left}, 0)`)
-    //     .call(d3.axisLeft(y))
+    container.append('g')
+        .attr('class', 'y-axis')
+        .attr('transform', `translate(${svgArea.margin.left}, 0)`)
+        .call(d3.axisLeft(y))
 
     // container.selectAll(".tick text").style("opacity", 0);
     // container.selectAll(".tick line").style("opacity", 0);
 
-
-    container.append("rect")
-        .attr("x", svgArea.margin.left)
-        .attr("y", svgArea.margin.bottom + svgArea.margin.top)
-        .attr("width", svgArea.width - svgArea.margin.left - svgArea.margin.right)
-        .attr("height", svgArea.height)
-        .attr("stroke", "black")
-        .attr("fill", "none")
-        .attr("stroke-width", 1);
+    // container.append("rect")
+    //     .attr("x", svgArea.margin.left)
+    //     .attr("y", svgArea.margin.bottom + svgArea.margin.top -5)
+    //     .attr("width", svgArea.width - svgArea.margin.left - svgArea.margin.right)
+    //     .attr("height", svgArea.height)
+    //     .attr("stroke", "black")
+    //     .attr("fill", "none")
+    //     .attr("stroke-width", 1);
 
     // y label
     // container.append('text')
@@ -417,7 +420,7 @@ export const chart = (container, groupData, group, svgArea) => {
 
     const title = container.append("text")
         .attr("class", "grid-title")
-        .attr("x", svgArea.width / 1.7)
+        .attr("x", svgArea.width / 2)
         .attr("y", -2 * svgArea.margin.right - svgArea.margin.top)
         .attr("dy", "1em")
         .style("text-anchor", "middle")
