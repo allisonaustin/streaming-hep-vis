@@ -55,11 +55,6 @@ export function createHeatmaps(svgData) {
     date = svgData.date.date;
     svgdata = svgData;
     const chartContainer = svgData.svg;
-    chartContainer.attr('viewBox', [0, -svgData.margin.top, svgArea.width + svgData.margin.left, svgArea.height + svgData.margin.top]);
-
-    let dock = chartContainer.append("g")
-        .attr("class", "dock")
-        .attr("transform", `translate(${svgData.margin.left}, ${svgArea.height + svgData.margin.top})`);
 
     let targetData = groupByDataType(svgData.data);
     let numCharts = Object.keys(targetData).length;
@@ -82,11 +77,18 @@ export function createHeatmaps(svgData) {
 
     const numRows = numCharts;
     const numCols = 1;
-    const chartWidth = (svgArea.width - (numCols) * svgData.margin.left) / numCols;
+    const chartWidth = (svgArea.width - (numCols) * svgArea.margin.left) / numCols;
     const chartHeight = svgArea.height / 5;
 
     // updating chart height
-    svgArea.height = chartHeight * numCharts;
+    // svgArea.height = chartHeight * numCharts;
+    const totalHeight = (chartHeight + svgArea.margin.top + 15) * numCharts
+    chartContainer.attr('viewBox', [0, -svgArea.margin.top, svgArea.width + svgArea.margin.left, totalHeight + svgArea.margin.top]);
+
+    let dock = chartContainer.append("g")
+        .attr("class", "dock")
+        .attr("transform", `translate(${svgArea.margin.left}, ${svgArea.height + svgArea.margin.top})`);
+
 
     const chartSvgArea = {
         height: chartHeight,
@@ -94,7 +96,7 @@ export function createHeatmaps(svgData) {
         margin: {
             top: 2,
             bottom: 2,
-            left: 15,
+            left: 50,
             right: 5,
         }
     }
@@ -129,7 +131,7 @@ export function createHeatmaps(svgData) {
 
     let legend = chartContainer.append('g').attr('id', 'heatmap_legend')
         .attr('transform', (d, i) =>
-            `translate(${svgData.margin.left + svgArea.width / 2}, ${svgData.margin.top + svgArea.height - 20})`)
+            `translate(${svgArea.margin.left + svgArea.width / 2}, ${svgArea.margin.top + svgArea.height - 20})`)
 
     const colorAxisScale = d3.scaleLinear()
         .domain([0, 1])
@@ -157,7 +159,7 @@ export function createHeatmaps(svgData) {
     for (let group in targetData) {
 
         const xOffset = 0;
-        const yOffset = row * (chartHeight + svgData.margin.top + 15);
+        const yOffset = row * (chartHeight + svgArea.margin.top + 15);
 
         const container = chartContainer.append("g")
             .attr('id', `${group}-heatmap`)
@@ -166,7 +168,7 @@ export function createHeatmaps(svgData) {
         container.append('rect')
             .attr('id', `${group}-heatmap-cell`)
             .attr("width", chartWidth)
-            .attr("height", chartHeight + svgData.margin.top)
+            .attr("height", chartHeight + svgArea.margin.top)
             .attr('margin-top', '5px')
             .attr("transform", `translate(0, -10)`)
             // .attr("fill", () => {
@@ -223,7 +225,6 @@ export const chart = (container, groupData, group, svgArea) => {
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
     let yInterval = (yDom[1] - yDom[0]) / ticksCount;
     let yDomain = d3.range(yDom[0], yDom[1] + yInterval + yInterval, yInterval).map(value => +value.toFixed(2));
-
     let y = d3.scaleLinear()
         .domain([yDomain[0], yDomain[yDomain.length - 1]])
         .range([svgArea.height - svgArea.margin.bottom, 0])
@@ -236,11 +237,11 @@ export const chart = (container, groupData, group, svgArea) => {
         // .attr('transform', 'rotate(-45)') 
         .style('font-size', '10')
         .style('text-anchor', 'end');
-
+    console.log({ margin_left: svgArea.margin.left })
     container.append('g')
         .attr('class', 'y-axis')
         .attr('transform', `translate(${svgArea.margin.left}, 0)`)
-        .call(d3.axisLeft(y))
+        .call(d3.axisLeft(y).tickFormat(d3.format(".2g")))
 
     // container.selectAll(".tick text").style("opacity", 0);
     // container.selectAll(".tick line").style("opacity", 0);
@@ -532,14 +533,14 @@ export const appendFPCA = (container, data, xDomain, yDomain, sliceFpcs = 4) => 
     let height = svgdata.svgArea.height
     let fpcaContainer = container.append('g')
         .attr('id', 'fpca-container')
-        .attr('transform', 'translate(' + (width + svgdata.margin.left - svgdata.margin.right) + ',0')
+        .attr('transform', 'translate(' + (width + svgArea.margin.left - svgArea.margin.right) + ',0')
 
-    var fpcaW = svgdata.margin.right,
+    var fpcaW = svgArea.margin.right,
         fpcaH = height / 2;
     var xfpca = d3.scaleLinear().range([0, fpcaW]);
     var yfpca = d3.scaleLinear().range([fpcaH, 0]);
 
-    var xfpcaeffect = d3.scaleLinear().range([0, svgdata.margin.right]);
+    var xfpcaeffect = d3.scaleLinear().range([0, svgArea.margin.right]);
     var yfpcaeffect = d3.scaleLinear().range([height / 2, 0]);
     const effectCols = ["mean", "minus", "plus"];
     var myFPCAcolor = d3.scaleOrdinal(d3.schemeAccent)

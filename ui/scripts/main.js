@@ -81,7 +81,7 @@ async function initHeatmap(data, dateValue, type) {
   heatmapSvgData.date = dateValue;
   heatmapSvgData.selectedX = xGroup;
   heatmapSvgData.selectedY = yGroup;
-  const margin = { top: 15, right: 10, bottom: 100, left: 10 };
+  const margin = { top: 15, right: 10, bottom: 100, left: 30 };
   heatmapSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${heatmapSvgData.domId}`),
     calcContainerHeight(`#${heatmapSvgData.domId}`),
@@ -98,7 +98,7 @@ async function initCorrelationView(data) {
   corrSvgData.date = dateValue;
   corrSvgData.selectedX = xGroup;
   corrSvgData.selectedY = yGroup;
-  const margin = { top: 60, right: 70, bottom: 60, left: 70 }
+  const margin = { top: 60, right: 60, bottom: 60, left: 70 }
   corrSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${corrSvgData.domId}`),
     calcContainerHeight(`#${corrSvgData.domId}`),
@@ -181,7 +181,7 @@ async function init(type, dateValue) {
   // });
   initHeatmap(data.data, dateValue, type)
   d3.selectAll('.grid-rect')
-      .attr('display', 'none');
+    .attr('display', 'none');
   initClusterView(data.data, dateValue)
   initCorrelationView(corrData)
   initMsPlotView(msData)
@@ -227,7 +227,7 @@ window.updateGrid = () => {
   const isChecked = document.getElementById('gridType').checked;
   setGridType(isChecked ? 1 : 0);
   d3.selectAll('.grid-rect')
-      .attr('display', isChecked ? 'block' : 'none');
+    .attr('display', isChecked ? 'block' : 'none');
 }
 
 window.handleGridChange = () => {
@@ -240,13 +240,13 @@ window.handleGridChange = () => {
       .attr('display', 'none');
     d3.selectAll('.lines-group')
       .selectAll('path')
-        .attr('stroke-opacity', 1)
+      .attr('stroke-opacity', 1)
   } else {
     d3.selectAll('.grid-rect')
       .attr('display', 'block');
     d3.selectAll('.lines-group')
       .selectAll('path')
-        .attr('stroke-opacity', 0)
+      .attr('stroke-opacity', 0)
   }
 }
 

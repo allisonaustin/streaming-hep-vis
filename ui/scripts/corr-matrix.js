@@ -14,7 +14,8 @@ export function drawSvg(svgData) {
     let date = svgData.date.date;
     let margin = svgData.margin;
     let container = svgData.svg;
-    container.attr('viewBox', [0, 0, svgArea.width + svgData.margin.left + svgData.margin.right, svgArea.height + svgData.margin.top + svgData.margin.bottom]);
+    container.attr('viewBox', [0, 0, svgArea.width + svgData.margin.left + svgData.margin.right,
+        svgArea.height + svgData.margin.top + svgData.margin.bottom]);
     let data = svgData.data;
     let selectedX = svgData.selectedX;
     let selectedY = svgData.selectedY;
@@ -39,7 +40,8 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
     const numRows = filteredCols.length;
     const numCols = filteredCols.length;
     // Calculate the grid size considering the available area and margins
-    const gridSize = (area.width) / numCols;
+    const sideLength = d3.min([area.height, area.width])
+    const gridSize = (sideLength) / numCols;
 
     // Top labels
     const xLabels = container.selectAll('.x-label')
@@ -66,7 +68,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
     // Right label
     container.append('text')
         .attr('class', 'label-text')
-        .attr('transform', `translate(${margin.left + area.width + margin.right / 2}, ${margin.top + area.width / 2}) rotate(-90)`)
+        .attr('transform', `translate(${margin.left + sideLength + margin.right / 2}, ${margin.top + sideLength / 2}) rotate(-90)`)
         .style('text-anchor', 'middle')
         .text('Partial Correlation')
         .style('font-size', '10px');
@@ -74,7 +76,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
     // Bottom label
     container.append('text')
         .attr('class', 'label-text')
-        .attr('transform', `translate(${margin.left + area.width / 2}, ${margin.top + area.width + 10})`)
+        .attr('transform', `translate(${margin.left + sideLength / 2}, ${margin.top + sideLength + 10})`)
         .style('text-anchor', 'middle')
         .text('Zero-one Correlation')
         .style('font-size', '10px');
@@ -111,7 +113,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
 
     let legend = container.append('g').attr('id', 'corr_legend')
         .attr('transform', (d, i) =>
-            `translate(${margin.left + area.width / 2}, ${margin.top + area.width + 15})`)
+            `translate(${margin.left + sideLength / 2}, ${margin.top + sideLength + 15})`)
     legend.append('rect')
         .attr("class", "legendRect")
         .attr("x", -barWidth / 2)
