@@ -94,8 +94,10 @@ function initLasso(container, targetItems) {
         console.log("selected items", selectedItems, selectedNodes);
         
         if (selectedItems.length !== 0) {
-            d3.selectAll('path')
-                .attr('stroke-opacity', 0.5);
+            if (getOverviewType() == 'lines') {
+                d3.selectAll('path')
+                    .attr('stroke-opacity', 0.5);
+            }
             
             selectedItems.forEach(itemId => {
                 d3.selectAll('path')

@@ -1,5 +1,5 @@
 import * as m from './model.js';
-import * as heatMapView from './heatmap.js'
+import * as heatMapView from './time-series.js'
 import * as cluster from './line-cluster.js'
 import * as msplot from './msplot.d3.js'
 import * as eventView from './bar-chart.js'

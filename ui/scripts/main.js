@@ -10,7 +10,7 @@ import * as u from './update.js';
 
 /* VIEWS */
 import * as lineClusterView from './line-cluster.js';
-import * as heatMapView from './heatmap.js';
+import * as heatMapView from './time-series.js';
 import * as msplot from './msplot.d3.js';
 import * as correlationView from './corr-matrix.js';
 import * as eventView from './bar-chart.js';

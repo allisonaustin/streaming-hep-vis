@@ -208,11 +208,19 @@ export const chart = (container, groupData, group, svgArea) => {
         .range([svgArea.margin.left, svgArea.width - svgArea.margin.right])
 
     xDomain = d3.timeMinute.every(5).range(...timeExtent);
-    let labels = xDomain.filter((_, i) => i % 5 === 0);
-
     const chartXAxis = d3.axisBottom(x)
-        .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
-        .tickValues(xDomain);
+        .tickValues(xDomain.filter((d, i) => i % 3 === 0))
+        .tickFormat(d3.timeFormat('%H:%M'))
+        .tickSizeOuter(0);
+
+    container.append('g')
+        .attr('class', `x-axis-${group}`)
+        .attr('transform', `translate(0, ${svgArea.height})`)
+        .call(chartXAxis)
+        .selectAll('text')
+        // .attr('transform', 'rotate(-45)') 
+        .style('font-size', '10')
+        .style('text-anchor', 'end');
 
     // x label
     // container.append('text')
@@ -225,23 +233,18 @@ export const chart = (container, groupData, group, svgArea) => {
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
     let yInterval = (yDom[1] - yDom[0]) / ticksCount;
     let yDomain = d3.range(yDom[0], yDom[1] + yInterval + yInterval, yInterval).map(value => +value.toFixed(2));
+    
     let y = d3.scaleLinear()
-        .domain([yDomain[0], yDomain[yDomain.length - 1]])
-        .range([svgArea.height - svgArea.margin.bottom, 0])
+        .domain([d3.min(yDomain), d3.max(yDomain)])
+        .range([svgArea.height - svgArea.margin.bottom, svgArea.margin.top])
 
     container.append('g')
-        .attr('class', `x-axis-${group}`)
-        .attr('transform', `translate(0, ${svgArea.height})`)
-        .call(chartXAxis)
-        .selectAll('text')
-        // .attr('transform', 'rotate(-45)') 
-        .style('font-size', '10')
-        .style('text-anchor', 'end');
-    console.log({ margin_left: svgArea.margin.left })
-    container.append('g')
-        .attr('class', 'y-axis')
         .attr('transform', `translate(${svgArea.margin.left}, 0)`)
-        .call(d3.axisLeft(y).tickFormat(d3.format(".2g")))
+        .call(d3.axisLeft(y))
+        .call(g => g.select(".domain").remove())
+        .call(g => g.selectAll(".tick line").clone()
+            .attr("x2", svgArea.width - svgArea.margin.left - svgArea.margin.right)
+            .attr("stroke-opacity", 0.1));
 
     // container.selectAll(".tick text").style("opacity", 0);
     // container.selectAll(".tick line").style("opacity", 0);
@@ -374,13 +377,14 @@ export const chart = (container, groupData, group, svgArea) => {
         xDomain.forEach((xValue, j) => {
             if (j < xDomain.length - 1) {
                 let width = x(xDomain[j + 1]) - x(xDomain[j])
+                let height = Math.abs(y(yDomain[i]) - y(yDomain[i] + yInterval));
                 grid.append('rect')
                     .attr('class', 'grid-rect')
                     .attr("id", `t_${j}_${i}`)
                     .attr('x', x(xValue))
                     .attr('y', y(yDomain[i]))
                     .attr('width', width)
-                    .attr('height', y(0) - y(yInterval))
+                    .attr('height', height)
                     .attr('fill', colorBand(counts[i][j]))
                     .attr('stroke', 'black')
                     .attr('stroke-width', 0.5)

@@ -222,7 +222,7 @@ function appendAxisLabels(cols) {
     //y axis label
     msContainer.append("text")
         .attr('x', -height / 2)
-        .attr("y", -marginMS.left - 20)
+        .attr("y", -marginMS.left - 8)
         .attr("transform", "rotate(-90)")
         .attr("dy", "1em")
         .attr("font-size", "10px")
