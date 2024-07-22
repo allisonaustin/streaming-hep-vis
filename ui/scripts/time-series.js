@@ -327,6 +327,25 @@ export const chart = (container, groupData, group, svgArea) => {
             .attr('d', line);
     }
 
+    container.append("rect")
+        .attr("class", "overlay")
+        .attr("x", svgArea.margin.left)
+        .attr("y", svgArea.margin.top)
+        .attr("width", svgArea.width - svgArea.margin.left - svgArea.margin.right)
+        .attr("height", svgArea.height - svgArea.margin.top - svgArea.margin.bottom)
+        .attr("fill", "none")
+        .attr("pointer-events", "all")
+        .on('mouseover', function (event, d) {
+            d3.select(this).style("cursor", "pointer");
+        })
+        .on("mouseout", function (d) {
+            d3.select(this).style("cursor", "default");
+        })
+        .on('click', function (event, d) {
+            svgdata.selectedX = group;
+            u.updateMS(group, svgdata.selectedY, getType(), true);
+        });
+
     // legend
     const colorBand = d3.scaleLinear()
         .domain([0, d3.max(counts.flat()) / 2, d3.max(counts.flat())])

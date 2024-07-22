@@ -26,12 +26,11 @@ select {
 }
 
 .wrapper_left {
-  width: 40%;
+  width: 60%;
 }
 
 .wrapper_right {
-  width: 60%;
-  margin-left: 5px;
+  width: 40%;
 }
 
 #farm_container {
@@ -73,7 +72,7 @@ select {
 }
 
 #ts_view {
-  float: right;
+  float: left;
   position: relative;
   display: flex;
   width: 100%;
