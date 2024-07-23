@@ -202,7 +202,6 @@ export const chart = (container, groupData, group, svgArea) => {
     let ticksCount = 15
 
     let timeExtent = d3.extent(tsArray);
-
     let x = d3.scaleTime()
         .domain([timeExtent[0].getTime(), timeExtent[1].getTime()])
         .range([svgArea.margin.left, svgArea.width - svgArea.margin.right])
@@ -300,6 +299,7 @@ export const chart = (container, groupData, group, svgArea) => {
     }
 
     const line = d3.line()
+        .defined(d => d.timestamp > timeExtent[0])
         .x(d => x(d.timestamp))
         .y(d => y(+d.value));
 
@@ -395,6 +395,7 @@ export const chart = (container, groupData, group, svgArea) => {
 
     // constructing grid
     for (let i = 0; i <= ticksCount; i++) {
+
         xDomain.forEach((xValue, j) => {
             if (j < xDomain.length - 1) {
                 let width = x(xDomain[j + 1]) - x(xDomain[j])
@@ -507,6 +508,7 @@ export const updateChart = (container, data, group, svgArea, x, y) => {
 
     // updating lines
     const line = d3.line()
+        .defined(d => d.timestamp > timeExtent[0])
         .x(d => x(d.timestamp))
         .y(d => y(+d.value));
 
