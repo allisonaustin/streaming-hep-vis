@@ -184,7 +184,7 @@ export const appendSlider = (xScale, yScale) => {
             .tickFormat(timeFormat)
             .tickSizeOuter(0);
 
-        container.select(".x-axis")
+        d3.selectAll(".x-axis")
             .transition()
             .duration(750)
             .call(xAxis);

@@ -214,7 +214,8 @@ export const chart = (container, groupData, group, svgArea) => {
         .tickSizeOuter(0);
 
     container.append('g')
-        .attr('class', `x-axis-${group}`)
+        .attr('id', `x-axis-${group}`)
+        .attr('class', `x-axis`)
         .attr('transform', `translate(0, ${svgArea.height})`)
         .call(chartXAxis)
         .selectAll('text')
@@ -239,6 +240,7 @@ export const chart = (container, groupData, group, svgArea) => {
         .range([svgArea.height - svgArea.margin.bottom, svgArea.margin.top])
 
     container.append('g')
+        .attr('class', 'y-axis')
         .attr('transform', `translate(${svgArea.margin.left}, 0)`)
         .call(d3.axisLeft(y))
         .call(g => g.select(".domain").remove())
