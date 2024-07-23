@@ -13,7 +13,7 @@ import * as lineClusterView from './line-cluster.js';
 import * as heatMapView from './time-series.js';
 import * as msplot from './msplot.d3.js';
 import * as correlationView from './corr-matrix.js';
-import * as eventView from './bar-chart.js';
+import * as eventView from './area-chart.js';
 
 import {
   calcContainerWidth,
@@ -32,8 +32,8 @@ let refreshIntervalId;
 let dateValue;
 let option;
 
-async function getData(filename, inc) {
-  const flaskUrl = m.flaskUrl + `/getData/${filename}/${inc}`;
+async function getData(dir, filename, inc) {
+  const flaskUrl = m.flaskUrl + `/getData/${dir}/${filename}/${inc}`;
   try {
     const res = await fetch(flaskUrl);
     if (!res.ok) {
@@ -169,8 +169,10 @@ async function initMsPlotView(response) {
 }
 
 async function init(type, dateValue) {
-  const filename = `far_data_${dateValue}.csv`;
-  const data = await getData(filename, 0);
+  const farm_file = `far_data_${dateValue}.csv`;
+  const manager_file = `manager_data_${dateValue}.csv`;
+  const farm_data = await getData('farm', farm_file, 0);
+  const manager_data = await getData('manager', manager_file, 0);
   const msData = await getMsData(xGroup, yGroup, 0, 0);
   const corrData = await getCorrelationData();
   setGridType(0);
@@ -179,29 +181,31 @@ async function init(type, dateValue) {
   // data.forEach(obj => {
   //   uniqueNodes.add(obj.nodeId);
   // });
-  initHeatmap(data.data, dateValue, type)
+  initHeatmap(farm_data.data, dateValue, type)
   d3.selectAll('.grid-rect')
     .attr('display', 'none');
-  initClusterView(data.data, dateValue)
+  initClusterView(farm_data.data, dateValue)
   initCorrelationView(corrData)
   initMsPlotView(msData)
-  initEventView(data.event_counts)
+  initEventView(manager_data.data)
 }
 
 async function updateView(date) {
-  const filename = `far_data_${date}.csv`;
-  const data = await getData(filename, 0);
+  const farm_file = `far_data_${date}.csv`;
+  const manager_file = `manager_data_${date}.csv`;
+  const farm_data = await getData('farm', farm_file, 0);
+  const manager_data = await getData('manager', manager_file, 0);
   const msData = await getMsData(xGroup, yGroup, 0, 0);
   const corrData = await getCorrelationData();
-  heatmapSvgData.data = data.data;
+  heatmapSvgData.data = farm_data.data;
   heatMapView.createHeatmaps(heatmapSvgData);
-  lineSvgData.data = data.data;
+  lineSvgData.data = farm_data.data;
   lineClusterView.drawSvg(lineSvgData);
   corrSvgData.data = corrData;
   correlationView.drawSvg(corrSvgData);
   msPlotData.data = msData.data;
   msplot.appendScatterPlot(msPlotData, msData.nodeIds);
-  barSvgData.data = data.event_counts;
+  barSvgData.data = manager_data.data;
   eventView.drawSvg(barSvgData);
 }
 

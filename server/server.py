@@ -5,6 +5,7 @@ from flask import Flask, jsonify, Response, request
 from flask_cors import CORS
 from pygam import GAM, s
 from scipy.interpolate import BSpline, splrep, splev
+from sklearn.decomposition import PCA
 from datetime import datetime
 import os
 import json
@@ -17,21 +18,24 @@ from prog_ms_fda import ProgressiveFDA
 app = Flask(__name__)
 cors = CORS(app)
 
+farm_df = pd.DataFrame()
 df = pd.DataFrame()
 X_ori = pd.DataFrame()
-filepath = '../ui/data/farm/'
+filepath = '../ui/data/'
 fname = ''
 init_timepts = 60000
 inc_rows = 1500 
 skip_rows = 15000
+farm_cols = []
 cols = []
 n_inc = 0
 inc = 0
 prog = 0
 inc_fdo = IncFDO()
 
-@app.route("/getData/<filename>/<inc>")
-def get_data(filename, inc):
+@app.route("/getData/<dir>/<filename>/<inc>")
+def get_data(dir, filename, inc):
+    global farm_df
     global df 
     global X_ori
     global filepath
@@ -40,42 +44,52 @@ def get_data(filename, inc):
     global skip_rows 
     global inc_rows
     global n_inc
+    global farm_cols
     global cols 
 
     rows = init_timepts
     fname = filename
 
-    if int(inc) == 0:
-        skip_rows = 15000
-        cols = pd.read_csv(filepath + filename, nrows=1).columns
-        df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=init_timepts, names=cols)
-        nan_events = df.iloc[:, :33]
-        X_ori = df
-        skip_rows += init_timepts 
-    else:
-        skip_rows += inc_rows
-        n_inc += 1
-        df = pd.read_csv(filepath + filename, skiprows=skip_rows, nrows=inc_rows, names=cols)
-        nan_events = df.iloc[:, :33]
+    if (dir == 'farm'):
+        if int(inc) == 0:
+            skip_rows = 15000
+            farm_cols = pd.read_csv(filepath + dir + '/' + filename, nrows=1).columns
+            farm_df = pd.read_csv(filepath + dir + '/' + filename, skiprows=skip_rows, nrows=init_timepts, names=farm_cols)
+            X_ori = farm_df
+            skip_rows += init_timepts 
+        else:
+            skip_rows += inc_rows
+            n_inc += 1
+            farm_df = pd.read_csv(filepath + dir + '/' + filename, skiprows=skip_rows, nrows=inc_rows, names=farm_cols)
 
-    nan_events['timestamp'] = pd.to_datetime(nan_events['timestamp'])
-    event_counts = nan_events.set_index('timestamp').isna().sum(axis=1).resample('T').sum()
-    event_counts.index = event_counts.index.astype(str)
-    df['timestamp'] = df['timestamp'].apply(lambda x: int(x) * 1000 if isinstance(x, int) else int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
-    final_df = df.replace({np.nan: None})
+        farm_df['timestamp'] = farm_df['timestamp'].apply(lambda x: int(x) * 1000 if isinstance(x, int) else int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
+        final_df = farm_df.replace({np.nan: None})
+    else:
+        if (int(inc) == 0):
+            cols = pd.read_csv(filepath + dir + '/' + filename, nrows=1).columns
+            df = pd.read_csv(filepath + dir + '/' + filename, skiprows=1, names=cols)
+        else:
+            df = pd.read_csv(filepath + dir + '/' + filename, names=cols, skiprows=1)
+
+        df['timestamp'] = df['timestamp'].apply(lambda x: int(x) * 1000 if isinstance(x, int) else int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
+        first_ts = farm_df['timestamp'].iloc[0]
+        last_ts = farm_df['timestamp'].max()
+        df = df[(df['timestamp'] >= first_ts) & (df['timestamp'] <= last_ts)]
+        df = df[df['datadisk'] == 7]
+        final_df = df.replace({np.nan: None}) 
     
     response = {
-        'data': final_df.to_dict(orient='records'),
-        'event_counts': event_counts.to_dict()
+        'data': final_df.to_dict(orient='records')
     }
     return Response(json.dumps(response), mimetype='application/json')
+    
 
 @app.route('/getCorr')
 def get_corr():
-    global df 
-    if df.empty:
+    global farm_df 
+    if farm_df.empty:
         return
-    dat = df.iloc[:, :34].drop(columns=['timestamp', 'nodeId', 'mem_free', 'mem_total', 'mem_shared'])
+    dat = farm_df.iloc[:, :34].drop(columns=['timestamp', 'nodeId', 'mem_free', 'mem_total', 'mem_shared'])
     # dat = dat.replace({np.nan: None})
 
     corr_df = dat.corr().round(2)
@@ -96,7 +110,7 @@ def get_corr():
 
 @app.route('/getMagnitudeShapeFDA/<xgroup>/<ygroup>/<incremental_update>/<progressive_update>')
 def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
-    global df 
+    global farm_df 
     global X_ori
     global fname
     global cols 
@@ -109,7 +123,7 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
     inc = int(incremental_update)
     prog = int(progressive_update)
 
-    ms_data = df.set_index('timestamp') \
+    ms_data = farm_df.set_index('timestamp') \
                 .pivot(columns='nodeId', values=xgroup).T
                 # .apply(lambda row: row.fillna(row.mean()), axis=0).T
     init_n = len(X_ori['nodeId'].unique())
@@ -147,77 +161,64 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
 
     return Response(json.dumps(response), mimetype='application/json')
 
-@app.route('/getFPCA/<group>')
-def get_fpca(group):
-    global df 
+def preprocess(df, value_column):
+    return df.loc[:, ['timestamp', 'nodeId', value_column]] \
+             .pivot_table(index='timestamp', columns='nodeId', values=value_column) \
+             .apply(lambda row: row.fillna(row.mean()), axis=0).T
 
-    bs="cr"
-    k="10"
-    optimizer=['outer', 'newton']
-    method="GCV.Cp"
-    nodes = df_baseline.index.to_list()
-    args = ["df_save.csv", nodes, bs, k, str(optimizer)[2:-2], method]
+def getPCs(X_i):
+    baseline = X_i.values
+    mean_hat = baseline.mean(axis=0)
+    demeaned = baseline - mean_hat
 
-    df_baseline = df.set_index('timestamp') \
-                    .pivot(columns='nodeId', values=group) \
-                    .apply(lambda col: col.fillna(col.mean()), axis=1).T
+    pca = PCA()
+    pca.fit(demeaned)
+    scores = pca.transform(demeaned)
 
-    tract = np.arange(len(df_baseline))
+    explained_variance_ratio_cumsum = np.cumsum(pca.explained_variance_ratio_)
+    npc = np.sum(explained_variance_ratio_cumsum < 0.9999) + 1
+    # print(f"Number of principal components: {npc}")
 
-    # estimating the mean functions
-    farm_baseline = df_baseline.values
-    smooth_curves = np.zeros(farm_baseline.shape)
+    npc = np.sum(np.cumsum(pca.explained_variance_ratio_) < 0.9999) + 1
+    P_fin = pd.DataFrame(scores[:, :npc], columns=[f"PC{k+1}" for k in range(npc)])
+    P_fin['Measurement'] = X_i.index
+    return P_fin
+
+def smooth_bspline(df, k=3, s=0.0):
+    x = np.arange(len(df))
+    t, c, k = splrep(x, df, k=k, s=s)
+    smoothed = splev(x, (t, c, k))
+    return pd.Series(smoothed, index=df.index)
+
+def smooth_gam(df):
+    x = np.arange(len(df))
+    gam = GAM(s(0)).fit(x, df)
+    smoothed = gam.predict(x)
+    return pd.Series(smoothed, index=df.index)
+
+@app.route('/getFPCA/<k>/<s>')
+def get_fpca(k, s):
+    global farm_df 
+    global cols
+
+    P_final = pd.DataFrame()
+
+    dataframes = [preprocess(farm_df, col) for col in cols]
+    for i, (farm_df, col_name) in enumerate(zip(dataframes, cols)):
+        try:
+            P_df = getPCs(farm_df)
+            if 'PC1' in P_df.columns and 'PC2' in P_df.columns:
+                P_final['Measurement'] = P_df['Measurement']
+                P_final['Col'] = col_name
+                P_final['PC1_smooth_bspline'] = smooth_bspline(P_df['PC1'], k, s)
+                P_final['PC2_smooth_bspline'] = smooth_bspline(P_df['PC2'], k, s)
+                P_final['PC1_smooth_gam'] = smooth_gam(P_df['PC1'])
+                P_final['PC2_smooth_gam'] = smooth_gam(P_df['PC2'])
+
+        except Exception as e:
+            print(f"Error processing {col_name}: {e}")
     
-    n_rows = farm_baseline.shape[0] # node ids
-
-    for j in range(n_rows):
-        x = tract
-        y = farm_baseline[j, :]
-        bs = BSplines(x[:, None], df=int(k), degree=[3])
-        gam = GLMGam(y, smoother=bs, alpha=0)
-        result = gam.fit()
-        smooth_curves[j, :] = result.fittedvalues
-
-    mean_hat = smooth_curves.mean(axis=1)
-    r_save = pd.concat([df_baseline, pd.Series(mean_hat, name="mean.hat")], axis=1)
-
-    r_save.to_csv("ui/data/farm/farm_data_temp.csv", index=False)
-
-    # covariance of smooth curves
-    smooth_cov = np.cov(smooth_curves)
-    # spectral decomposition of the estimated covariance
-    evalues, evectors = np.linalg.eigh(smooth_cov)
-    evalues, evectors = evalues[evalues > 0], evectors[:, evalues > 0]
-
-    # scale eigenfunctions
-    efns0 = evectors * np.sqrt(93)
-    evals0 = evalues / 93
-    pve = np.cumsum(evals0) / np.sum(evals0)
-    npc = np.sum(pve < 0.9999) + 1
-
-    if npc == 1:
-        npc = np.sum(pve < 0.9999998) + 2
-
-    # truncated estimated eigen components
-    efns = efns0[:, :npc]
-    evals = evals0[:npc]
-
-    k_pc = 1
-    effect = efns[:, k_pc] * 2 * np.sqrt(evals[k_pc])
-    mat = np.column_stack([mean_hat - effect, mean_hat + effect])
-
-    # estimation of scores & fitted curves
-    demeaned = farm_baseline - mean_hat[:, None]
-    scores = np.zeros((n_rows, npc))
-    fitted = np.zeros_like(farm_baseline)
-
-    scores_fin = pd.DataFrame(scores, columns=[f"PC{k+1}" for k in range(npc)])
-    scores_fin['Measurement'] = df_baseline.index
-
-    pd.DataFrame(efns).to_csv("ui/data/farm/efns.csv", index=False)
-    scores_fin.to_csv("ui/data/farm/scores.csv", index=False)
-    pd.DataFrame(fitted.T).to_csv("ui/data/farm/fitted.csv", index=False)
-    return Response(json.dumps(efns), mimetype='application/json')
+    return Response(P_final.to_json(orient='records'), mimetype='application/json')
 
 if __name__ == '__main__':
     app.run(debug=True, port=5001)

@@ -2,7 +2,7 @@ import * as m from './model.js';
 import * as heatMapView from './time-series.js'
 import * as cluster from './line-cluster.js'
 import * as msplot from './msplot.d3.js'
-import * as eventView from './bar-chart.js'
+import * as eventView from './area-chart.js'
 
 let hmData;
 let msData;
@@ -10,7 +10,8 @@ let eventData;
 
 export const updateCharts = async (heatmapSvg, barSvg) => {
   const filename = `far_data_${heatmapSvg.date}.csv`
-  const flaskUrl = m.flaskUrl + `/getData/${filename}/1`;
+  const dir = 'farm';
+  const flaskUrl = m.flaskUrl + `/getData/${dir}/${filename}/1`;
   if (document.getElementById('data-stream-option').checked) {
     await fetch(flaskUrl)
       .then(res => {
@@ -22,7 +23,7 @@ export const updateCharts = async (heatmapSvg, barSvg) => {
         })
         .then(data => {
           hmData = heatmapSvg.data.concat(data.data);
-          barSvg.data = { ...barSvg.data, ...data.event_counts };
+          barSvg.data = { ...barSvg.data, ...data.null_readings };
           heatmapSvg.data = hmData;
           heatMapView.updateHeatmaps(heatmapSvg, data.data);
           eventView.updateChart(barSvg);
