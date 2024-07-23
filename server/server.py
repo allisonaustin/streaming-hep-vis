@@ -3,8 +3,8 @@ import numpy as np
 import pingouin as pg
 from flask import Flask, jsonify, Response, request
 from flask_cors import CORS
-from statsmodels.gam.api import GLMGam, BSplines
-from scipy.interpolate import BSpline
+from pygam import GAM, s
+from scipy.interpolate import BSpline, splrep, splev
 from datetime import datetime
 import os
 import json

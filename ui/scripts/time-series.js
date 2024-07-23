@@ -422,7 +422,7 @@ export const chart = (container, groupData, group, svgArea) => {
                             // selectedXChart.attr('fill', `#${features.blue}`);
 
                             u.updateMS(group, svgdata.selectedY, getType(), true);
-                            u.updateCorr(group, svgdata.selectedY);
+                            // u.updateCorr(group, svgdata.selectedY);
                         } else if (getState2() == 1 && group != svgdata.selectedX) { // new Feature 2
                             svgdata.selectedY = group;
 
@@ -435,7 +435,7 @@ export const chart = (container, groupData, group, svgArea) => {
 
                             document.getElementById('yGroupLabel').innerText = group;
                             u.updateMS(svgdata.selectedX, group, getType(), true);
-                            u.updateCorr(svgdata.selectedX, group);
+                            // u.updateCorr(svgdata.selectedX, group);
                         }
                     });
             }

@@ -167,7 +167,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                     setValue(xLabel, yLabel);
                     document.getElementById('yGroupLabel').innerText = yLabel;
                     u.updateMS(xLabel, yLabel, getType(), true);
-                    u.updateCorr(xLabel, yLabel);
+                    // u.updateCorr(xLabel, yLabel);
                 })
                 .on('mouseover', function () {
                     d3.select(this).style("cursor", "pointer");

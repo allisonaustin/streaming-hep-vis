@@ -31,6 +31,7 @@
         "wheel": "^1.0.0"
     },
     "dependencies": {
-        "d3-lasso": "^0.0.5"
+        "d3-lasso": "^0.0.5",
+        "d3-simple-slider": "^2.0.0"
     }
 }

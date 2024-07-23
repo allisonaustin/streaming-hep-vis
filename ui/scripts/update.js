@@ -25,7 +25,7 @@ export const updateCharts = async (heatmapSvg, barSvg) => {
           barSvg.data = { ...barSvg.data, ...data.event_counts };
           heatmapSvg.data = hmData;
           heatMapView.updateHeatmaps(heatmapSvg, data.data);
-          eventView.updateChart(barSvg, data.event_counts);
+          eventView.updateChart(barSvg);
         })
         .catch(error => {
           console.error('Error:', error);

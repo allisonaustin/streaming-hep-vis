@@ -170,7 +170,12 @@ export function showTooltip(item) {
     const circle = d3.select(item);
     const circleX = parseFloat(circle.attr("cx"));
     const circleY = parseFloat(circle.attr("cy"));
-    tooltipM.addToolTip(`${circle.attr("id")}`, circleX + 10, circleY - 20);
+    const svgContainer = d3.select("#msplot-svg").node();
+    const svgBoundingBox = svgContainer.getBoundingClientRect();
+
+    const tooltipX = svgBoundingBox.left + circleX + 10;
+    const tooltipY = svgBoundingBox.top + circleY - 20; 
+    tooltipM.addToolTip(`${circle.attr("id")}`, tooltipX, tooltipY);
 }
 
 //append scatter plot data
