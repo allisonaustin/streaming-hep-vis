@@ -14,7 +14,12 @@ let timeInterval;
 let date = '';
 let functs = {};
 let svgdata;
+let targetData;
 let xDomain;
+let chartContainer;
+let x;
+let y;
+let ticksCount = 15;
 
 function incrementFillColor(fillColor) {
     let currentColor = d3.rgb(fillColor);
@@ -54,9 +59,9 @@ export function createHeatmaps(svgData) {
     const svgArea = svgData.svgArea;
     date = svgData.date.date;
     svgdata = svgData;
-    const chartContainer = svgData.svg;
+    chartContainer = svgData.svg;
 
-    let targetData = groupByDataType(svgData.data);
+    targetData = groupByDataType(svgData.data);
     let numCharts = Object.keys(targetData).length;
 
     for (let group in targetData) {
@@ -198,11 +203,8 @@ export function createHeatmaps(svgData) {
 export const chart = (container, groupData, group, svgArea) => {
     const data = groupData;
     const timeFormat = d3.timeFormat('%H:%M');
-    // granularity of heatmap, edit later to be configurable in UI ?
-    let ticksCount = 15
-
     let timeExtent = d3.extent(tsArray);
-    let x = d3.scaleTime()
+    x = d3.scaleTime()
         .domain([timeExtent[0].getTime(), timeExtent[1].getTime()])
         .range([svgArea.margin.left, svgArea.width - svgArea.margin.right])
 
@@ -234,7 +236,7 @@ export const chart = (container, groupData, group, svgArea) => {
     let yInterval = (yDom[1] - yDom[0]) / ticksCount;
     let yDomain = d3.range(yDom[0], yDom[1] + yInterval + yInterval, yInterval).map(value => +value.toFixed(2));
     
-    let y = d3.scaleLinear()
+    y = d3.scaleLinear()
         .domain([d3.min(yDomain), d3.max(yDomain)])
         .range([svgArea.height - svgArea.margin.bottom, svgArea.margin.top])
 
@@ -464,7 +466,7 @@ export const chart = (container, groupData, group, svgArea) => {
 export const updateHeatmaps = (svgData, newData) => {
     const chartContainer = svgData.svg;
     date = svgData.date.date;
-    let targetData = groupByDataType(svgData.data);
+    targetData = groupByDataType(svgData.data);
 
     let newTimestamps = d3.extent(newData.map(obj => new Date(obj.timestamp)));
     let numIntervals = (newTimestamps[1].getTime() - newTimestamps[0].getTime()) / timeInterval;
@@ -478,10 +480,8 @@ export const updateHeatmaps = (svgData, newData) => {
     }
 }
 
-export const updateChart = (container, data, group, svgArea, x, y) => {
+export const updateChart = (container, data, group, svgArea) => {
     const timeFormat = d3.timeFormat('%H:%M');
-    // granularity of heatmap, edit later to be configurable in UI ?
-    let ticksCount = 15
     let timeExtent = d3.extent(tsArray);
 
     // updating x axis
@@ -505,6 +505,7 @@ export const updateChart = (container, data, group, svgArea, x, y) => {
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
     let yInterval = (yDom[1] - yDom[0]) / ticksCount;
     let yDomain = d3.range(yDom[0], yDom[1] + yInterval + yInterval, yInterval).map(value => +value.toFixed(2));
+    y.domain([d3.min(yDomain), d3.max(yDomain)])
 
     // updating lines
     const line = d3.line()
@@ -552,6 +553,38 @@ export const updateChart = (container, data, group, svgArea, x, y) => {
 
     return { x, y };
 
+}
+
+export const updateTime = (timeDom) => {
+    // updating x
+    x.domain(timeDom);
+
+    // updating y
+    // for (let group in targetData) {
+    //     let yDom = d3.extent(Object.values(targetData[group]).flatMap(array => array.map(obj => obj.value)));
+    //     let yInterval = (yDom[1] - yDom[0]) / ticksCount;
+    //     let yDomain = d3.range(yDom[0], yDom[1] + yInterval + yInterval, yInterval).map(value => +value.toFixed(2));
+    //     y.domain([d3.min(yDomain), d3.max(yDomain)]);
+    // }
+
+    // updating lines
+    const line = d3.line()
+        .defined(d => d.timestamp > timeDom[0])
+        .x(d => x(d.timestamp))
+        .y(d => y(+d.value));
+
+    Object.keys(targetData).forEach((key, _) => {
+        let linesGroup = d3.select(`#lines-group_${key}`);
+        Object.keys(targetData[key]).forEach((nodeId) => {
+            // Retrieve the data for the current nodeId
+            let groupData = targetData[key][nodeId];
+    
+            // Update the paths within the lines-group
+            linesGroup.selectAll('path')
+                .datum(groupData)
+                .attr('d', line);
+        });
+    });
 }
 
 export const appendFPCA = (container, data, xDomain, yDomain, sliceFpcs = 4) => {

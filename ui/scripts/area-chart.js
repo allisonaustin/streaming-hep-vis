@@ -2,6 +2,7 @@ import * as tooltipM from './tooltip-module.js'
 import {
     features
 } from './colors.js';
+import { updateTime } from './time-series.js'
 
 let container;
 let svgArea;
@@ -21,7 +22,7 @@ export function drawSvg(svgData) {
     container = svgData.svg;
     data = svgData.data;
     container.attr('viewBox', [0, 0, svgArea.width, svgArea.height]);
-    
+
     data.forEach(obj => {
         Object.keys(obj).forEach(key => {
             if (selectedKeys.includes(key)) {
@@ -122,12 +123,15 @@ export const chart = (data) => {
     const area = d3.area()
         .x(d => xScale(d.data.timestamp)) 
         .y0(d => yScale(d[0]))             
-        .y1(d => yScale(d[1]));            
+        .y1(d => yScale(d[1])); 
   
     container.append("g")
+        .attr("class", "areas")
       .selectAll()
       .data(series)
       .join("path")
+        .attr("class", "area")
+        .attr('id', d => d.key)
         .attr("fill", d => color(d.key))
         .attr("d", area)
       .append("title")
@@ -142,14 +146,25 @@ export const chart = (data) => {
         .attr('transform', `translate(${legendX}, ${legendY})`);
     
     legend.selectAll('rect')
-        .data(keys)
+        .data(series)
         .enter()
         .append('rect')
+        .attr('id', d => d.key)
         .attr('x', 0)
         .attr('y', (d, i) => i * 20)
         .attr('width', 18)
         .attr('height', 18)
-        .attr('fill', d => color(d));
+        .attr('fill', d => color(d.key))
+        .on('mouseover', function(event) {
+            let stack = this.id;
+            container.selectAll('.area')
+                .style('opacity', function() {
+                    return this.id === stack ? 1 : 0.4; 
+                });
+        })
+        .on('mouseout', function() {
+            container.selectAll('.area').style('opacity', 1);
+        })
     
     legend.selectAll('text')
         .data(keys)
@@ -167,7 +182,7 @@ export const appendSlider = (xScale, yScale) => {
     const timestamps = chartdata.map(v => v.timestamp)
     const sliderRange = d3.sliderBottom()
         .min(d3.min(timestamps))
-        .max(d3.max(timestamps))
+        .max(new Date(1708588799000)) // FIX ME!!!!
         .width(svgArea.width - margin.left - margin.right - 50)
         .tickFormat(timeFormat)
         .ticks(15)
@@ -217,7 +232,9 @@ export const appendSlider = (xScale, yScale) => {
             .y0(d => yScale(d[0]))             
             .y1(d => yScale(d[1]));
 
-        const paths = container.selectAll(".area")
+        // Updating stacks
+        const areasGroup = container.select(".areas");
+        const paths = areasGroup.selectAll("path")
             .data(series);
 
         paths.enter()
@@ -230,6 +247,9 @@ export const appendSlider = (xScale, yScale) => {
             .attr("d", area);
 
         paths.exit().remove();
+
+        // Updating time series
+        // updateTime(d3.extent(newdata, d => d.timestamp))
     });
 
     const timeRange = d3.select('#slider-range')
@@ -273,7 +293,4 @@ export const updateChart = (svg) => {
         .transition()
         .duration(750)
         .call(yAxis);
-
-    // Update the stacks
-
 }

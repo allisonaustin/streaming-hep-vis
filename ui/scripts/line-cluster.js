@@ -116,7 +116,7 @@ export const chart = () => {
     .y((d, i) => yScale(d.y));
   const linesGroup = container.append('g')
     .attr('transform', `translate(${margin.left}, ${margin.top})`)
-    .attr('id', 'lines-group');
+    .attr('id', 'corr-lines');
 
   const gradientColors = [
     { offset: '0%', color: 'steelblue' },
