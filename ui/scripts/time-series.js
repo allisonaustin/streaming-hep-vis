@@ -21,12 +21,6 @@ let x;
 let y;
 let ticksCount = 15;
 
-function incrementFillColor(fillColor) {
-    let currentColor = d3.rgb(fillColor);
-    let updatedColor = d3.rgb(currentColor.r + 1, currentColor.g + 1, currentColor.b + 1);
-    return updatedColor.toString();
-}
-
 function groupByDataType(data) {
     const groups = {};
     Object.keys(g.groups).forEach(target => {
@@ -82,7 +76,7 @@ export function createCharts(svgData) {
     const numRows = numCharts;
     const numCols = 1;
     const chartWidth = (svgArea.width - (numCols) * svgArea.margin.left) / numCols;
-    const chartHeight = svgArea.height / 5;
+    const chartHeight = svgArea.height / 3;
 
     // updating chart height
     // svgArea.height = chartHeight * numCharts;
@@ -589,10 +583,12 @@ export const updateTime = (timeDom) => {
 
 export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
     let filteredData = data.filter(x => x.Col === group);
-    let height = svgArea.height;
-    let width = svgArea.height * 1.8;
 
-    let margin = { top: 15, left: 20, right: 10, bottom: 20 }
+    const hasPC2 = filteredData.some(d => d.PC2 !== null);
+
+    let height = svgArea.height;
+    let width = svgArea.height * 1.5;
+    let margin = { top: 10, left: 35, right: 10, bottom: 30 }
 
     if (filteredData.length == 0) {
         return;
@@ -600,15 +596,17 @@ export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
     const svg = d3.select('#pca_svg');
     const container = svg.append("g")
         .attr('id', `${group}-pca-plot`)
-        .attr("transform", `translate(${xOffset}, ${yOffset})`)
+        .attr("transform", `translate(${xOffset}, ${yOffset + margin.bottom})`)
     
     // x axis
-    const xScale = d3.scaleLinear()
+    const xScale = hasPC2 ? d3.scaleLinear()
         .domain(d3.extent(filteredData, d => d.PC1))
+        .range([0, width]) : d3.scaleLinear()
+        .domain([0, filteredData.length - 1])
         .range([0, width]);
     
     const xAxisGroup = container.append("g")
-        .attr("transform", `translate(${margin.left},${height})`)
+        .attr("transform", `translate(${margin.left},${height + margin.top})`)
         .call(d3.axisBottom(xScale));
     
     xAxisGroup.selectAll("text")
@@ -616,40 +614,48 @@ export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
         .style("text-anchor", "end");
     
     xAxisGroup.append("text")
-        .attr("x", width / 2)
-        .attr("y", margin.bottom + margin.top + 8)
+        .attr("x", width + margin.left - 15)
+        .attr("y", -margin.top + 10)
         .attr("fill", "black")
         .style("text-anchor", "middle")
-        .text("PC1");
+        .text(hasPC2 ? "PC1" : "");
 
     // y axis
-    const yScale = d3.scaleLinear()
+    const yScale = hasPC2 ? d3.scaleLinear()
         .domain(d3.extent(filteredData, d => d.PC2))
+        .range([height, 0]) : d3.scaleLinear()
+        .domain(d3.extent(filteredData, d => d.PC1))
         .range([height, 0]);
     
     container.append("g")
-        .attr('transform', `translate(${margin.left},0)`)
+        .attr('transform', `translate(${margin.left},${margin.top})`)
         .call(d3.axisLeft(yScale))
         .append("text")
             .attr("x", -5)
             .attr("y", -5)
             .attr("fill", "black")
             .style("text-anchor", "middle")
-            .text("PC2");
+            .text(hasPC2 ? "PC2" : "PC1");
+
+    // chart title
+    container.append("text")
+        .attr("x", width / 2 + margin.left)
+        .attr("y", margin.top - 5)
+        .attr("fill", "black")
+        .style("text-anchor", "middle")
+        .text(group);
 
     container.append("g")
         .selectAll("dot")
         .data(filteredData)
         .enter()
         .append("circle")
-        .attr('transform', `translate(${margin.left},0)`)
-        .attr("cx", d => xScale(d.PC1))
-        .attr("cy", d => yScale(d.PC2))
-        .attr("r", 2)
+        .attr('transform', `translate(${margin.left},${margin.top})`)
+        .attr("cx", (d, i) => hasPC2 ? xScale(d.PC1) : xScale(i))
+        .attr("cy", d => yScale(hasPC2 ? d.PC2 : d.PC1))
+        .attr("r", 3)
         .attr("stroke", "#D3D3D3")
         .attr("stroke-width", "1px")
         .style("fill", "#69b3a2");
       
-    // });
-    // console.log("appendLines done!!")
 } // end of fpca

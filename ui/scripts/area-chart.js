@@ -59,7 +59,7 @@ export const chart = (data) => {
     // X axis label
     container.append('text')
       .attr("x", svgArea.width/2)
-      .attr("y", svgArea.height + 5)      
+      .attr("y", svgArea.height - 10)
       .style('text-anchor', 'middle')
       .text('Time (hh:mm)')
       .style('font-size', '10px');

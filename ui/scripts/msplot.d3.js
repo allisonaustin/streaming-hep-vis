@@ -94,7 +94,7 @@ function appendColorLegend() {
             `translate(${marginMS.left}, ${marginMS.top + height - 10})`)
     legend.append('rect')
         .attr("class", "legendRect")
-        .attr("x", 0)
+        .attr("x", -10)
         .attr("y", 0)
         .attr("width", barWidth)
         .attr("height", barHeight)
@@ -108,7 +108,7 @@ function appendColorLegend() {
         .tickSize(-barHeight)
         .tickFormat((d) => d3.format(".2g")(d))
     colorAxis = legend.append("g")
-        .attr('transform', `translate(${0}, ${barHeight})`)
+        .attr('transform', `translate(${-10}, ${barHeight})`)
         .call(colorAxisTicks);
 }
 

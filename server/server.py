@@ -186,12 +186,16 @@ def getPCs(X_i):
     return P_fin
 
 def smooth_bspline(df, k=3, s=0.0):
+    if len(df) < k + 1:
+        return df
     x = np.arange(len(df))
     t, c, k = splrep(x, df, k=k, s=s)
     smoothed = splev(x, (t, c, k))
     return pd.Series(smoothed, index=df.index)
 
 def smooth_gam(df):
+    if (len(df) == 0):
+        return df
     x = np.arange(len(df))
     gam = GAM(s(0)).fit(x, df)
     smoothed = gam.predict(x)
@@ -216,18 +220,20 @@ def get_fpca(k, s):
     # for i, (temp_df, col_name) in enumerate(zip(dataframes, pca_cols)):
     #     try:
     #         P_df = getPCs(temp_df)
-    #         if 'PC1' in P_df.columns and 'PC2' in P_df.columns:
-    #             P_df_temp = pd.DataFrame({
-    #                 'Measurement': P_df['Measurement'],
-    #                 'Col': col_name,
-    #                 'PC1': P_df['PC1'],
-    #                 'PC2': P_df['PC2'],
-    #                 'PC1_smooth_bspline': smooth_bspline(P_df['PC1'], int(k), float(s)),
-    #                 'PC2_smooth_bspline': smooth_bspline(P_df['PC2'], int(k), float(s)),
-    #                 'PC1_smooth_gam': smooth_gam(P_df['PC1']),
-    #                 'PC2_smooth_gam': smooth_gam(P_df['PC2'])
-    #             })
-    #             P_final = pd.concat([P_final, P_df_temp])
+            # P_df_temp = pd.DataFrame({
+            #     'Measurement': P_df['Measurement'],
+            #     'Col': col_name,
+            #     'PC1': P_df['PC1'],
+            #     'PC2': P_df['PC2'],
+            #     'PC3': P_df['PC3'],
+            #     'PC1_smooth_bspline': smooth_bspline(P_df['PC1'].dropna()),
+            #     'PC2_smooth_bspline': smooth_bspline(P_df['PC2'].dropna()),
+            #     'PC3_smooth_bspline': smooth_bspline(P_df['PC3'].dropna()),
+            #     'PC1_smooth_gam': smooth_gam(P_df['PC1'].dropna()),
+            #     'PC2_smooth_gam': smooth_gam(P_df['PC2'].dropna()),
+            #     'PC3_smooth_gam': smooth_gam(P_df['PC3'].dropna()),
+            # })
+            # P_final = pd.concat([P_final, P_df_temp])
     #     except Exception as e:
     #         print(f"Error processing {col_name}: {e}")
     
