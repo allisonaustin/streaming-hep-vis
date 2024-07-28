@@ -53,8 +53,7 @@ function groupByDataType(data) {
     return groups;
 }
 
-
-export function createHeatmaps(svgData) {
+export function createCharts(svgData) {
     svgData.svg.selectAll("*").remove();
     const svgArea = svgData.svgArea;
     date = svgData.date.date;
@@ -191,6 +190,7 @@ export function createHeatmaps(svgData) {
             .attr("ry", 5);
 
         functs = chart(container, targetData[group], group, chartSvgArea)
+        appendFPCA(svgData.colordata, group, chartSvgArea, xOffset, yOffset);
 
         col++;
         if (col >= numCols) {
@@ -587,97 +587,69 @@ export const updateTime = (timeDom) => {
     });
 }
 
-export const appendFPCA = (container, data, xDomain, yDomain, sliceFpcs = 4) => {
-    d3.select('#fpca-container').remove();
-    let width = svgdata.svgArea.width
-    let height = svgdata.svgArea.height
-    let fpcaContainer = container.append('g')
-        .attr('id', 'fpca-container')
-        .attr('transform', 'translate(' + (width + svgArea.margin.left - svgArea.margin.right) + ',0')
+export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
+    let filteredData = data.filter(x => x.Col === group);
+    let height = svgArea.height;
+    let width = svgArea.height * 1.8;
 
-    var fpcaW = svgArea.margin.right,
-        fpcaH = height / 2;
-    var xfpca = d3.scaleLinear().range([0, fpcaW]);
-    var yfpca = d3.scaleLinear().range([fpcaH, 0]);
+    let margin = { top: 15, left: 20, right: 10, bottom: 20 }
 
-    var xfpcaeffect = d3.scaleLinear().range([0, svgArea.margin.right]);
-    var yfpcaeffect = d3.scaleLinear().range([height / 2, 0]);
-    const effectCols = ["mean", "minus", "plus"];
-    var myFPCAcolor = d3.scaleOrdinal(d3.schemeAccent)
+    if (filteredData.length == 0) {
+        return;
+    }
+    const svg = d3.select('#pca_svg');
+    const container = svg.append("g")
+        .attr('id', `${group}-pca-plot`)
+        .attr("transform", `translate(${xOffset}, ${yOffset})`)
+    
+    // x axis
+    const xScale = d3.scaleLinear()
+        .domain(d3.extent(filteredData, d => d.PC1))
+        .range([0, width]);
+    
+    const xAxisGroup = container.append("g")
+        .attr("transform", `translate(${margin.left},${height})`)
+        .call(d3.axisBottom(xScale));
+    
+    xAxisGroup.selectAll("text")
+        .attr("transform", "rotate(-45)")
+        .style("text-anchor", "end");
+    
+    xAxisGroup.append("text")
+        .attr("x", width / 2)
+        .attr("y", margin.bottom + margin.top + 8)
+        .attr("fill", "black")
+        .style("text-anchor", "middle")
+        .text("PC1");
 
-    d3.select('#fpca-container')
-        .call(d3.brushX()
-            .extent([[0, 0], [fpcaW, fpcaH]])
-            .on('start', () => { x.domain(xDomain) })
-            .on('end', updateChart));
+    // y axis
+    const yScale = d3.scaleLinear()
+        .domain(d3.extent(filteredData, d => d.PC2))
+        .range([height, 0]);
+    
+    container.append("g")
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(d3.axisLeft(yScale))
+        .append("text")
+            .attr("x", -5)
+            .attr("y", -5)
+            .attr("fill", "black")
+            .style("text-anchor", "middle")
+            .text("PC2");
 
-    colnames = Object.keys(data[0]).slice(0, sliceFpcs).filter(function (col) {
-        return col !== "";
-    })
-
-    data.forEach(function (d) {
-        colnames.forEach(function (c) {
-            if (c !== "")
-                d[c] = +d[c]
-        })
-    });
-
-    xfpca.domain([0, data.length]);
-    var yextent = getExtent(colnames, data);
-    yfpca.domain(yextent);
-
-    // X axis
-    fpcaContainer.append('g')
-        .attr("id", "xfpcsaxis-container")
-        .attr("transform", "translate(0," + (height / 2) + ")")
-        .call(d3.axisBottom(xfpca))
-        .style("text-anchor", "end")
-        .attr("dx", "-.8em")
-        .attr("dy", ".15em")
-        .selectAll("text")
-        .attr("transform", "rotate(-65)");
-
-    // Y Axis
-    fpcaContainer.append('g')
-        .attr('id', 'yfpcaaxis-container')
-        .call(d3.axisLeft(yfpca))
-
-    // append g for lines
-    var dl = fpcaContainer.append('g')
-        .attr('id', 'fpca-lines')
-
-    columns.forEach(function (c) {
-        if (c !== "") {
-
-            var valueline = d3.line()
-                .x(function (d, i) {
-                    return xfpca(i);
-                })
-                .y(function (d) {
-                    return yfpca(d[c]);
-                });
-
-            dl.append("path")
-                .data([data])
-                .attr("class", "line-fpca")
-                .attr("id", "fpca" + c.split("V")[1])
-                .attr("stroke", function (d, i) {
-                    return myFPCAcolor(c.split("V")[1])
-                })
-                .attr("d", valueline)
-                .on("click", function () {
-
-                    if (d3.select(this) === undefined) return;
-
-                    var fpcLine = d3.select(this);
-                    var h = fpcLine.property("id");
-                    var fcolor = fpcLine.style('stroke');
-                    let fpcColor = d3.color(fcolor).formatHex().split("#")[1];
-                    // get main contributors of FPC on main plot
-                })
-            // .on("mouseover", fpcahover)
-            // .on("mouseout", fpcahoverout)
-        }
-    });
-    console.log("appendLines done!!")
+    container.append("g")
+        .selectAll("dot")
+        .data(filteredData)
+        .enter()
+        .append("circle")
+        .attr('transform', `translate(${margin.left},0)`)
+        .attr("cx", d => xScale(d.PC1))
+        .attr("cy", d => yScale(d.PC2))
+        .attr("r", 2)
+        .attr("stroke", "#D3D3D3")
+        .attr("stroke-width", "1px")
+        .style("fill", "#69b3a2");
+      
+    // });
+    // console.log("appendLines done!!")
 } // end of fpca

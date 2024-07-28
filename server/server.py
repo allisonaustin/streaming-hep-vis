@@ -23,9 +23,9 @@ df = pd.DataFrame()
 X_ori = pd.DataFrame()
 filepath = '../ui/data/'
 fname = ''
-init_timepts = 60000
+init_timepts = 70000
 inc_rows = 1500 
-skip_rows = 15000
+skip_rows = 167000
 farm_cols = []
 cols = []
 n_inc = 0
@@ -52,7 +52,7 @@ def get_data(dir, filename, inc):
 
     if (dir == 'farm'):
         if int(inc) == 0:
-            skip_rows = 15000
+            skip_rows = 167000
             farm_cols = pd.read_csv(filepath + dir + '/' + filename, nrows=1).columns
             farm_df = pd.read_csv(filepath + dir + '/' + filename, skiprows=skip_rows, nrows=init_timepts, names=farm_cols)
             X_ori = farm_df
@@ -66,6 +66,7 @@ def get_data(dir, filename, inc):
         final_df = farm_df.replace({np.nan: None})
     else:
         if (int(inc) == 0):
+            skip_rows = 167000
             cols = pd.read_csv(filepath + dir + '/' + filename, nrows=1).columns
             df = pd.read_csv(filepath + dir + '/' + filename, skiprows=1, names=cols)
         else:
@@ -199,25 +200,38 @@ def smooth_gam(df):
 @app.route('/getFPCA/<k>/<s>')
 def get_fpca(k, s):
     global farm_df 
-    global cols
+    global farm_cols
+    global filepath
 
-    P_final = pd.DataFrame()
+    pca_cols = ['cpu_idle', 'cpu_nice', 'cpu_system', 'cpu_aidle', 'cpu_num', 'cpu_speed', 'cpu_wio', 
+            'bytes_in', 'bytes_out', 'disk_free', 'disk_total', 'part_max_used', 'mem_buffers', 
+            'mem_cached', 'mem_free', 'mem_total', 'swap_total', 'swap_free', 
+            'proc_total', 'boottime', 'load_fifteen', 'load_five', 'load_one']
 
-    dataframes = [preprocess(farm_df, col) for col in cols]
-    for i, (farm_df, col_name) in enumerate(zip(dataframes, cols)):
-        try:
-            P_df = getPCs(farm_df)
-            if 'PC1' in P_df.columns and 'PC2' in P_df.columns:
-                P_final['Measurement'] = P_df['Measurement']
-                P_final['Col'] = col_name
-                P_final['PC1_smooth_bspline'] = smooth_bspline(P_df['PC1'], k, s)
-                P_final['PC2_smooth_bspline'] = smooth_bspline(P_df['PC2'], k, s)
-                P_final['PC1_smooth_gam'] = smooth_gam(P_df['PC1'])
-                P_final['PC2_smooth_gam'] = smooth_gam(P_df['PC2'])
+    P_final = pd.read_csv(filepath + 'farm/P_final.csv', index_col=0)
 
-        except Exception as e:
-            print(f"Error processing {col_name}: {e}")
+    # P_final = pd.DataFrame()
+
+    # dataframes = [preprocess(farm_df, col) for col in pca_cols]
+    # for i, (temp_df, col_name) in enumerate(zip(dataframes, pca_cols)):
+    #     try:
+    #         P_df = getPCs(temp_df)
+    #         if 'PC1' in P_df.columns and 'PC2' in P_df.columns:
+    #             P_df_temp = pd.DataFrame({
+    #                 'Measurement': P_df['Measurement'],
+    #                 'Col': col_name,
+    #                 'PC1': P_df['PC1'],
+    #                 'PC2': P_df['PC2'],
+    #                 'PC1_smooth_bspline': smooth_bspline(P_df['PC1'], int(k), float(s)),
+    #                 'PC2_smooth_bspline': smooth_bspline(P_df['PC2'], int(k), float(s)),
+    #                 'PC1_smooth_gam': smooth_gam(P_df['PC1']),
+    #                 'PC2_smooth_gam': smooth_gam(P_df['PC2'])
+    #             })
+    #             P_final = pd.concat([P_final, P_df_temp])
+    #     except Exception as e:
+    #         print(f"Error processing {col_name}: {e}")
     
+    # print(P_final.head())
     return Response(P_final.to_json(orient='records'), mimetype='application/json')
 
 if __name__ == '__main__':

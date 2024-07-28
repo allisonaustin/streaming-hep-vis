@@ -10,7 +10,7 @@ import * as u from './update.js';
 
 /* VIEWS */
 import * as lineClusterView from './line-cluster.js';
-import * as heatMapView from './time-series.js';
+import * as timeSeriesView from './time-series.js';
 import * as msplot from './msplot.d3.js';
 import * as correlationView from './corr-matrix.js';
 import * as eventView from './area-chart.js';
@@ -21,7 +21,7 @@ import {
   prepareSvgArea
 } from './d3_utils.js';
 
-const heatmapSvgData = m.svgData();
+const timeSeriesSvgData = m.svgData();
 const lineSvgData = m.svgData();
 const msPlotData = m.svgData();
 const corrSvgData = m.svgData();
@@ -74,21 +74,36 @@ async function getCorrelationData() {
   }
 }
 
-async function initHeatmap(data, dateValue, type) {
-  heatmapSvgData.domId = 'farm_view';
-  heatmapSvgData.svg = d3.select(`#${type}_svg`);
-  heatmapSvgData.data = data;
-  heatmapSvgData.date = dateValue;
-  heatmapSvgData.selectedX = xGroup;
-  heatmapSvgData.selectedY = yGroup;
-  const margin = { top: 15, right: 10, bottom: 100, left: 30 };
-  heatmapSvgData.svgArea = prepareSvgArea(
-    calcContainerWidth(`#${heatmapSvgData.domId}`),
-    calcContainerHeight(`#${heatmapSvgData.domId}`),
+async function getFPCData() {
+  const flaskUrl = m.flaskUrl + `/getFPCA/3/0`;
+  try {
+    const res = await fetch(flaskUrl);
+    if (!res.ok) {
+      throw new Error('Error getting data:', farmGroup);
+    }
+    const data = res.json();
+    return data
+  } catch (error) {
+    console.error('Error:', error);
+  }
+}
+
+async function initTimeSeries(data, fpcData, dateValue, type) {
+  timeSeriesSvgData.domId = 'farm_view';
+  timeSeriesSvgData.svg = d3.select(`#${type}_svg`);
+  timeSeriesSvgData.data = data;
+  timeSeriesSvgData.date = dateValue;
+  timeSeriesSvgData.selectedX = xGroup;
+  timeSeriesSvgData.selectedY = yGroup;
+  timeSeriesSvgData.colordata = fpcData;
+  const margin = { top: 15, right: 10, bottom: 100, left: 10 };
+  timeSeriesSvgData.svgArea = prepareSvgArea(
+    calcContainerWidth(`#${timeSeriesSvgData.domId}`),
+    calcContainerHeight(`#${timeSeriesSvgData.domId}`),
     margin || { top: 0, right: 0, bottom: 0, left: 0 }
   );
-  heatmapSvgData.margin = margin;
-  heatMapView.createHeatmaps(heatmapSvgData);
+  timeSeriesSvgData.margin = margin;
+  timeSeriesView.createCharts(timeSeriesSvgData);
 }
 
 async function initCorrelationView(data) {
@@ -175,13 +190,14 @@ async function init(type, dateValue) {
   const manager_data = await getData('manager', manager_file, 0);
   const msData = await getMsData(xGroup, yGroup, 0, 0);
   const corrData = await getCorrelationData();
+  const fpcData = await getFPCData();
   setGridType(0);
   setOverviewType('lines');
   // const uniqueNodes = new Set();
   // data.forEach(obj => {
   //   uniqueNodes.add(obj.nodeId);
   // });
-  initHeatmap(farm_data.data, dateValue, type)
+  initTimeSeries(farm_data.data, fpcData, dateValue, type)
   d3.selectAll('.grid-rect')
     .attr('display', 'none');
   initClusterView(farm_data.data, dateValue)
@@ -197,8 +213,10 @@ async function updateView(date) {
   const manager_data = await getData('manager', manager_file, 0);
   const msData = await getMsData(xGroup, yGroup, 0, 0);
   const corrData = await getCorrelationData();
-  heatmapSvgData.data = farm_data.data;
-  heatMapView.createHeatmaps(heatmapSvgData);
+  const fpcData = await getFPCData();
+  timeSeriesSvgData.data = farm_data.data;
+  timeSeriesSvgData.colordata = fpcData;
+  timeSeriesView.createCharts(timeSeriesSvgData);
   lineSvgData.data = farm_data.data;
   lineClusterView.drawSvg(lineSvgData);
   corrSvgData.data = corrData;
@@ -257,7 +275,7 @@ window.handleGridChange = () => {
 window.updateChart = () => {
   if (document.getElementById('data-stream-option').checked) {
     refreshIntervalId = setInterval(() => {
-      u.updateCharts(heatmapSvgData, barSvgData);
+      u.updateCharts(timeSeriesSvgData, barSvgData);
       u.updateMS(getFeature1(), getFeature2(), option, true, 1);
     }, 500);
   } else {
