@@ -585,7 +585,7 @@ export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
     let filteredData = data.filter(x => x.Col === group);
 
     const hasPC2 = filteredData.some(d => d.PC2 !== null);
-
+    
     let height = svgArea.height;
     let width = svgArea.height * 1.5;
     let margin = { top: 10, left: 35, right: 10, bottom: 30 }
@@ -595,8 +595,19 @@ export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
     }
     const svg = d3.select('#pca_svg');
     const container = svg.append("g")
+        .attr('class', 'pca-plot')
         .attr('id', `${group}-pca-plot`)
         .attr("transform", `translate(${xOffset}, ${yOffset + margin.bottom})`)
+        .on('mouseover', function (event, d) {
+            d3.select(this).style("cursor", "pointer");
+        })
+        .on("mouseout", function (d) {
+            d3.select(this).style("cursor", "default");
+        })
+        .on('click', function (event, d) {
+            svgdata.selectedX = group;
+            u.updateMS(group, svgdata.selectedY, getType(), true);
+        });
     
     // x axis
     const xScale = hasPC2 ? d3.scaleLinear()
@@ -654,6 +665,7 @@ export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
         .attr("cx", (d, i) => hasPC2 ? xScale(d.PC1) : xScale(i))
         .attr("cy", d => yScale(hasPC2 ? d.PC2 : d.PC1))
         .attr("r", 3)
+        .attr("class", d => `pca-circle ${d.Measurement}`)
         .attr("stroke", "#D3D3D3")
         .attr("stroke-width", "1px")
         .style("fill", "#69b3a2");

@@ -28,6 +28,12 @@ function mapReset() {
         d3.select(this).attr("r", "2")
             .style("fill", "darkgray")
     });
+
+    d3.selectAll(".pca-plot").selectAll('circle')
+        .attr('fill-opacity', 1)
+        .attr("stroke-width", "1px")
+        .attr("stroke", "#D3D3D3")
+        .attr("r", 3);
     
     if (getOverviewType() == 'heatmap') {
         d3.selectAll('.lines-group path')
@@ -97,6 +103,9 @@ function initLasso(container, targetItems) {
             if (getOverviewType() == 'lines') {
                 d3.selectAll('path')
                     .attr('stroke-opacity', 0.5);
+
+                d3.selectAll(".pca-plot").selectAll('circle')
+                    .attr('fill-opacity', 0.5);
             }
             
             selectedItems.forEach(itemId => {
@@ -107,6 +116,18 @@ function initLasso(container, targetItems) {
                     .attr('stroke-opacity', 1)
                     .attr('stroke', tableauColors['tab:blue'])
                     .raise();
+            });
+
+            selectedItems.forEach(itemId => {
+                d3.selectAll(".pca-plot").selectAll('circle')
+                    .filter(function() {
+                        return d3.select(this).attr('class').includes(itemId);
+                    })
+                    .attr('fill-opacity', 1)
+                    .attr('stroke', tableauColors['tab:blue'])
+                    .attr('stroke-width', '1.5px')
+                    .attr('r', 4) 
+                    .raise(); 
             });
         } else {
             mapReset();

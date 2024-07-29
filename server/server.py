@@ -109,7 +109,8 @@ def get_corr():
 
     return Response(result_corr_df.to_json(orient='records'), mimetype='application/json')
 
-@app.route('/getMagnitudeShapeFDA/<xgroup>/<ygroup>/<incremental_update>/<progressive_update>')
+# MS data for one group
+@app.route('/getMagnitudeShape/<xgroup>/<ygroup>/<incremental_update>/<progressive_update>')
 def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
     global farm_df 
     global X_ori
@@ -155,6 +156,58 @@ def get_ms_inc(xgroup, ygroup, incremental_update, progressive_update):
         # taking average over inc interval
         ms_data['avg'] = ms_data.mean(axis=1)
         x_new = ms_data.iloc[:init_n, -1].to_numpy()
+        inc_fdo.partial_fit(x_new)
+        # if (n_inc + 1) % 10 == 0:
+        lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
+        response['data'] = lis
+
+    return Response(json.dumps(response), mimetype='application/json')
+
+# Multivariate MS
+@app.route('/getMagnitudeShapeFDA/<groups>/<incremental_update>/<progressive_update>')
+def get_ms_inc_all(groups, incremental_update, progressive_update):
+    global farm_df 
+    global X_ori
+    global fname
+    global farm_cols 
+    global init_timepts
+    global inc
+    global n_inc
+    global prog
+    global inc_fdo
+
+    groups = ['cpu_idle', 'cpu_nice', 'cpu_system', 'cpu_aidle', 'cpu_num', 'cpu_speed', 'cpu_wio', 
+            'bytes_in', 'bytes_out', 'disk_free', 'disk_total', 'part_max_used', 'mem_buffers', 
+            'mem_cached', 'mem_free','mem_shared', 'mem_total', 'swap_total', 'swap_free', 
+            'proc_total', 'boottime', 'load_fifteen', 'load_five', 'load_one']
+
+    inc = int(incremental_update)
+    prog = int(progressive_update)
+
+    # ms_data = farm_df[groups]
+    # ms_data_final = pd.DataFrame()
+    # # min max scaling
+    # for i in range(ms_data.shape[1]):
+    #     min_value = min(ms_data[ms_data.columns[i]])
+    #     max_value = max(ms_data[ms_data.columns[i]])
+    #     ms_data_final[ms_data.columns[i]] = (ms_data[ms_data.columns[i]] - min_value) / (max_value - min_value)
+
+    ms_data_final = pd.read_csv(filepath + 'farm/ms_final.csv', index_col=0)
+
+    init_n = len(X_ori['nodeId'].unique())
+
+    response = {'data': [], 'nodeIds': []}
+    response['nodeIds'] = farm_df['nodeId'].tolist()
+
+    if (inc == 0 and prog == 0):
+        inc_fdo = IncFDO()
+        inc_fdo.initial_fit(ms_data_final)
+        lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()
+        response['data'] = lis
+    if (inc == 1):
+        # taking average over inc interval
+        ms_data_final['avg'] = ms_data_final.mean(axis=1)
+        x_new = ms_data_final.iloc[:init_n, -1].to_numpy()
         inc_fdo.partial_fit(x_new)
         # if (n_inc + 1) % 10 == 0:
         lis = np.vstack((inc_fdo.MO, inc_fdo.VO)).T.tolist()

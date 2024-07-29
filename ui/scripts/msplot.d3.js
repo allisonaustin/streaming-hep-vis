@@ -94,8 +94,8 @@ function appendColorLegend() {
             `translate(${marginMS.left}, ${marginMS.top + height - 10})`)
     legend.append('rect')
         .attr("class", "legendRect")
-        .attr("x", -10)
-        .attr("y", 0)
+        .attr("x", marginMS.left + marginMS.right)
+        .attr("y", marginMS.bottom - 15)
         .attr("width", barWidth)
         .attr("height", barHeight)
         .style("fill", "url(#linear-gradient-ms)")
@@ -108,7 +108,7 @@ function appendColorLegend() {
         .tickSize(-barHeight)
         .tickFormat((d) => d3.format(".2g")(d))
     colorAxis = legend.append("g")
-        .attr('transform', `translate(${-10}, ${barHeight})`)
+        .attr('transform', `translate(${marginMS.left + marginMS.right}, ${barHeight + marginMS.bottom - 15})`)
         .call(colorAxisTicks);
 }
 
@@ -123,7 +123,7 @@ function processInput(data) {
         yd = d3.extent(data.map(d => d[1]));
 
     xms = d3.scaleLinear()
-        .range([marginMS.left, width])
+        .range([marginMS.left, width + marginMS.right + 20])
         .domain([xd[0] - 0.001, xd[1] + 0.001]).nice();
     yms = d3.scaleLinear()
         .range([height, marginMS.top])
@@ -136,10 +136,11 @@ function appendAxis() {
     xAxis = msContainer.append("g")
         .attr("id", "xmsaxis-container")
         .attr("transform", `translate(0,${height})`)
-        .call(d3.axisBottom(xms).tickFormat(formatTick))
-    // .selectAll("text")
-    //    .attr("transform", "rotate(-45)")
-    //    .style("text-anchor", "end");
+        .call(d3.axisBottom(xms).tickFormat(formatTick));
+        
+    xAxis.selectAll("text")
+       .attr("transform", "rotate(-45)")
+       .style("text-anchor", "end");
 
     // Add the Y Axis
     yAxis = msContainer.append("g")
@@ -218,7 +219,7 @@ function appendAxisLabels(cols) {
     msContainer.append("text")
         .attr("transform", "rotate(0)")
         .attr("x", width / 1.8)
-        .attr('y', height + marginMS.top)
+        .attr('y', height + marginMS.top + 5)
         .attr("font-size", "10px")
         .attr("font-weight", "bold")
         .attr("text-anchor", "middle")
@@ -394,7 +395,7 @@ export function appendScatterPlot(msdata, cols, nodes) {
     showMapCircles();
     visUpdateFlag = false;
     // console.log("cols for circles",cols, visUpdateFlag)
-    appendLegend();
+    // appendLegend();
     appendColorLegend();
 
 
@@ -409,7 +410,7 @@ export function updateScatterPlot(msdata, group, cdata) {
     showMapCircles();
     visUpdateFlag = false;
     // console.log("updateScatterPlot", visUpdateFlag)
-    appendLegend();
+    // appendLegend();
     appendColorLegend();
 
 }
@@ -422,7 +423,7 @@ export function updateScatterPlotProgressive(msdata, newCircId, newRackId) {
     showMapCircles();
     visUpdateFlag = false;
     // console.log("updateScatterPlotProgressive", visUpdateFlag)
-    appendLegend();
+    // appendLegend();
     appendColorLegend();
 
 }

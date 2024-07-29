@@ -39,7 +39,7 @@ export const updateCorr = (group1, group2) => {
 }
 
 export const updateMS = async (msGroup, colorGroup, colorType='var', newData=false, inc=0) => {
-  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${msGroup}/${colorGroup}/${inc}/0`;
+  const flaskUrl = m.flaskUrl + `/getMagnitudeShape/${msGroup}/${colorGroup}/${inc}/0`;
   let colordata = [];
   if (newData || msData == null) {
     await fetch(flaskUrl)

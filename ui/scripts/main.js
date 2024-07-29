@@ -28,6 +28,7 @@ const corrSvgData = m.svgData();
 const barSvgData = m.svgData();
 let xGroup = 'cpu_idle';
 let yGroup = 'cpu_nice';
+let groups = [];
 let refreshIntervalId;
 let dateValue;
 let option;
@@ -47,7 +48,7 @@ async function getData(dir, filename, inc) {
 }
 
 async function getMsData(xGroup, yGroup, inc = 0, prog = 0) {
-  const flaskUrl = m.flaskUrl + `/getMagnitudeShapeFDA/${xGroup}/${yGroup}/${inc}/${prog}`;
+  const flaskUrl = m.flaskUrl + `/getMagnitudeShape/${xGroup}/${yGroup}/${inc}/${prog}`;
   try {
     const res = await fetch(flaskUrl);
     if (!res.ok) {
@@ -166,8 +167,8 @@ async function initMsPlotView(response) {
   const margin = {
     top: 30,
     right: 10,
-    bottom: 20,
-    left: 20
+    bottom: 40,
+    left: 40
   }
   msPlotData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${msPlotData.domId}`),
