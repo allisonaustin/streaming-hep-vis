@@ -154,7 +154,7 @@ export function createCharts(svgData) {
             .call(colorAxisTicks);
     }
     const pcaSvg = d3.select('#pca_svg')
-    pcaSvg.attr("viewBox", [0, 0, 100+chartSvgArea.width, (chartSvgArea.height+15)* numCharts])
+    pcaSvg.attr("viewBox", [0, 0, chartSvgArea.height*2.3, (chartSvgArea.height)* numCharts])
 
     for (let group in targetData) {
 
