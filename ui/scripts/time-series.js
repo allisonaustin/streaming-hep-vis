@@ -153,6 +153,8 @@ export function createCharts(svgData) {
             .attr('transform', `translate(${-barWidth / 2}, ${barHeight})`)
             .call(colorAxisTicks);
     }
+    const pcaSvg = d3.select('#pca_svg')
+    pcaSvg.attr("viewBox", [0, 0, 100+chartSvgArea.width, (chartSvgArea.height+15)* numCharts])
 
     for (let group in targetData) {
 
@@ -593,7 +595,7 @@ export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
     if (filteredData.length == 0) {
         return;
     }
-    const svg = d3.select('#pca_svg');
+    const svg = d3.select('#pca_svg')
     const container = svg.append("g")
         .attr('class', 'pca-plot')
         .attr('id', `${group}-pca-plot`)
