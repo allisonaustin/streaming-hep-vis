@@ -137,7 +137,7 @@ function appendAxis() {
         .attr("id", "xmsaxis-container")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(xms).tickFormat(formatTick));
-        
+
     xAxis.selectAll("text")
        .attr("transform", "rotate(-45)")
        .style("text-anchor", "end");
@@ -174,7 +174,7 @@ export function showTooltip(item) {
     const svgContainer = d3.select("#msplot-svg").node();
     const svgBoundingBox = svgContainer.getBoundingClientRect();
 
-    const tooltipX = svgBoundingBox.left + circleX + 10;
+    const tooltipX = svgBoundingBox.left + circleX - 50;
     const tooltipY = svgBoundingBox.top + circleY - 20; 
     tooltipM.addToolTip(`${circle.attr("id")}`, tooltipX, tooltipY);
 }
@@ -199,7 +199,7 @@ function appendCircles(cols, nodes) {
         })
         .on("mouseover", function () {
             tooltipM.getTooltip("msTooltip");
-            tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX, d3.event.pageY - 20);
+            tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX - 40, d3.event.pageY - 20);
         })
         .on("mouseout", function () {
             d3.select("#msTooltip").remove();
@@ -228,7 +228,7 @@ function appendAxisLabels(cols) {
     //y axis label
     msContainer.append("text")
         .attr('x', -height / 2)
-        .attr("y", -marginMS.left - 8)
+        .attr("y", -marginMS.right)
         .attr("transform", "rotate(-90)")
         .attr("dy", "1em")
         .attr("font-size", "10px")
@@ -240,7 +240,7 @@ function appendAxisLabels(cols) {
     msContainer.append("text")
         .attr("id", "chart-title")
         .attr("x", width / 1.8)
-        .attr("y", marginMS.top)
+        .attr("y", marginMS.top - 10)
         .attr("dy", "1em")
         .attr("font-weight", "bold")
         .attr("text-anchor", "middle")
@@ -271,6 +271,9 @@ function updateData(msdata) {
 function updateAxis() {
     processInput(data);
     xAxis.call(d3.axisBottom(xms).tickFormat(formatTick));
+    xAxis.selectAll("text")
+       .attr("transform", "rotate(-45)")
+       .style("text-anchor", "end");
     yAxis.call(d3.axisLeft(yms).tickFormat(formatTick));
 };
 

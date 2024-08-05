@@ -5,6 +5,7 @@ from flask import Flask, jsonify, Response, request
 from flask_cors import CORS
 from pygam import GAM, s
 from scipy.interpolate import BSpline, splrep, splev
+from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
 from datetime import datetime
 import os
@@ -236,6 +237,15 @@ def getPCs(X_i):
     npc = np.sum(np.cumsum(pca.explained_variance_ratio_) < 0.9999) + 1
     P_fin = pd.DataFrame(scores[:, :npc], columns=[f"PC{k+1}" for k in range(npc)])
     P_fin['Measurement'] = X_i.index
+
+    kmeans = KMeans(n_clusters=3)
+    if 'PC2' in P_fin.columns:
+        kmeans = KMeans(n_clusters=3)
+        kmeans.fit(P_fin[['PC1', 'PC2']])
+    else:
+        kmeans = KMeans(n_clusters=3)
+        kmeans.fit(P_fin[['PC1']])
+    P_fin['Cluster'] = kmeans.fit_predict(P_fin['PC1', 'PC2'])
     return P_fin
 
 def smooth_bspline(df, k=3, s=0.0):
@@ -285,6 +295,8 @@ def get_fpca(k, s):
             #     'PC1_smooth_gam': smooth_gam(P_df['PC1'].dropna()),
             #     'PC2_smooth_gam': smooth_gam(P_df['PC2'].dropna()),
             #     'PC3_smooth_gam': smooth_gam(P_df['PC3'].dropna()),
+            #     'Cluster': P_df['Cluster']
+
             # })
             # P_final = pd.concat([P_final, P_df_temp])
     #     except Exception as e:

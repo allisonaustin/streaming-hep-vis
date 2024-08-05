@@ -585,7 +585,7 @@ export const updateTime = (timeDom) => {
 
 export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
     let filteredData = data.filter(x => x.Col === group);
-
+    console.log(filteredData)
     const hasPC2 = filteredData.some(d => d.PC2 !== null);
     
     let height = svgArea.height;
