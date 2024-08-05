@@ -15,6 +15,7 @@ let date = '';
 let functs = {};
 let svgdata;
 let targetData;
+let pcaData;
 let xDomain;
 let chartContainer;
 let x;
@@ -56,6 +57,7 @@ export function createCharts(svgData) {
     const svgArea = svgData.svgArea;
     date = svgData.date.date;
     svgdata = svgData;
+    pcaData = svgData.colordata;
     chartContainer = svgData.svg;
 
     targetData = groupByDataType(svgData.data);
@@ -192,7 +194,7 @@ export function createCharts(svgData) {
             .attr("ry", 5);
 
         functs = chart(container, targetData[group], group, chartSvgArea)
-        appendFPCA(svgData.colordata, group, chartSvgArea, xOffset, yOffset);
+        appendFPCA(group, chartSvgArea, xOffset, yOffset);
 
         col++;
         if (col >= numCols) {
@@ -204,6 +206,7 @@ export function createCharts(svgData) {
 
 export const chart = (container, groupData, group, svgArea) => {
     const data = groupData;
+    const colordata = pcaData.filter(x => x.Col === group);
     const timeFormat = d3.timeFormat('%H:%M');
     let timeExtent = d3.extent(tsArray);
     x = d3.scaleTime()
@@ -321,13 +324,15 @@ export const chart = (container, groupData, group, svgArea) => {
         .attr("height", svgArea.height - svgArea.margin.top);
 
     for (let nodeId in data) {
+        const cluster = colordata.find(d => d.Measurement === nodeId)?.Cluster;
         let group = data[nodeId];
+
         linesGroup.append("path")
             .datum(group)
             .attr('class', nodeId)
             .attr('fill', 'none')
             .attr('clip-path', `url(#${clipPathId})`)
-            .attr('stroke', '#555555')
+            .attr('stroke', customColorScale(cluster))
             .attr('stroke-width', 1)
             .attr('stroke-opacity', getOverviewType() == 'lines' ? 1 : 0)
             .attr('d', line);
@@ -623,8 +628,8 @@ export const appendPCALegend = (svg, numClusters, svgArea) => {
         .style('font-size', '10px');
 }
 
-export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
-    let filteredData = data.filter(x => x.Col === group);
+export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
+    let filteredData = pcaData.filter(x => x.Col === group);
 
     let numClusters = 3;
 
