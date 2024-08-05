@@ -138,7 +138,7 @@ export const chart = (data) => {
         .text(d => d.key);
 
     const legendWidth = 200;
-    const legendHeight = keys.length * 20; // Adjust as needed
+    const legendHeight = keys.length * 20;
     const legendX = svgArea.width - margin.right - legendWidth;
     const legendY = margin.top;
     

@@ -21,6 +21,10 @@ let x;
 let y;
 let ticksCount = 15;
 
+const customColorScale = d3.scaleOrdinal()
+    .domain(Object.keys(pallette))
+    .range(Object.values(pallette).map(percentColToD3Rgb));
+
 function groupByDataType(data) {
     const groups = {};
     Object.keys(g.groups).forEach(target => {
@@ -154,12 +158,14 @@ export function createCharts(svgData) {
             .call(colorAxisTicks);
     }
     const pcaSvg = d3.select('#pca_svg')
-    pcaSvg.attr("viewBox", [0, 0, chartSvgArea.height*2.3, (chartSvgArea.height)* numCharts])
+    const chartPadding = 25;
+    pcaSvg.attr("viewBox", [0, 0, chartSvgArea.height*2.3, ((chartSvgArea.height) * numCharts) + ((chartPadding + 2 * svgArea.margin.top) * numCharts)])
+    appendPCALegend(pcaSvg, 3, chartSvgArea);
 
     for (let group in targetData) {
 
         const xOffset = 0;
-        const yOffset = row * (chartHeight + svgArea.margin.top + 15);
+        const yOffset = row * (chartHeight + svgArea.margin.top + chartPadding);
 
         const container = chartContainer.append("g")
             .attr('id', `${group}-heatmap`)
@@ -583,14 +589,51 @@ export const updateTime = (timeDom) => {
     });
 }
 
+export const appendPCALegend = (svg, numClusters, svgArea) => {
+    // legend
+    const legendWidth = 200;
+    const legendHeight = numClusters * 20;
+    const legendX = legendWidth + 78;
+    const legendY = 15;
+    
+    const legend = svg.append("g")
+        .attr('transform', `translate(${legendX}, ${legendY})`)
+        .attr('class', 'legend');
+
+    const clusters = Array.from({ length: numClusters }, (_, i) => i);
+    
+    legend.selectAll('rect')
+        .data(clusters)
+        .enter()
+        .append('rect')
+        .attr('id', d => `cluster-${d}`)
+        .attr('x', 0)
+        .attr('y', (d, i) => i * 20)
+        .attr('width', 18)
+        .attr('height', 18)
+        .attr('fill', d => customColorScale(d))
+    
+    legend.selectAll('text')
+        .data(clusters)
+        .enter()
+        .append('text')
+        .attr('x', 25)
+        .attr('y', (d, i) => i * 20 + 14)
+        .text(d => `Cluster ${d + 1}`)
+        .style('font-size', '10px');
+}
+
 export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
     let filteredData = data.filter(x => x.Col === group);
-    console.log(filteredData)
+
+    let numClusters = 3;
+
     const hasPC2 = filteredData.some(d => d.PC2 !== null);
     
     let height = svgArea.height;
     let width = svgArea.height * 1.5;
-    let margin = { top: 10, left: 35, right: 10, bottom: 30 }
+    let margin = { top: 10, left: 35, right: 10, bottom: 30 };
+    const formatDecimal = d3.format(".2s");
 
     if (filteredData.length == 0) {
         return;
@@ -620,7 +663,7 @@ export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
     
     const xAxisGroup = container.append("g")
         .attr("transform", `translate(${margin.left},${height + margin.top})`)
-        .call(d3.axisBottom(xScale));
+        .call(d3.axisBottom(xScale).tickFormat(formatDecimal));
     
     xAxisGroup.selectAll("text")
         .attr("transform", "rotate(-45)")
@@ -642,7 +685,7 @@ export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
     
     container.append("g")
         .attr('transform', `translate(${margin.left},${margin.top})`)
-        .call(d3.axisLeft(yScale))
+        .call(d3.axisLeft(yScale).tickFormat(formatDecimal))
         .append("text")
             .attr("x", -5)
             .attr("y", -5)
@@ -670,6 +713,6 @@ export const appendFPCA = (data, group, svgArea, xOffset, yOffset) => {
         .attr("class", d => `pca-circle ${d.Measurement}`)
         .attr("stroke", "#D3D3D3")
         .attr("stroke-width", "1px")
-        .style("fill", "#69b3a2");
+        .style("fill", d => customColorScale(d.Cluster));
       
 } // end of fpca
