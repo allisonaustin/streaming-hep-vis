@@ -156,12 +156,13 @@ async function initEventView(data) {
   eventView.drawSvg(barSvgData);
 }
 
-async function initMsPlotView(response) {
+async function initMsPlotView(response, fpcData) {
   msPlotData.domId = 'fc_view';
   msPlotData.svg = d3.select(`#msplot-svg`);
   msPlotData.data = response.data;
   msPlotData.group = xGroup;
   msPlotData.colordata = response.variance;
+  msPlotData.clusterdata = fpcData;
   msPlotData.selectedX = xGroup;
   msPlotData.selectedY = yGroup;
   const margin = {
@@ -194,6 +195,7 @@ async function init(type, dateValue) {
   const fpcData = await getFPCData();
   setGridType(0);
   setOverviewType('lines');
+  setType('cluster')
   // const uniqueNodes = new Set();
   // data.forEach(obj => {
   //   uniqueNodes.add(obj.nodeId);
@@ -203,7 +205,7 @@ async function init(type, dateValue) {
     .attr('display', 'none');
   initClusterView(farm_data.data, dateValue)
   initCorrelationView(corrData)
-  initMsPlotView(msData)
+  initMsPlotView(msData, fpcData)
   initEventView(manager_data.data)
 }
 

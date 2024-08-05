@@ -11,6 +11,7 @@ export const svgData = () => {
       selectedY: undefined,
       group: undefined,
       date: undefined,
-      colordata: undefined
+      colordata: undefined,
+      clusterdata: undefined
     }
   };

@@ -1,3 +1,8 @@
+import {
+    percentColToD3Rgb,
+    pallette,
+    features
+} from './colors.js';
 import * as lassoitem from './custom-lasso.js'
 import * as tooltipM from './tooltip-module.js'
 
@@ -14,9 +19,13 @@ let ms_circle_r = 3.5
 let visUpdateFlag;
 let selectednodesMain = [];
 let colordata = [];
+let clusterdata = [];
+let nodes = [];
 
 const colorRange = d3.schemeCategory10;
 let colorcode;
+let colorType;
+let clusterColorScale;
 
 function formatTick(d) {
     if (Math.abs(d) < 1000) {
@@ -29,12 +38,14 @@ function formatTick(d) {
 let xrange, xdomR1, xdomR2, yrange, ydomR1, ydomR2, xAxis, yAxis;
 let linearGradient, legend, colorAxisScale, colorAxisTicks, colorAxis;
 
-function init(msdata, nodes) {
+function init(msdata, nodeList) {
     data = msdata.data;
     marginMS = msdata.margin
     height = msdata.svgArea.height;
     width = msdata.svgArea.width;
     colordata = msdata.colordata;
+    clusterdata = msdata.clusterdata;
+    nodes = nodeList;
 
     msPlotSvg = msdata.svg
     // .attr('width', width)
@@ -56,6 +67,10 @@ function init(msdata, nodes) {
             d3.max(colordata, d => d.val)
         ])
         .range(['#0000FF', '#00FF00', '#FFFF00', '#FF7F00', '#FF0000']);
+
+    clusterColorScale = d3.scaleOrdinal()
+        .domain(Object.keys(pallette))
+        .range(Object.values(pallette).map(percentColToD3Rgb));
 
 };
 
@@ -180,7 +195,7 @@ export function showTooltip(item) {
 }
 
 //append scatter plot data
-function appendCircles(cols, nodes) {
+function appendCircles(cols) {
     // append circle for ms scatter plot
     let circs = msContainer.append("g")
         .selectAll(".ms-circle")
@@ -195,7 +210,7 @@ function appendCircles(cols, nodes) {
         .attr("stroke", "#D3D3D3")
         .attr("stroke-width", "1px")
         .attr('fill', (d, i) => {
-            return colorcode(colordata.find(item => item.nodeId === nodes[i])?.val || '#000000');
+            return clusterColorScale(clusterdata.find(item => item.Measurement === nodes[i])?.Cluster || '#000000');
         })
         .on("mouseover", function () {
             tooltipM.getTooltip("msTooltip");
@@ -249,11 +264,11 @@ function appendAxisLabels(cols) {
 };
 
 
-function appendDataModules(msdata, nodes) {
-    init(msdata, nodes)
+function appendDataModules(msdata, nodeList) {
+    init(msdata, nodeList)
     processInput(msdata.data);
     appendAxis();
-    appendCircles(msdata.group, nodes);
+    appendCircles(msdata.group);
     appendAxisLabels(msdata.group);
 };
 
@@ -283,27 +298,39 @@ function updateTitle(title) {
 }
 
 function updateCircles() {
-    colorcode = d3.scaleLinear()
-        .domain([0, 0.25 * d3.max(colordata, d => d.val),
-            0.5 * d3.max(colordata, d => d.val),
-            0.75 * d3.max(colordata, d => d.val),
-            d3.max(colordata, d => d.val)
-        ])
-        .range(['#0000FF', '#00FF00', '#FFFF00', '#FF7F00', '#FF0000']);
-
     let circles = msContainer
         .selectAll(".ms-circle")
         .data(data);
 
-    circles
-        .transition()
-        .duration(500)
-        .attr("cx", d => xms(d[0]))
-        .attr("cy", d => yms(d[1]))
-        .attr("r", ms_circle_r)
-        .attr('fill', (d, i) => {
-            return colorcode(colordata[i]?.val || '#000000');
-        })
+    if (colorType == 'cluster') {
+        circles
+            .transition()
+            .duration(500)
+            .attr("cx", d => xms(d[0]))
+            .attr("cy", d => yms(d[1]))
+            .attr("r", ms_circle_r)
+            .attr('fill', (d, i) => {
+                return clusterColorScale(clusterdata.find(item => item.Measurement === nodes[i])?.Cluster || '#000000');
+            })
+    } else {
+        colorcode = d3.scaleLinear()
+            .domain([0, 0.25 * d3.max(colordata, d => d.val),
+                0.5 * d3.max(colordata, d => d.val),
+                0.75 * d3.max(colordata, d => d.val),
+                d3.max(colordata, d => d.val)
+            ])
+            .range(['#0000FF', '#00FF00', '#FFFF00', '#FF7F00', '#FF0000']);
+
+        circles
+            .transition()
+            .duration(500)
+            .attr("cx", d => xms(d[0]))
+            .attr("cy", d => yms(d[1]))
+            .attr("r", ms_circle_r)
+            .attr('fill', (d, i) => {
+                return colorcode(colordata[i]?.val || '#000000');
+            })
+        }
 };
 
 
@@ -358,37 +385,34 @@ function updateCirclesProgressive(newCircleID, newRackID) {
 };
 
 function appendLegend() {
-    const legendContainer = d3.select('#legend2')
-        .attr('width', width)
-        .attr('height', 40)
+    d3.select('#linear-gradient-ms').remove();
+    d3.select('#ms_color_legend').remove();
 
-    const legendGroup = legendContainer.append('g')
-        .attr('transform', `translate(${width / 2},30)`)
-        .selectAll('.mylegend')
-        .data(selectednodesMain).enter()
-        .append('g')
-    const legend_label = legendGroup.append('text')
-        .attr('x', (d, i) => 20 + i * 50)
-        .attr('y', 2.5)
-        .style('font-family', 'Georgia,Serif')
-        .style('font-size', '12px')
-        .text(d => d)
+    legend = msContainer.append('g').attr('id', 'ms_color_legend')
+        .attr('transform', (d, i) =>
+            `translate(${width - marginMS.left}, ${marginMS.top})`);
 
-    legendGroup
-        .append('circle')
-        .attr('r', 5)
-        .attr('cx', (d, i) => 10 + i * 50)
-        .attr('cy', 0)
-        .attr('fill', (d, i) => colorcode([d]))
-        .style('opacity', 0.7)
-        .on('mouseover', (event, d) => {
-            msContainer.selectAll('.ms-circle').style('opacity', 0.2)
-            let selectedCircs = msContainer.selectAll(`[class$='${selectednodesMain[d]}']`)
-            selectedCircs.style('opacity', 1)
-        })
-        .on('mouseout', (event, d) => {
-            msContainer.selectAll('.ms-circle').style('opacity', 1);
-        })
+    const clusters = Array.from({ length: 3 }, (_, i) => i);
+
+    legend.selectAll('rect')
+        .data(clusters)
+        .enter()
+        .append('rect')
+        .attr('id', d => `cluster-${d}`)
+        .attr('x', 0)
+        .attr('y', (d, i) => i * 20)
+        .attr('width', 18)
+        .attr('height', 18)
+        .attr('fill', d => clusterColorScale(d))
+    
+    legend.selectAll('text')
+        .data(clusters)
+        .enter()
+        .append('text')
+        .attr('x', 25)
+        .attr('y', (d, i) => i * 20 + 14)
+        .text(d => `Cluster ${d + 1}`)
+        .style('font-size', '10px');
 }
 
 export function appendScatterPlot(msdata, cols, nodes) {
@@ -399,13 +423,11 @@ export function appendScatterPlot(msdata, cols, nodes) {
     visUpdateFlag = false;
     // console.log("cols for circles",cols, visUpdateFlag)
     // appendLegend();
-    appendColorLegend();
-
-
+    // appendColorLegend();
 }
 
-export function updateScatterPlot(msdata, group, cdata) {
-    colordata = cdata
+export function updateScatterPlot(msdata, group, cdata, color) {
+    colorType = color;
     updateData(msdata);
     updateAxis();
     updateTitle(group);
@@ -413,9 +435,12 @@ export function updateScatterPlot(msdata, group, cdata) {
     showMapCircles();
     visUpdateFlag = false;
     // console.log("updateScatterPlot", visUpdateFlag)
-    // appendLegend();
-    appendColorLegend();
-
+    if (colorType != 'cluster') {
+        colordata = cdata;
+        appendColorLegend();
+    } else {
+        appendLegend();
+    }
 }
 
 export function updateScatterPlotProgressive(msdata, newCircId, newRackId) {
@@ -427,7 +452,7 @@ export function updateScatterPlotProgressive(msdata, newCircId, newRackId) {
     visUpdateFlag = false;
     // console.log("updateScatterPlotProgressive", visUpdateFlag)
     // appendLegend();
-    appendColorLegend();
+    // appendColorLegend();
 
 }
 

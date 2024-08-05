@@ -162,7 +162,8 @@ export function createCharts(svgData) {
     const pcaSvg = d3.select('#pca_svg')
     const chartPadding = 25;
     pcaSvg.attr("viewBox", [0, 0, chartSvgArea.height*2.3, ((chartSvgArea.height) * numCharts) + ((chartPadding + 2 * svgArea.margin.top) * numCharts)])
-    appendPCALegend(pcaSvg, 3, chartSvgArea);
+   
+    appendLegend(chartContainer, 3, chartSvgArea);
 
     for (let group in targetData) {
 
@@ -594,12 +595,12 @@ export const updateTime = (timeDom) => {
     });
 }
 
-export const appendPCALegend = (svg, numClusters, svgArea) => {
+export const appendLegend = (svg, numClusters) => {
     // legend
     const legendWidth = 200;
     const legendHeight = numClusters * 20;
-    const legendX = legendWidth + 78;
-    const legendY = 15;
+    const legendX = svgdata.svgArea.width / 2 + 100;
+    const legendY = -15;
     
     const legend = svg.append("g")
         .attr('transform', `translate(${legendX}, ${legendY})`)
@@ -612,8 +613,8 @@ export const appendPCALegend = (svg, numClusters, svgArea) => {
         .enter()
         .append('rect')
         .attr('id', d => `cluster-${d}`)
-        .attr('x', 0)
-        .attr('y', (d, i) => i * 20)
+        .attr('x', (d, i) => i * 70) 
+        .attr('y', 0)
         .attr('width', 18)
         .attr('height', 18)
         .attr('fill', d => customColorScale(d))
@@ -622,8 +623,8 @@ export const appendPCALegend = (svg, numClusters, svgArea) => {
         .data(clusters)
         .enter()
         .append('text')
-        .attr('x', 25)
-        .attr('y', (d, i) => i * 20 + 14)
+        .attr('x', (d, i) => i * 70 + 20)
+        .attr('y', 14)
         .text(d => `Cluster ${d + 1}`)
         .style('font-size', '10px');
 }

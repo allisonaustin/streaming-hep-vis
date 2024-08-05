@@ -41,7 +41,6 @@ function mapReset() {
     } else {
         d3.selectAll('.lines-group path')
             .attr('stroke-opacity', 1)
-            .attr('stroke', '#555555');
     }
 
     d3.selectAll("#msTooltip").remove();
@@ -102,7 +101,7 @@ function initLasso(container, targetItems) {
         if (selectedItems.length !== 0) {
             if (getOverviewType() == 'lines') {
                 d3.selectAll('path')
-                    .attr('stroke-opacity', 0.5);
+                    .attr('stroke-opacity', 0.3);
 
                 d3.selectAll(".pca-plot").selectAll('circle')
                     .attr('fill-opacity', 0.5);
@@ -114,7 +113,7 @@ function initLasso(container, targetItems) {
                         return d3.select(this).attr('class') === itemId;
                     })
                     .attr('stroke-opacity', 1)
-                    .attr('stroke', tableauColors['tab:blue'])
+                    // .attr('stroke', tableauColors['tab:blue'])
                     .raise();
             });
 

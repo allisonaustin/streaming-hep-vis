@@ -33,6 +33,34 @@ select {
   width: 30%;
 }
 
+.color-selection {
+  display: flex;
+  flex-direction: column; 
+}
+
+.radio-group {
+  display: flex;
+  align-items: center; 
+}
+
+.color-container {
+  display: flex;
+  align-items: center; 
+}
+
+#yGroupLabel {
+  display: flex;
+  align-items: center; 
+}
+
+#yGroupLabel input[type="radio"] {
+  margin-left: 10px; 
+}
+
+#yGroupLabel label {
+  margin-left: 5px; 
+}
+
 #farm_container {
   width: 100%;
   overflow: scroll;

@@ -56,15 +56,22 @@
       <div id="ms_view">
         <svg id="msplot-svg"></svg>
         <div class="view_title">MS Plot</div>
-        Color: <span id="yGroupLabel"></span>
-        <div id="node_color" class="color-selection" onchange="handleColorChange()">
-          <input type="radio" id="var" name="color" value="var" checked>
-          <label for="var">variance</label>
-          <input type="radio" id="min" name="color" value="min">
-          <label for="min">min</label>
-          <input type="radio" id="max" name="color" value="max">
-          <label for="max">max</label><br>
-        </div>
+          <div id="node_color" class="color-selection" onchange="handleColorChange()">
+            Color:
+            <div class="radio-group">
+                <input type="radio" id="cluster" name="color" value="cluster" checked>
+                <label for="cluster">cluster</label>
+            </div>
+            <div class="color-container">
+                <span id="yGroupLabel"></span>
+                <input type="radio" id="var" name="color" value="var">
+                <label for="var">variance</label>
+                <input type="radio" id="min" name="color" value="min">
+                <label for="min">min</label>
+                <input type="radio" id="max" name="color" value="max">
+                <label for="max">max</label>
+            </div>
+      </div>
       </div>
       <div id="fc_view">
         <div id="corr_view">

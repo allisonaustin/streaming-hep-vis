@@ -7,6 +7,7 @@ import * as eventView from './area-chart.js'
 let hmData;
 let msData;
 let eventData;
+let pcaData;
 
 export const updateCharts = async (heatmapSvg, barSvg) => {
   const filename = `far_data_${heatmapSvg.date}.csv`
@@ -38,7 +39,7 @@ export const updateCorr = (group1, group2) => {
   cluster.updatePlot(group1, group2);
 }
 
-export const updateMS = async (msGroup, colorGroup, colorType='var', newData=false, inc=0) => {
+export const updateMS = async (msGroup, colorGroup, colorType='cluster', newData=false, inc=0) => {
   const flaskUrl = m.flaskUrl + `/getMagnitudeShape/${msGroup}/${colorGroup}/${inc}/0`;
   let colordata = [];
   if (newData || msData == null) {
@@ -56,8 +57,10 @@ export const updateMS = async (msGroup, colorGroup, colorType='var', newData=fal
         colordata = data['variance'];
       } else if (colorType == 'min') {
         colordata = data['min'];
-      } else {
+      } else if (colorType == 'max') {
         colordata = data['max'];
+      } else {
+        colordata = pcaData;
       }
     });
   } else {
@@ -65,15 +68,17 @@ export const updateMS = async (msGroup, colorGroup, colorType='var', newData=fal
       colordata = msData['variance']; 
     } else if (colorType === 'min') {
         colordata = msData['min']; 
-    } else {
+    } else if (colorType == 'max') {
         colordata = msData['max'];
+    } else {
+      colordata = pcaData;
     }
   }
-  msplot.updateScatterPlot(msData.data, [msGroup], colordata);
+  msplot.updateScatterPlot(msData.data, [msGroup], colordata, colorType);
 }
 
 
-export const updatePCA = async (group) => {
+export const updatePCA = async (group) => { // fix me !!
   const flaskUrl = m.flaskUrl + `/getFPCA/${group}`;
   await fetch(flaskUrl)
     .then(res => {
@@ -84,6 +89,7 @@ export const updatePCA = async (group) => {
       }
     })
     .then(data => {
+      pcaData = data;
       heatMapView.appendFPCA()
     });
 }
