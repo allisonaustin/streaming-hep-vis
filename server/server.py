@@ -245,7 +245,12 @@ def getPCs(X_i):
     else:
         kmeans = KMeans(n_clusters=3)
         kmeans.fit(P_fin[['PC1']])
+        
     P_fin['Cluster'] = kmeans.fit_predict(P_fin['PC1', 'PC2'])
+
+    explained_var = pca.explained_variance_ratio_
+    P_fin['ExpVariance'] = explained_var
+
     return P_fin
 
 def smooth_bspline(df, k=3, s=0.0):

@@ -79,7 +79,7 @@ export const chart = (data) => {
           .attr("stroke-opacity", 0.1))
       .call(g => g.append("text")
           .attr("x", -margin.left + 5)
-          .attr("y", 15)
+          .attr("y", 40)
           .attr("fill", "currentColor")
           .attr("text-anchor", "start")
           .text("Count")); // Y label
@@ -140,7 +140,7 @@ export const chart = (data) => {
     const legendWidth = 200;
     const legendHeight = keys.length * 20;
     const legendX = svgArea.width - margin.right - legendWidth;
-    const legendY = margin.top;
+    const legendY = 10;
     
     const legend = container.append('g')
         .attr('transform', `translate(${legendX}, ${legendY})`);

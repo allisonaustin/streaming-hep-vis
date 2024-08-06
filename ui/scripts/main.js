@@ -146,7 +146,7 @@ async function initEventView(data) {
   barSvgData.svg = d3.select(`#bar_svg`);
   barSvgData.data = data;
   barSvgData.date = dateValue;
-  const margin = { top: 15, right: 10, bottom: 40, left: 40 }
+  const margin = { top: 35, right: 10, bottom: 40, left: 40 }
   barSvgData.svgArea = prepareSvgArea(
     calcContainerWidth(`#${barSvgData.domId}`),
     calcContainerHeight(`#${barSvgData.domId}`),

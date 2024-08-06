@@ -27,6 +27,8 @@ const customColorScale = d3.scaleOrdinal()
     .domain([0, 1, 2])
     .range([pallette.blue, pallette.green, pallette.purple].map(percentColToD3Rgb));
 
+const formatAxisTitle = d3.format(".2f");
+
 function groupByDataType(data) {
     const groups = {};
     Object.keys(g.groups).forEach(target => {
@@ -633,13 +635,11 @@ export const appendLegend = (svg, numClusters) => {
 export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
     let filteredData = pcaData.filter(x => x.Col === group);
 
-    let numClusters = 3;
-
     const hasPC2 = filteredData.some(d => d.PC2 !== null);
     
     let height = svgArea.height;
     let width = svgArea.height * 1.5;
-    let margin = { top: 10, left: 35, right: 10, bottom: 30 };
+    let margin = { top: 10, left: 35, right: 10, bottom: 40 };
     const formatDecimal = d3.format(".2s");
 
     if (filteredData.length == 0) {
@@ -677,11 +677,11 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
         .style("text-anchor", "end");
     
     xAxisGroup.append("text")
-        .attr("x", width + margin.left - 15)
+        .attr("x", width + margin.left)
         .attr("y", -margin.top + 10)
         .attr("fill", "black")
         .style("text-anchor", "middle")
-        .text(hasPC2 ? "PC1" : "");
+        .text(hasPC2 ? `PC1 (${formatAxisTitle(filteredData[0].ExpVariance1 * 100)}%)` : "");
 
     // y axis
     const yScale = hasPC2 ? d3.scaleLinear()
@@ -694,11 +694,11 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
         .attr('transform', `translate(${margin.left},${margin.top})`)
         .call(d3.axisLeft(yScale).tickFormat(formatDecimal))
         .append("text")
-            .attr("x", -5)
+            .attr("x", 10)
             .attr("y", -5)
             .attr("fill", "black")
             .style("text-anchor", "middle")
-            .text(hasPC2 ? "PC2" : "PC1");
+            .text(hasPC2 ? `PC2 (${formatAxisTitle(filteredData[0].ExpVariance2 * 100)}%)` : `PC1 (${formatAxisTitle(filteredData[0].ExpVariance1 * 100)}%)`);
 
     // chart title
     container.append("text")

@@ -1,6 +1,6 @@
 html,
 body {
-  overflow: scroll;
+  /* overflow: scroll; */
   font-family: 'Helvetica Neue', sans-serif;
   font-size: 11px;
   width: 100%;
@@ -63,13 +63,13 @@ select {
 
 #farm_container {
   width: 100%;
-  overflow: scroll;
+  overflow-y: scroll;
   /* margin-left: 20px; */
 }
 
 #pca_container {
   width: 100%;
-  overflow: scroll;
+  overflow-y: scroll;
   /* margin-top: 20px; */
 }
 
@@ -444,7 +444,6 @@ div.tooltip-module {
 .button-container {
   position: relative;
   display: inline-block;
-  left: 100px;
 }
 
 button {

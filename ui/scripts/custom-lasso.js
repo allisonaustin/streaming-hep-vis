@@ -41,6 +41,7 @@ function mapReset() {
     } else {
         d3.selectAll('.lines-group path')
             .attr('stroke-opacity', 1)
+            .attr('stroke-width', 1);
     }
 
     d3.selectAll("#msTooltip").remove();
@@ -113,6 +114,7 @@ function initLasso(container, targetItems) {
                         return d3.select(this).attr('class') === itemId;
                     })
                     .attr('stroke-opacity', 1)
+                    .attr('stroke-width', 2)
                     // .attr('stroke', tableauColors['tab:blue'])
                     .raise();
             });
