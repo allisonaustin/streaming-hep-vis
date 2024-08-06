@@ -6,6 +6,7 @@ import {
 
 import * as g from './groups.js';
 import * as u from './update.js';
+import * as tooltipM from './tooltip-module.js'
 import { getFeature1, getFeature2, getState1, getState2, setValue, getType, getGridType, getOverviewType } from './stateManager.js';
 
 let timestamps = new Set(); // all timestamps
@@ -23,8 +24,8 @@ let y;
 let ticksCount = 15;
 
 const customColorScale = d3.scaleOrdinal()
-    .domain(Object.keys(pallette))
-    .range(Object.values(pallette).map(percentColToD3Rgb));
+    .domain([0, 1, 2])
+    .range([pallette.blue, pallette.green, pallette.purple].map(percentColToD3Rgb));
 
 function groupByDataType(data) {
     const groups = {};
@@ -717,8 +718,16 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
         .attr("cy", d => yScale(hasPC2 ? d.PC2 : d.PC1))
         .attr("r", 3)
         .attr("class", d => `pca-circle ${d.Measurement}`)
+        .attr("id", d => d.Measurement)
         .attr("stroke", "#D3D3D3")
         .attr("stroke-width", "1px")
-        .style("fill", d => customColorScale(d.Cluster));
+        .style("fill", d => customColorScale(d.Cluster))
+        .on("mouseover", function () {
+            tooltipM.getTooltip("msTooltip");
+            tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX - 40, d3.event.pageY - 20);
+        })
+        .on("mouseout", function () {
+            d3.select("#msTooltip").remove();
+        });
       
 } // end of fpca

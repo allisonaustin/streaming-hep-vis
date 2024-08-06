@@ -22,10 +22,12 @@ let colordata = [];
 let clusterdata = [];
 let nodes = [];
 
-const colorRange = d3.schemeCategory10;
 let colorcode;
 let colorType;
-let clusterColorScale;
+
+let clusterColorScale = d3.scaleOrdinal()
+    .domain([0, 1, 2])
+    .range([pallette.blue, pallette.green, pallette.purple].map(percentColToD3Rgb));
 
 function formatTick(d) {
     if (Math.abs(d) < 1000) {
@@ -67,10 +69,6 @@ function init(msdata, nodeList) {
             d3.max(colordata, d => d.val)
         ])
         .range(['#0000FF', '#00FF00', '#FFFF00', '#FF7F00', '#FF0000']);
-
-    clusterColorScale = d3.scaleOrdinal()
-        .domain(Object.keys(pallette))
-        .range(Object.values(pallette).map(percentColToD3Rgb));
 
 };
 
@@ -389,8 +387,7 @@ function appendLegend() {
     d3.select('#ms_color_legend').remove();
 
     legend = msContainer.append('g').attr('id', 'ms_color_legend')
-        .attr('transform', (d, i) =>
-            `translate(${width - marginMS.left}, ${marginMS.top})`);
+        .attr('transform', `translate(${width - marginMS.left}, ${marginMS.top})`);
 
     const clusters = Array.from({ length: 3 }, (_, i) => i);
 
@@ -438,9 +435,10 @@ export function updateScatterPlot(msdata, group, cdata, color) {
     if (colorType != 'cluster') {
         colordata = cdata;
         appendColorLegend();
-    } else {
-        appendLegend();
-    }
+    } 
+    // else {
+    //     appendLegend();
+    // }
 }
 
 export function updateScatterPlotProgressive(msdata, newCircId, newRackId) {

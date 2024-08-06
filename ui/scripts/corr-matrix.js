@@ -166,7 +166,6 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
                     // selectedYChart.attr('fill', `#${features.teal}`);
                     setValue(xLabel, yLabel);
                     document.getElementById('yGroupLabel').innerText = yLabel;
-                    console.log(getType())
                     u.updateMS(xLabel, yLabel, getType(), true);
                     // u.updateCorr(xLabel, yLabel);
                 })
