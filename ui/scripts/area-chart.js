@@ -9,6 +9,7 @@ let svgArea;
 let margin;
 let chartdata = [];
 let data;
+let sliderdata;
 let date = '';
 const timeFormat = d3.timeFormat('%H:%M');
 const timeParse = d3.timeParse('%Y-%m-%d %H:%M:%S');
@@ -21,6 +22,7 @@ export function drawSvg(svgData) {
     margin = svgData.margin;
     container = svgData.svg;
     data = svgData.data;
+    sliderdata = svgData.colordata;
     container.attr('viewBox', [0, 0, svgArea.width, svgArea.height]);
 
     data.forEach(obj => {
@@ -41,7 +43,7 @@ export function drawSvg(svgData) {
 
 export const chart = (data) => {
     const xScale = d3.scaleUtc()
-        .domain(d3.extent(data, d => d.timestamp))
+        .domain(d3.extent(sliderdata, d => d.timestamp))
         .range([margin.left, svgArea.width - margin.right])
         // .padding(0.1);
 
@@ -179,14 +181,15 @@ export const chart = (data) => {
 }
 
 export const appendSlider = (xScale, yScale) => {
-    const timestamps = chartdata.map(v => v.timestamp)
+    const timestamps = chartdata.map(v => v.timestamp);
+    const tsTimestamps = sliderdata.map(y => y.timestamp);
     const sliderRange = d3.sliderBottom()
         .min(d3.min(timestamps))
-        .max(new Date(1708588799000)) // FIX ME!!!!
+        .max(d3.max(timestamps))
         .width(svgArea.width - margin.left - margin.right - 50)
         .tickFormat(timeFormat)
         .ticks(15)
-        .default([d3.min(timestamps), d3.max(timestamps)])
+        .default([d3.min(tsTimestamps), d3.max(tsTimestamps)])
         .fill(`#${features.teal}`);
 
     sliderRange.on('onchange', val => {

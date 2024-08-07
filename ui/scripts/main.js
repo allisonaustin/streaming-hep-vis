@@ -141,10 +141,11 @@ async function initClusterView(data, dateValue) {
   lineClusterView.drawSvg(lineSvgData);
 }
 
-async function initEventView(data) {
+async function initEventView(manager_data, farm_data) {
   barSvgData.domId = 'ts_view';
   barSvgData.svg = d3.select(`#bar_svg`);
-  barSvgData.data = data;
+  barSvgData.data = manager_data;
+  barSvgData.colordata = farm_data;
   barSvgData.date = dateValue;
   const margin = { top: 35, right: 10, bottom: 40, left: 40 }
   barSvgData.svgArea = prepareSvgArea(
@@ -206,7 +207,7 @@ async function init(type, dateValue) {
   initClusterView(farm_data.data, dateValue)
   initCorrelationView(corrData)
   initMsPlotView(msData, fpcData)
-  initEventView(manager_data.data)
+  initEventView(manager_data.data, farm_data.data)
 }
 
 async function updateView(date) {

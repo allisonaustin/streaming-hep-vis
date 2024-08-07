@@ -66,17 +66,11 @@ def get_data(dir, filename, inc):
         farm_df['timestamp'] = farm_df['timestamp'].apply(lambda x: int(x) * 1000 if isinstance(x, int) else int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
         final_df = farm_df.replace({np.nan: None})
     else:
-        if (int(inc) == 0):
-            skip_rows = 167000
-            cols = pd.read_csv(filepath + dir + '/' + filename, nrows=1).columns
-            df = pd.read_csv(filepath + dir + '/' + filename, skiprows=1, names=cols)
-        else:
-            df = pd.read_csv(filepath + dir + '/' + filename, names=cols, skiprows=1)
-
+        df = pd.read_csv(filepath + dir + '/' + filename)
         df['timestamp'] = df['timestamp'].apply(lambda x: int(x) * 1000 if isinstance(x, int) else int(datetime.strptime(x, '%Y-%m-%d %H:%M:%S').timestamp()) * 1000)
         first_ts = farm_df['timestamp'].iloc[0]
         last_ts = farm_df['timestamp'].max()
-        df = df[(df['timestamp'] >= first_ts) & (df['timestamp'] <= last_ts)]
+        # df = df[(df['timestamp'] >= first_ts) & (df['timestamp'] <= last_ts)]
         df = df[df['datadisk'] == 7]
         final_df = df.replace({np.nan: None}) 
     
@@ -245,7 +239,7 @@ def getPCs(X_i):
     else:
         kmeans = KMeans(n_clusters=3)
         kmeans.fit(P_fin[['PC1']])
-        
+
     P_fin['Cluster'] = kmeans.fit_predict(P_fin['PC1', 'PC2'])
 
     explained_var = pca.explained_variance_ratio_

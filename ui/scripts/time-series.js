@@ -89,7 +89,7 @@ export function createCharts(svgData) {
 
     // updating chart height
     // svgArea.height = chartHeight * numCharts;
-    const totalHeight = (chartHeight + svgArea.margin.top + 15) * numCharts
+    const totalHeight = (chartHeight + svgArea.margin.top + 30) * numCharts
     chartContainer.attr('viewBox', [0, -svgArea.margin.top, svgArea.width + svgArea.margin.left, totalHeight + svgArea.margin.top]);
 
     let dock = chartContainer.append("g")
