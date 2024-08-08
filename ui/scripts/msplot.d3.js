@@ -187,8 +187,8 @@ export function showTooltip(item) {
     const svgContainer = d3.select("#msplot-svg").node();
     const svgBoundingBox = svgContainer.getBoundingClientRect();
 
-    const tooltipX = svgBoundingBox.left + circleX - 70;
-    const tooltipY = svgBoundingBox.top + circleY - 20; 
+    const tooltipX = svgBoundingBox.left + circleX - 80;
+    const tooltipY = svgBoundingBox.top + circleY + 30; 
     tooltipM.addToolTip(`${circle.attr("id")}`, tooltipX, tooltipY);
 }
 

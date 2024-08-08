@@ -122,7 +122,7 @@ function initLasso(container, targetItems) {
             selectedItems.forEach(itemId => {
                 d3.selectAll(".pca-plot").selectAll('circle')
                     .filter(function() {
-                        return d3.select(this).attr('class').includes(itemId);
+                        return d3.select(this).attr('class') === itemId;
                     })
                     .attr('fill-opacity', 1)
                     .attr('stroke', tableauColors['tab:blue'])
