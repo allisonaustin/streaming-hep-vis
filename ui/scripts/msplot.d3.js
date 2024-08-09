@@ -208,7 +208,7 @@ function appendCircles(cols) {
         .attr("stroke", "#D3D3D3")
         .attr("stroke-width", "1px")
         .attr('fill', (d, i) => {
-            return clusterColorScale(clusterdata.find(item => item.Measurement === nodes[i])?.Cluster || '#000000');
+            return clusterColorScale(clusterdata.find(item => item.Measurement === nodes[i] && item.Col === cols)?.Cluster || '#000000');
         })
         .on("mouseover", function () {
             tooltipM.getTooltip("msTooltip");
@@ -295,7 +295,7 @@ function updateTitle(title) {
         .text(title);
 }
 
-function updateCircles() {
+function updateCircles(group) {
     let circles = msContainer
         .selectAll(".ms-circle")
         .data(data);
@@ -308,7 +308,7 @@ function updateCircles() {
             .attr("cy", d => yms(d[1]))
             .attr("r", ms_circle_r)
             .attr('fill', (d, i) => {
-                return clusterColorScale(clusterdata.find(item => item.Measurement === nodes[i])?.Cluster || '#000000');
+                return clusterColorScale(clusterdata.find(item => item.Measurement === nodes[i] && item.Col === group)?.Cluster || '#000000');
             })
     } else {
         colorcode = d3.scaleLinear()
@@ -428,7 +428,7 @@ export function updateScatterPlot(msdata, group, cdata, color) {
     updateData(msdata);
     updateAxis();
     updateTitle(group);
-    updateCircles();
+    updateCircles(group[0]);
     showMapCircles();
     visUpdateFlag = false;
     // console.log("updateScatterPlot", visUpdateFlag)
