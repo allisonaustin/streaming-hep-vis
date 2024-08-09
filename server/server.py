@@ -25,9 +25,11 @@ df = pd.DataFrame()
 X_ori = pd.DataFrame()
 filepath = '../ui/data/'
 fname = ''
-init_timepts = 70000
+msfile = 'ms_final-17-21.csv'
+pcafile = 'P_final-17-21.csv'
+init_timepts = 190000 # 145000 # 70000
 inc_rows = 1500 
-skip_rows = 167000
+skip_rows = 300000 # 350000 # 167000
 farm_cols = []
 cols = []
 n_inc = 0
@@ -54,7 +56,6 @@ def get_data(dir, filename, inc):
 
     if (dir == 'farm'):
         if int(inc) == 0:
-            skip_rows = 167000
             farm_cols = pd.read_csv(filepath + dir + '/' + filename, nrows=1).columns
             farm_df = pd.read_csv(filepath + dir + '/' + filename, skiprows=skip_rows, nrows=init_timepts, names=farm_cols)
             X_ori = farm_df
@@ -171,6 +172,7 @@ def get_ms_inc_all(groups, incremental_update, progressive_update):
     global n_inc
     global prog
     global inc_fdo
+    global msfile
 
     groups = ['cpu_idle', 'cpu_nice', 'cpu_system', 'cpu_aidle', 'cpu_num', 'cpu_speed', 'cpu_wio', 
             'bytes_in', 'bytes_out', 'disk_free', 'disk_total', 'part_max_used', 'mem_buffers', 
@@ -188,7 +190,7 @@ def get_ms_inc_all(groups, incremental_update, progressive_update):
     #     max_value = max(ms_data[ms_data.columns[i]])
     #     ms_data_final[ms_data.columns[i]] = (ms_data[ms_data.columns[i]] - min_value) / (max_value - min_value)
 
-    ms_data_final = pd.read_csv(filepath + 'farm/ms_final.csv', index_col=0)
+    ms_data_final = pd.read_csv(filepath + 'farm/' + msfile, index_col=0)
 
     init_n = len(X_ori['nodeId'].unique())
 
@@ -272,13 +274,14 @@ def get_fpca(k, s):
     global farm_df 
     global farm_cols
     global filepath
+    global pcafile
 
     pca_cols = ['cpu_idle', 'cpu_nice', 'cpu_system', 'cpu_aidle', 'cpu_num', 'cpu_speed', 'cpu_wio', 
             'bytes_in', 'bytes_out', 'disk_free', 'disk_total', 'part_max_used', 'mem_buffers', 
             'mem_cached', 'mem_free', 'mem_total', 'swap_total', 'swap_free', 
             'proc_total', 'boottime', 'load_fifteen', 'load_five', 'load_one']
 
-    P_final = pd.read_csv(filepath + 'farm/P_final.csv', index_col=0)
+    P_final = pd.read_csv(filepath + 'farm/' + pcafile, index_col=0)
 
     # P_final = pd.DataFrame()
 

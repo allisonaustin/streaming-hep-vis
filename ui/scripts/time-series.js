@@ -344,7 +344,7 @@ export const chart = (container, groupData, group, svgArea) => {
             .on('mouseover', function (event, d) {
                 if (d3.select(this).attr("id") == 'novadaq-far-farm-130' || d3.select(this).attr("id") == 'novadaq-far-farm-142') {
                     tooltipM.getTooltip("linesTooltip");
-                    tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX - 40, d3.event.pageY - 20);
+                    tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX - 40, d3.event.pageY + 20);
                 }
             })
             .on("mouseout", function () {
@@ -734,7 +734,7 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
         .on("mouseover", function () {
             if (d3.select(this).attr("id") == 'novadaq-far-farm-130' || d3.select(this).attr("id") == 'novadaq-far-farm-142') {
                 tooltipM.getTooltip("pcaTooltip");
-                tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX - 40, d3.event.pageY - 20);
+                tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX - 40, d3.event.pageY + 40);
             }
         })
         .on("mouseout", function () {
