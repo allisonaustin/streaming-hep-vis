@@ -28,6 +28,7 @@ const customColorScale = d3.scaleOrdinal()
     .range([pallette.blue, pallette.green, pallette.purple].map(percentColToD3Rgb));
 
 const formatAxisTitle = d3.format(".2f");
+const formatDecimal = d3.format(".2s");
 
 function groupByDataType(data) {
     const groups = {};
@@ -252,7 +253,7 @@ export const chart = (container, groupData, group, svgArea) => {
     container.append('g')
         .attr('class', 'y-axis')
         .attr('transform', `translate(${svgArea.margin.left}, 0)`)
-        .call(d3.axisLeft(y))
+        .call(d3.axisLeft(y).tickFormat(formatDecimal))
         .call(g => g.select(".domain").remove())
         .call(g => g.selectAll(".tick line").clone()
             .attr("x2", svgArea.width - svgArea.margin.left - svgArea.margin.right)
@@ -339,7 +340,16 @@ export const chart = (container, groupData, group, svgArea) => {
             .attr('stroke', customColorScale(cluster))
             .attr('stroke-width', 1)
             .attr('stroke-opacity', getOverviewType() == 'lines' ? 1 : 0)
-            .attr('d', line);
+            .attr('d', line)
+            .on('mouseover', function (event, d) {
+                if (d3.select(this).attr("id") == 'novadaq-far-farm-130' || d3.select(this).attr("id") == 'novadaq-far-farm-142') {
+                    tooltipM.getTooltip("linesTooltip");
+                    tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX - 40, d3.event.pageY - 20);
+                }
+            })
+            .on("mouseout", function () {
+                d3.select("#linesTooltip").remove();
+            });
     }
 
     container.append("rect")
@@ -640,7 +650,6 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
     let height = svgArea.height;
     let width = svgArea.height * 1.5;
     let margin = { top: 10, left: 35, right: 10, bottom: 40 };
-    const formatDecimal = d3.format(".2s");
 
     if (filteredData.length == 0) {
         return;
@@ -717,17 +726,19 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
         .attr("cx", (d, i) => hasPC2 ? xScale(d.PC1) : xScale(i))
         .attr("cy", d => yScale(hasPC2 ? d.PC2 : d.PC1))
         .attr("r", 3)
-        .attr("class", d => `pca-circle ${d.Measurement}`)
+        .attr("class", d => `${d.Measurement}`)
         .attr("id", d => d.Measurement)
         .attr("stroke", "#D3D3D3")
         .attr("stroke-width", "1px")
         .style("fill", d => customColorScale(d.Cluster))
         .on("mouseover", function () {
-            tooltipM.getTooltip("msTooltip");
-            tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX - 40, d3.event.pageY - 20);
+            if (d3.select(this).attr("id") == 'novadaq-far-farm-130' || d3.select(this).attr("id") == 'novadaq-far-farm-142') {
+                tooltipM.getTooltip("pcaTooltip");
+                tooltipM.addToolTip(`${d3.select(this).attr("id")}`, d3.event.pageX - 40, d3.event.pageY - 20);
+            }
         })
         .on("mouseout", function () {
-            d3.select("#msTooltip").remove();
+            d3.select("#pcaTooltip").remove();
         });
       
 } // end of fpca

@@ -45,6 +45,8 @@ function mapReset() {
     }
 
     d3.selectAll("#msTooltip").remove();
+    d3.selectAll("#pcaTooltip").remove();
+    d3.selectAll("#linesTooltip").remove();
 };
 
 function initLasso(container, targetItems) {
@@ -90,6 +92,7 @@ function initLasso(container, targetItems) {
 
         selectedItems = [];
         selectedNodes = [];
+        // Showing tooltips for ms plot circles
         selectedcircles.each(function () {
             selectedItems.push(d3.select(this).property("id"));
             var node = d3.select(this).attr("class").substring("ms-circle ".length).replace(" selected", "");

@@ -7,6 +7,7 @@ from pygam import GAM, s
 from scipy.interpolate import BSpline, splrep, splev
 from sklearn.cluster import KMeans
 from sklearn.decomposition import PCA
+from sklearn.preprocessing import StandardScaler
 from datetime import datetime
 import os
 import json
@@ -220,8 +221,11 @@ def getPCs(X_i):
     mean_hat = baseline.mean(axis=0)
     demeaned = baseline - mean_hat
 
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(demeaned)
+
     pca = PCA()
-    pca.fit(demeaned)
+    pca.fit(scaled_data)
     scores = pca.transform(demeaned)
 
     explained_variance_ratio_cumsum = np.cumsum(pca.explained_variance_ratio_)

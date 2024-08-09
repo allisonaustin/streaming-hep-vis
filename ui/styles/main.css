@@ -426,7 +426,9 @@ input:checked+.slider:before {
   fill-opacity: .5;
 }
 
-
+.label-text {
+  margin-left: 10px;
+}
 
 div.tooltip-module {
   position: absolute;
@@ -444,6 +446,7 @@ div.tooltip-module {
 .button-container {
   position: relative;
   display: inline-block;
+  margin-left:20px;
 }
 
 button {
