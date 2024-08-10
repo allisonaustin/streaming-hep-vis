@@ -5,6 +5,4 @@ server/data
 package-lock.json
 .DS_STORE
 
-*.ipynb
-
 node_modules/
