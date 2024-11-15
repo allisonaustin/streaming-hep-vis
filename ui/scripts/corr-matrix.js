@@ -133,7 +133,7 @@ const chart = (container, area, margin, data, selectedX, selectedY) => {
         .call(colorAxisTicks);
 
 
-    let grid = container.append('g').attr('class', 'grid')
+    let grid = container.append('g').attr('class', 'grid-corr')
         .attr('transform', `translate(${margin.left + 20}, ${margin.top})`)
 
     for (let i = 0; i < numRows; i++) {

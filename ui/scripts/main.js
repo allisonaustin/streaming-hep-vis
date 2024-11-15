@@ -54,7 +54,7 @@ async function getMsData(xGroup, yGroup, inc = 0, prog = 0) {
     if (!res.ok) {
       throw new Error('Error getting data');
     }
-    const data = res.json();
+    const data = await res.json();
     return data
   } catch (error) {
     console.error('Error:', error);
@@ -68,7 +68,7 @@ async function getCorrelationData() {
     if (!res.ok) {
       throw new Error('Error getting data:', farmGroup);
     }
-    const data = res.json();
+    const data = await res.json();
     return data
   } catch (error) {
     console.error('Error:', error);
@@ -82,7 +82,7 @@ async function getFPCData() {
     if (!res.ok) {
       throw new Error('Error getting data:', farmGroup);
     }
-    const data = res.json();
+    const data = await res.json();
     return data
   } catch (error) {
     console.error('Error:', error);
@@ -259,21 +259,30 @@ window.updateGrid = () => {
 window.handleGridChange = () => {
   option = document.querySelector('input[name="grid"]:checked').value;
   setOverviewType(option);
-  if (option == 'lines') {
-    // d3.selectAll('.grid-rect')
-    //   .attr('fill', 'none');
-    d3.selectAll('.grid-rect')
-      .attr('display', 'none');
-    d3.selectAll('.lines-group')
-      .selectAll('path')
-      .attr('stroke-opacity', 1)
-  } else {
-    d3.selectAll('.grid-rect')
-      .attr('display', 'block');
-    d3.selectAll('.lines-group')
-      .selectAll('path')
-      .attr('stroke-opacity', 0)
-  }
+
+  const isHeatmapVisible = option === 'heatmap';
+
+  d3.selectAll('.grid')
+    .style('display', isHeatmapVisible ? 'block' : 'none');
+
+  d3.selectAll('.lines-group')
+    .style('display', isHeatmapVisible ? 'none' : 'block');
+
+  // if (option == 'lines') {
+  //   // d3.selectAll('.grid-rect')
+  //   //   .attr('fill', 'none');
+  //   d3.selectAll('.grid-rect')
+  //     .attr('display', 'none');
+  //   d3.selectAll('.lines-group')
+  //     .selectAll('path')
+  //     .attr('stroke-opacity', 1)
+  // } else {
+  //   d3.selectAll('.grid-rect')
+  //     .attr('display', 'block');
+  //   d3.selectAll('.lines-group')
+  //     .selectAll('path')
+  //     .attr('stroke-opacity', 0)
+  // }
 }
 
 window.updateChart = () => {

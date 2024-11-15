@@ -165,41 +165,89 @@ export function createCharts(svgData) {
     }
     const pcaSvg = d3.select('#pca_svg')
     const chartPadding = 25;
-    pcaSvg.attr("viewBox", [0, 0, chartSvgArea.height*2.3, ((chartSvgArea.height) * numCharts) + ((chartPadding + 2 * svgArea.margin.top) * numCharts)])
-   
+    pcaSvg.attr("viewBox", [0, 0, chartSvgArea.height * 2.3, ((chartSvgArea.height) * numCharts) + ((chartPadding + 2 * svgArea.margin.top) * numCharts)])
+
     appendLegend(chartContainer, 3, chartSvgArea);
+
+
+
+    const observerOptions = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1
+    };
+
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const group = entry.target.getAttribute('data-group');
+                if (!entry.target.getAttribute('data-rendered')) {
+                    const xOffset = parseFloat(entry.target.getAttribute('data-x-offset'));
+                    const yOffset = parseFloat(entry.target.getAttribute('data-y-offset'));
+                    const container = d3.select(entry.target);
+
+
+                    functs = chart(container, targetData[group], group, chartSvgArea);
+                    appendFPCA(group, chartSvgArea, xOffset, yOffset);
+
+                    const isHeatmapVisible = getOverviewType() === 'heatmap';
+                    container.select('.grid').style('display', isHeatmapVisible ? 'block' : 'none');
+                    container.select('.lines-group').style('display', isHeatmapVisible ? 'none' : 'block');
+    
+
+                    entry.target.setAttribute('data-rendered', 'true');
+                }
+            }
+        });
+    }, observerOptions);
 
     for (let group in targetData) {
 
         const xOffset = 0;
         const yOffset = row * (chartHeight + svgArea.margin.top + chartPadding);
 
+        // const container = chartContainer.append("g")
+        //     .attr('id', `${group}-heatmap`)
+        //     .attr("transform", `translate(${xOffset}, ${yOffset})`)
+
+        // container.append('rect')
+        //     .attr('id', `${group}-heatmap-cell`)
+        //     .attr("width", chartWidth)
+        //     .attr("height", chartHeight + svgArea.margin.top)
+        //     .attr('margin-top', '5px')
+        //     .attr("transform", `translate(0, -10)`)
+        //     // .attr("fill", () => {
+        //     //     if (group === svgData.selectedX) {
+        //     //         return `#${features.blue}`
+        //     //     } else if (group === svgData.selectedY) {
+        //     //         return `#${features.teal}`
+        //     //     } else {
+        //     //         return 'none'
+        //     //     }
+        //     // })
+        //     .attr('fill', 'none')
+        //     .attr("stroke", "none")
+        //     .attr("rx", 5)
+        //     .attr("ry", 5);
+
+        // functs = chart(container, targetData[group], group, chartSvgArea)
+        // appendFPCA(group, chartSvgArea, xOffset, yOffset);
+
         const container = chartContainer.append("g")
             .attr('id', `${group}-heatmap`)
-            .attr("transform", `translate(${xOffset}, ${yOffset})`)
+            .attr('data-group', group)
+            .attr('data-x-offset', xOffset)
+            .attr('data-y-offset', yOffset)
+            .attr("transform", `translate(${xOffset}, ${yOffset})`);
 
+        
         container.append('rect')
-            .attr('id', `${group}-heatmap-cell`)
-            .attr("width", chartWidth)
-            .attr("height", chartHeight + svgArea.margin.top)
-            .attr('margin-top', '5px')
-            .attr("transform", `translate(0, -10)`)
-            // .attr("fill", () => {
-            //     if (group === svgData.selectedX) {
-            //         return `#${features.blue}`
-            //     } else if (group === svgData.selectedY) {
-            //         return `#${features.teal}`
-            //     } else {
-            //         return 'none'
-            //     }
-            // })
-            .attr('fill', 'none')
-            .attr("stroke", "none")
-            .attr("rx", 5)
-            .attr("ry", 5);
+            .attr('width', svgArea.width)
+            .attr('height', chartHeight)
+            .attr('fill', 'none');
 
-        functs = chart(container, targetData[group], group, chartSvgArea)
-        appendFPCA(group, chartSvgArea, xOffset, yOffset);
+        
+        observer.observe(container.node());
 
         col++;
         if (col >= numCols) {
@@ -245,7 +293,7 @@ export const chart = (container, groupData, group, svgArea) => {
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
     let yInterval = (yDom[1] - yDom[0]) / ticksCount;
     let yDomain = d3.range(yDom[0], yDom[1] + yInterval + yInterval, yInterval).map(value => +value.toFixed(2));
-    
+
     y = d3.scaleLinear()
         .domain([d3.min(yDomain), d3.max(yDomain)])
         .range([svgArea.height - svgArea.margin.bottom, svgArea.margin.top])
@@ -339,7 +387,7 @@ export const chart = (container, groupData, group, svgArea) => {
             .attr('clip-path', `url(#${clipPathId})`)
             .attr('stroke', customColorScale(cluster))
             .attr('stroke-width', 1)
-            .attr('stroke-opacity', getOverviewType() == 'lines' ? 1 : 0)
+            .attr('stroke-opacity', 1)
             .attr('d', line)
             .on('mouseover', function (event, d) {
                 if (d3.select(this).attr("id") == 'novadaq-far-farm-130' || d3.select(this).attr("id") == 'novadaq-far-farm-142') {
@@ -496,8 +544,16 @@ export const updateHeatmaps = (svgData, newData) => {
         .slice(numIntervals)
         .concat(Array.from({ length: numIntervals }, (_, index) => new Date(newTimestamps[0].getTime() + index * timeInterval)))
 
+    // for (let group in targetData) {
+    //     functs = updateChart(chartContainer, targetData[group], group, svgData.svgArea, functs.x, functs.y)
+    // }
     for (let group in targetData) {
-        functs = updateChart(chartContainer, targetData[group], group, svgData.svgArea, functs.x, functs.y)
+        
+        const container = d3.select(`#${group}-heatmap`);
+        if (container.empty() || !container.attr('data-rendered')) {
+            continue; 
+        }
+        functs = updateChart(chartContainer, targetData[group], group, svgData.svgArea);
     }
 }
 
@@ -599,7 +655,7 @@ export const updateTime = (timeDom) => {
         Object.keys(targetData[key]).forEach((nodeId) => {
             // Retrieve the data for the current nodeId
             let groupData = targetData[key][nodeId];
-    
+
             // Update the paths within the lines-group
             linesGroup.selectAll('path')
                 .datum(groupData)
@@ -614,24 +670,24 @@ export const appendLegend = (svg, numClusters) => {
     const legendHeight = numClusters * 20;
     const legendX = svgdata.svgArea.width / 2 + 100;
     const legendY = -15;
-    
+
     const legend = svg.append("g")
         .attr('transform', `translate(${legendX}, ${legendY})`)
         .attr('class', 'legend');
 
     const clusters = Array.from({ length: numClusters }, (_, i) => i);
-    
+
     legend.selectAll('rect')
         .data(clusters)
         .enter()
         .append('rect')
         .attr('id', d => `cluster-${d}`)
-        .attr('x', (d, i) => i * 70) 
+        .attr('x', (d, i) => i * 70)
         .attr('y', 0)
         .attr('width', 18)
         .attr('height', 18)
         .attr('fill', d => customColorScale(d))
-    
+
     legend.selectAll('text')
         .data(clusters)
         .enter()
@@ -646,7 +702,7 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
     let filteredData = pcaData.filter(x => x.Col === group);
 
     const hasPC2 = filteredData.some(d => d.PC2 !== null);
-    
+
     let height = svgArea.height;
     let width = svgArea.height * 1.5;
     let margin = { top: 10, left: 35, right: 10, bottom: 40 };
@@ -669,22 +725,22 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
             svgdata.selectedX = group;
             u.updateMS(group, svgdata.selectedY, getType(), true);
         });
-    
+
     // x axis
     const xScale = hasPC2 ? d3.scaleLinear()
         .domain(d3.extent(filteredData, d => d.PC1))
         .range([0, width]) : d3.scaleLinear()
-        .domain([0, filteredData.length - 1])
-        .range([0, width]);
-    
+            .domain([0, filteredData.length - 1])
+            .range([0, width]);
+
     const xAxisGroup = container.append("g")
         .attr("transform", `translate(${margin.left},${height + margin.top})`)
         .call(d3.axisBottom(xScale).tickFormat(formatDecimal));
-    
+
     xAxisGroup.selectAll("text")
         .attr("transform", "rotate(-45)")
         .style("text-anchor", "end");
-    
+
     xAxisGroup.append("text")
         .attr("x", width + margin.left)
         .attr("y", -margin.top + 10)
@@ -696,18 +752,18 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
     const yScale = hasPC2 ? d3.scaleLinear()
         .domain(d3.extent(filteredData, d => d.PC2))
         .range([height, 0]) : d3.scaleLinear()
-        .domain(d3.extent(filteredData, d => d.PC1))
-        .range([height, 0]);
-    
+            .domain(d3.extent(filteredData, d => d.PC1))
+            .range([height, 0]);
+
     container.append("g")
         .attr('transform', `translate(${margin.left},${margin.top})`)
         .call(d3.axisLeft(yScale).tickFormat(formatDecimal))
         .append("text")
-            .attr("x", 10)
-            .attr("y", -5)
-            .attr("fill", "black")
-            .style("text-anchor", "middle")
-            .text(hasPC2 ? `PC2 (${formatAxisTitle(filteredData[0].ExpVariance2 * 100)}%)` : `PC1 (${formatAxisTitle(filteredData[0].ExpVariance1 * 100)}%)`);
+        .attr("x", 10)
+        .attr("y", -5)
+        .attr("fill", "black")
+        .style("text-anchor", "middle")
+        .text(hasPC2 ? `PC2 (${formatAxisTitle(filteredData[0].ExpVariance2 * 100)}%)` : `PC1 (${formatAxisTitle(filteredData[0].ExpVariance1 * 100)}%)`);
 
     // chart title
     container.append("text")
@@ -740,5 +796,5 @@ export const appendFPCA = (group, svgArea, xOffset, yOffset) => {
         .on("mouseout", function () {
             d3.select("#pcaTooltip").remove();
         });
-      
+
 } // end of fpca
