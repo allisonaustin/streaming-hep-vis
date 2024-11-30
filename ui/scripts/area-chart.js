@@ -11,6 +11,12 @@ let chartdata = [];
 let data;
 let sliderdata;
 let date = '';
+
+let xScale, yScale, xAxis, yAxis, area;
+let sliderRange;
+let currentStartTime, currentEndTime;
+let color;
+
 const timeFormat = d3.timeFormat('%H:%M');
 const timeParse = d3.timeParse('%Y-%m-%d %H:%M:%S');
 const formatCount = d3.format(",.0f");
@@ -24,6 +30,8 @@ export function drawSvg(svgData) {
     data = svgData.data;
     sliderdata = svgData.colordata;
     container.attr('viewBox', [0, 0, svgArea.width, svgArea.height]);
+
+    chartdata = []; 
 
     data.forEach(obj => {
         Object.keys(obj).forEach(key => {
@@ -118,11 +126,11 @@ export const chart = (data) => {
         .value((d, key) => d[key] || 0)
         (nestedData);
 
-    const color = d3.scaleOrdinal()
+    color = d3.scaleOrdinal()
       .domain(series.map(d => d.key))
       .range(d3.schemeTableau10);
 
-    const area = d3.area()
+    area = d3.area()
         .x(d => xScale(d.data.timestamp)) 
         .y0(d => yScale(d[0]))             
         .y1(d => yScale(d[1])); 
@@ -180,10 +188,15 @@ export const chart = (data) => {
     appendSlider(xScale, yScale)
 }
 
-export const appendSlider = (xScale, yScale) => {
+export const appendSlider = (xScaleParam, yScaleParam) => {
+
+    xScale = xScaleParam;
+    yScale = yScaleParam;
+
     const timestamps = chartdata.map(v => v.timestamp);
     const tsTimestamps = sliderdata.map(y => y.timestamp);
-    const sliderRange = d3.sliderBottom()
+
+    sliderRange = d3.sliderBottom()
         .min(d3.min(timestamps))
         .max(d3.max(timestamps))
         .width(svgArea.width - margin.left - margin.right - 50)
@@ -192,8 +205,13 @@ export const appendSlider = (xScale, yScale) => {
         .default([d3.min(tsTimestamps), d3.max(tsTimestamps)])
         .fill(`#${features.teal}`);
 
+    [currentStartTime, currentEndTime] = sliderRange.value();
+
     sliderRange.on('onchange', val => {
-        let newdata = chartdata.filter(d => d.timestamp >= val[0] && d.timestamp <= val[1])
+        currentStartTime = val[0];
+        currentEndTime = val[1];
+        // let newdata = chartdata.filter(d => d.timestamp >= val[0] && d.timestamp <= val[1])
+        let newdata = chartdata.filter(d => d.timestamp >= currentStartTime && d.timestamp <= currentEndTime);
         
         xScale.domain(d3.extent(newdata, d => d.timestamp));
         yScale.domain([0, 350 + d3.max(newdata, d => d.count)]);
@@ -230,7 +248,7 @@ export const appendSlider = (xScale, yScale) => {
             .domain(keys)
             .range(d3.schemeTableau10);
 
-        const area = d3.area()
+        area = d3.area()
             .x(d => xScale(d.data.timestamp)) 
             .y0(d => yScale(d[0]))             
             .y1(d => yScale(d[1]));
@@ -265,35 +283,109 @@ export const appendSlider = (xScale, yScale) => {
     timeRange.call(sliderRange);
 }
 
-export const updateChart = (svg) => {
-    let eventData = Object.keys(svg.data).map(key => ({
-        timestamp: timeParse(key),
-        count: +parseInt(svg.data[key])
-    }));
+export const updateChart = () => {
+    
+    currentEndTime = d3.timeMinute.offset(currentEndTime, 1);
 
-    const xScale = d3.scaleUtc()
-        .domain(d3.extent(eventData, d => d.timestamp))
-        .range([margin.left, svgArea.width - margin.right])
+   
+    if (currentEndTime > sliderRange.max()) {
+        currentEndTime = sliderRange.max();
+    }
 
-    const yScale = d3.scaleLinear()
-        .domain([0, 350 + d3.max(eventData, d => d.count)])
-        .range([svgArea.height - margin.bottom, margin.top]);
+    
+    sliderRange.value([currentStartTime, currentEndTime]);
 
-    const xAxis = d3.axisBottom(xScale)
-        // .tickValues(eventData.filter((d, i) => i % 15 === 0).map(d => d.timestamp))
-        .tickFormat(d3.timeFormat('%H:%M'))
+    
+    let newdata = chartdata.filter(d => d.timestamp >= currentStartTime && d.timestamp <= currentEndTime);
+
+    xScale.domain(d3.extent(newdata, d => d.timestamp));
+    yScale.domain([0, 350 + d3.max(newdata, d => d.count)]);
+
+    xAxis = d3.axisBottom(xScale)
+        .tickFormat(timeFormat)
         .tickSizeOuter(0);
 
-    container.select(".x-axis")
+    d3.selectAll(".x-axis")
         .transition()
         .duration(750)
         .call(xAxis);
 
-    // Update the y-axis
-    const yAxis = d3.axisLeft(yScale).ticks(svgArea.height / 40);
+    yAxis = d3.axisLeft(yScale).ticks(svgArea.height / 40);
 
     container.select(".y-axis")
         .transition()
         .duration(750)
         .call(yAxis);
+
+    const keys = Array.from(new Set(newdata.map(d => d.key))).reverse();
+    const nestedData = d3.groups(newdata, d => d.timestamp)
+        .map(([timestamp, values]) => ({
+            timestamp,
+            ...Object.fromEntries(values.map(d => [d.key, d.count]))
+        }));
+
+    const series = d3.stack()
+        .keys(keys)
+        .value((d, key) => d[key] || 0)
+        (nestedData);
+
+    // Use existing color scale
+    area = d3.area()
+        .x(d => xScale(d.data.timestamp))
+        .y0(d => yScale(d[0]))
+        .y1(d => yScale(d[1]));
+
+    // Updating stacks
+    const areasGroup = container.select(".areas");
+    const paths = areasGroup.selectAll("path")
+        .data(series);
+
+    paths.enter()
+        .append("path")
+        .attr("class", "area")
+        .attr('id', d => d.key)
+        .attr("fill", d => color(d.key))
+        .merge(paths)
+        .transition()
+        .duration(750)
+        .attr("d", area);
+
+    paths.exit().remove();
+
+    // Updating time series
+    // updateTime(d3.extent(newdata, d => d.timestamp))
 }
+
+// export const updateChart = (svg) => {
+//     let eventData = Object.keys(svg.data).map(key => ({
+//         timestamp: timeParse(key),
+//         count: +parseInt(svg.data[key])
+//     }));
+
+//     const xScale = d3.scaleUtc()
+//         .domain(d3.extent(eventData, d => d.timestamp))
+//         .range([margin.left, svgArea.width - margin.right])
+
+//     const yScale = d3.scaleLinear()
+//         .domain([0, 350 + d3.max(eventData, d => d.count)])
+//         .range([svgArea.height - margin.bottom, margin.top]);
+
+//     const xAxis = d3.axisBottom(xScale)
+//         // .tickValues(eventData.filter((d, i) => i % 15 === 0).map(d => d.timestamp))
+//         .tickFormat(d3.timeFormat('%H:%M'))
+//         .tickSizeOuter(0);
+
+//     container.select(".x-axis")
+//         .transition()
+//         .duration(750)
+//         .call(xAxis);
+
+//     // Update the y-axis
+//     const yAxis = d3.axisLeft(yScale).ticks(svgArea.height / 40);
+
+//     container.select(".y-axis")
+//         .transition()
+//         .duration(750)
+//         .call(yAxis);
+// }
+

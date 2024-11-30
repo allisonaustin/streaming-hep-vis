@@ -193,7 +193,7 @@ export function createCharts(svgData) {
                     const isHeatmapVisible = getOverviewType() === 'heatmap';
                     container.select('.grid').style('display', isHeatmapVisible ? 'block' : 'none');
                     container.select('.lines-group').style('display', isHeatmapVisible ? 'none' : 'block');
-    
+
 
                     entry.target.setAttribute('data-rendered', 'true');
                 }
@@ -240,13 +240,13 @@ export function createCharts(svgData) {
             .attr('data-y-offset', yOffset)
             .attr("transform", `translate(${xOffset}, ${yOffset})`);
 
-        
+
         container.append('rect')
             .attr('width', svgArea.width)
             .attr('height', chartHeight)
             .attr('fill', 'none');
 
-        
+
         observer.observe(container.node());
 
         col++;
@@ -266,19 +266,36 @@ export const chart = (container, groupData, group, svgArea) => {
         .domain([timeExtent[0].getTime(), timeExtent[1].getTime()])
         .range([svgArea.margin.left, svgArea.width - svgArea.margin.right])
 
-    xDomain = d3.timeMinute.every(5).range(...timeExtent);
+    // xDomain = d3.timeMinute.every(5).range(...timeExtent);
+    // const chartXAxis = d3.axisBottom(x)
+    //     .tickValues(xDomain.filter((d, i) => i % 3 === 0))
+    //     .tickFormat(d3.timeFormat('%H:%M'))
+    //     .tickSizeOuter(0);
+
+    // container.append('g')
+    //     .attr('id', `x-axis-${group}`)
+    //     .attr('class', `x-axis-t`)
+    //     .attr('transform', `translate(0, ${svgArea.height})`)
+    //     .call(chartXAxis)
+    //     .selectAll('text')
+    //     // .attr('transform', 'rotate(-45)') 
+    //     .style('font-size', '10')
+    //     .style('text-anchor', 'end');
+
+    xDomain = d3.timeMinute.every(5).range(timeExtent[0], timeExtent[1]);
+
     const chartXAxis = d3.axisBottom(x)
-        .tickValues(xDomain.filter((d, i) => i % 3 === 0))
-        .tickFormat(d3.timeFormat('%H:%M'))
+        .tickValues(xDomain.filter((d, i) => i % 6 === 0))
+        .tickFormat(timeFormat)
         .tickSizeOuter(0);
 
     container.append('g')
         .attr('id', `x-axis-${group}`)
-        .attr('class', `x-axis`)
+        .attr('class', `x-axis-${group}`)
         .attr('transform', `translate(0, ${svgArea.height})`)
         .call(chartXAxis)
         .selectAll('text')
-        // .attr('transform', 'rotate(-45)') 
+        // .attr('transform', 'rotate(-45)')
         .style('font-size', '10')
         .style('text-anchor', 'end');
 
@@ -299,7 +316,7 @@ export const chart = (container, groupData, group, svgArea) => {
         .range([svgArea.height - svgArea.margin.bottom, svgArea.margin.top])
 
     container.append('g')
-        .attr('class', 'y-axis')
+        .attr('class', 'y-axis-t')
         .attr('transform', `translate(${svgArea.margin.left}, 0)`)
         .call(d3.axisLeft(y).tickFormat(formatDecimal))
         .call(g => g.select(".domain").remove())
@@ -548,10 +565,10 @@ export const updateHeatmaps = (svgData, newData) => {
     //     functs = updateChart(chartContainer, targetData[group], group, svgData.svgArea, functs.x, functs.y)
     // }
     for (let group in targetData) {
-        
+
         const container = d3.select(`#${group}-heatmap`);
         if (container.empty() || !container.attr('data-rendered')) {
-            continue; 
+            continue;
         }
         functs = updateChart(chartContainer, targetData[group], group, svgData.svgArea);
     }
@@ -563,7 +580,8 @@ export const updateChart = (container, data, group, svgArea) => {
 
     // updating x axis
     x.domain([timeExtent[0].getTime(), timeExtent[1].getTime()])
-    let xDomain = d3.timeMinute.every(5).range(...timeExtent);
+    // let xDomain = d3.timeMinute.every(5).range(...timeExtent);
+
     // let labels = xDomain.filter((_, i) => i % 3 === 0);
     // let chartXAxis = d3.axisBottom(x)
     //     .tickFormat((d, i) => labels.includes(d) ? timeFormat(d) : '')
@@ -578,6 +596,22 @@ export const updateChart = (container, data, group, svgArea) => {
     //     .attr('transform', 'rotate(-45)') 
     //     .style('font-size', '10')
     //     .style('text-anchor', 'end');
+
+
+    
+    let xDomain = d3.timeMinute.every(5).range(timeExtent[0], timeExtent[1]);
+    let chartXAxis = d3.axisBottom(x)
+        .tickValues(xDomain.filter((d, i) => i % 6 === 0))
+        .tickFormat(timeFormat)
+        .tickSizeOuter(0);
+    d3.select(`.x-axis-${group}`)
+        .transition()
+        .duration(750)
+        .call(chartXAxis)
+        .selectAll('text')
+        // .attr('transform', 'rotate(-45)')
+        .style('font-size', '10')
+        .style('text-anchor', 'end');
 
     let yDom = d3.extent(Object.values(data).flatMap(array => array.map(obj => obj.value)))
     let yInterval = (yDom[1] - yDom[0]) / ticksCount;
