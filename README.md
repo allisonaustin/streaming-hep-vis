@@ -1,4 +1,4 @@
-# TachyonVis
+# Streaming Visualization of Performance Metrics from HEP Workflow
  
 ### Setup
 #### Server

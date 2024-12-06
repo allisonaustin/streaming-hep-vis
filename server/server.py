@@ -312,4 +312,4 @@ def get_fpca(k, s):
     return Response(P_final.to_json(orient='records'), mimetype='application/json')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)
