@@ -1,4 +1,6 @@
 # Streaming Visualization of Performance Metrics from HEP Workflow
+
+![](/ui/assets/ui.png)
  
 ### Setup
 #### Server
